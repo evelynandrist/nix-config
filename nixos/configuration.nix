@@ -150,6 +150,8 @@
     gh
   ];
 
+  environment.pathsToLink = [ "/share/zsh" ]; # required for system packages autocomplete
+
   hardware.opengl.enable = true;
 
   # Some programs need SUID wrappers, can be configured further or are

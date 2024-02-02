@@ -21,6 +21,7 @@
     ./hyprland.nix
     ./waybar.nix
     ./kitty.nix
+    ./zsh.nix
   ];
 
   colorScheme = inputs.nix-colors.colorSchemes.dracula;
