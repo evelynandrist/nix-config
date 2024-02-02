@@ -355,6 +355,23 @@ printf "\033]232;#${c0}\033\\"
 printf "\033]256;#${cF}\033\\"
 printf "\033]257;#${c0}\033\\"
 printf "\033]708;#${c0}\033\\"
+
+export EDITOR="emacsclient -c -a 'emacs'"
+
+alias emacs="emacsclient -c -a 'emacs'"
+function em() {
+  exec >/dev/null
+  setopt LOCAL_OPTIONS NO_NOTIFY NO_MONITOR
+  hyprctl dispatch togglegroup
+  e ''${*:-.} &
+  sleep 0.5
+  hyprctl dispatch lockactivegroup lock
+  wait
+  hyprctl dispatch togglegroup
+  exec >/dev/tty
+}
+
+bindkey -v
     '';
   };
   programs.zoxide = {
