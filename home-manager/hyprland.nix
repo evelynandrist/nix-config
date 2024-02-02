@@ -4,7 +4,6 @@
   home.packages = with pkgs; [
     bluetuith
     fira
-    fira-code-nerdfont
     flashfocus
     grimblast
     gtk3
@@ -12,12 +11,10 @@
     hyprland-autoname-workspaces
     imv
     mpvpaper
-    nerdfonts
     rclone
     rsync
     slurp
     swaylock-effects
-    waybar
     wdisplays
     wl-clipboard
     wlsunset
@@ -198,9 +195,9 @@
       color10 = config.colorScheme.palette.base0A;
       color11 = config.colorScheme.palette.base0B;
       color13 = config.colorScheme.palette.base0D;
-    in "
+    in ''
       $submap_resize = <span foreground='##${color10}'>󰩨</span>  <span foreground='##${color5}'><b>Resize</b></span> <span foreground='##${color10}'>(<b>↑ ↓ ← →</b>)</span>
-      bind=$mainMod,r,submap,$submap_resize
+      bind=$mod,r,submap,$submap_resize
       submap=$submap_resize
       binde=,l,resizeactive,15 0
       binde=,h,resizeactive,-15 0
@@ -211,7 +208,7 @@
       $submap_shutdown = <span foreground='##${color10}'></span>  <span foreground='##${color5}'>  <span foreground='##${color10}'>(<b>h</b>)</span>hibernate <span foreground='##${color10}'>(<b>l</b>)</span>lock <span foreground='##${color10}'>(<b>e</b>)</span>logout <span foreground='##${color10}'>(<b>r</b>)</span>reboot <span foreground='##${color10}'>(<b>u</b>)</span>suspend <span foreground='##${color10}'>(<b>s</b>)</span>shutdown </span>
       $purge_cliphist = rm -f $HOME/.cache/cliphist/db
       $locking = swaylock --daemonize --color \"##${color1}\" --inside-color \"##${color1}\" --inside-clear-color \"##${color6}\" --ring-color \"##${color2}\" --ring-clear-color \"##${color11}\" --ring-ver-color \"##${color13}\" --show-failed-attempts --fade-in 0.2 --grace 2 --effect-vignette 0.5:0.5 --effect-blur 7x5 --ignore-empty-password --screenshots --clock
-      bind=$mainMod SHIFT,e,submap,$submap_shutdown
+      bind=$mod SHIFT,e,submap,$submap_shutdown
       submap=$submap_shutdown
       bind=,l,exec,$reset_submap && $locking # lock
       bind=,e,exec,$reset_submap && $purge_cliphist; loginctl terminate-user $USER # logout
@@ -230,6 +227,6 @@
       bind=SHIFT,s,exec,$reset_submap && grimblast save screen
       bind=,escape,submap,reset
       submap=reset
-    ";
+    '';
   };
 }

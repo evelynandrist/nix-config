@@ -19,9 +19,15 @@
     # You can also split up your configuration and import pieces of it here:
     # ./nvim.nix
     ./hyprland.nix
+    ./waybar.nix
   ];
 
   colorScheme = inputs.nix-colors.colorSchemes.dracula;
+
+  fonts.fontconfig.enable = true;
+  home.packages = with pkgs; [
+    (pkgs.nerdfonts.override { fonts = [ "FiraCode" "FiraMono" "JetBrainsMono" ]; })
+  ];
 
   nixpkgs = {
     # You can add overlays here
