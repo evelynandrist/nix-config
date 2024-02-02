@@ -24,7 +24,7 @@
     ./zsh.nix
   ];
 
-  colorScheme = inputs.nix-colors.colorSchemes.dracula;
+  colorScheme = inputs.nix-colors.colorSchemes.catppuccin-mocha;
 
   fonts.fontconfig.enable = true;
   home.packages = with pkgs; [
