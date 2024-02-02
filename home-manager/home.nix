@@ -22,6 +22,7 @@
     ./waybar.nix
     ./kitty.nix
     ./zsh.nix
+    ./wofi.nix
   ];
 
   colorScheme = inputs.nix-colors.colorSchemes.catppuccin-mocha;
