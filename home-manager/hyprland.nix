@@ -128,7 +128,7 @@
       "$reset_submap" = "hyprctl dispatch submap reset";
       bind = let
         terminal = "kitty";
-        menu = "wofi --normal-window --show drun --terminal $term --allow-images --lines 10 --style ~/.config/wpg/templates/wofi";
+        menu = "wofi --normal-window --show drun --terminal kitty --allow-images --lines 10 --style ~/.config/wpg/templates/wofi";
         editor = "emacsclient -c -a \"emacs\"";
         browser = "firefox";
         fileManager = "dolphin";

@@ -20,6 +20,7 @@
     # ./nvim.nix
     ./hyprland.nix
     ./waybar.nix
+    ./kitty.nix
   ];
 
   colorScheme = inputs.nix-colors.colorSchemes.dracula;
