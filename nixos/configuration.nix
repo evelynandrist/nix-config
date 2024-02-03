@@ -125,6 +125,8 @@
     pulse.enable = true;
   };
 
+  programs.zsh.enable = true;
+
   # TODO: Configure your system-wide user settings (groups, etc), add more users as needed.
   users.users = {
     evelyn = {
@@ -133,6 +135,7 @@
       # Be sure to change it (using passwd) after rebooting!
       initialPassword = "changeme";
       isNormalUser = true;
+      shell = pkgs.zsh;
       openssh.authorizedKeys.keys = [
         # TODO: Add your SSH public key(s) here, if you plan on using SSH to connect
       ];

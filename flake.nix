@@ -22,6 +22,8 @@
 
     WaveFox = { url = "github:QNetITQ/WaveFox?dir=chrome"; flake = false; };
 
+    doom-emacs = { url = "github:hlissner/doom-emacs"; flake = false; };
+
     nur.url = "github:nix-community/NUR";
   };
 

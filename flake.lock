@@ -34,6 +34,22 @@
         "type": "github"
       }
     },
+    "doom-emacs": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1706917831,
+        "narHash": "sha256-BIqyziOMBEtWOA0SpAS6lchbjACCM88/xbkaeU0VJJg=",
+        "owner": "hlissner",
+        "repo": "doom-emacs",
+        "rev": "d38787edf48f4c08bdf7ea8b3b54fcbc268f13b5",
+        "type": "github"
+      },
+      "original": {
+        "owner": "hlissner",
+        "repo": "doom-emacs",
+        "type": "github"
+      }
+    },
     "home-manager": {
       "inputs": {
         "nixpkgs": [
@@ -138,6 +154,7 @@
     "root": {
       "inputs": {
         "WaveFox": "WaveFox",
+        "doom-emacs": "doom-emacs",
         "home-manager": "home-manager",
         "nix-colors": "nix-colors",
         "nixpkgs": "nixpkgs",

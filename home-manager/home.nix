@@ -24,9 +24,11 @@
     ./zsh.nix
     ./wofi.nix
     ./firefox.nix
+    ./doom.nix
   ];
 
   colorScheme = inputs.nix-colors.colorSchemes.catppuccin-mocha;
+  home.sessionVariables = { TEST = 1; };
 
   fonts.fontconfig.enable = true;
   home.packages = with pkgs; [
