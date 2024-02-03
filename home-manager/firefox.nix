@@ -2,11 +2,11 @@
   imports = [
     inputs.nur.hmModules.nur
   ];
-  home.file.".mozilla/firefox/evelyn/chrome".source = "${inputs.WaveFox}/chrome";
+  home.file.".mozilla/firefox/${config.userConfig.username}/chrome".source = "${inputs.WaveFox}/chrome";
 
   programs.firefox = {
     enable = true;
-    profiles.evelyn = {
+    profiles.${config.userConfig.username} = {
       extensions = with config.nur.repos.rycee.firefox-addons; [
         bitwarden
         ublock-origin

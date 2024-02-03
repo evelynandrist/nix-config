@@ -20,6 +20,8 @@
     # everything match nicely? Try nix-colors!
     nix-colors.url = "github:misterio77/nix-colors";
 
+    nixos-hardware.url = "github:NixOS/nixos-hardware/master";
+
     WaveFox = { url = "github:QNetITQ/WaveFox?dir=chrome"; flake = false; };
 
     doom-emacs = { url = "github:hlissner/doom-emacs"; flake = false; };

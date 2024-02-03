@@ -16,6 +16,8 @@
     # Or modules exported from other flakes (such as nix-colors):
     inputs.nix-colors.homeManagerModules.default
 
+    ../modules/user-config
+
     # You can also split up your configuration and import pieces of it here:
     # ./nvim.nix
     ./hyprland.nix
@@ -65,8 +67,8 @@
 
   # TODO: Set your username
   home = {
-    username = "evelyn";
-    homeDirectory = "/home/evelyn";
+    username = "${config.userConfig.username}";
+    homeDirectory = "/home/${config.userConfig.username}";
   };
 
   # Add stuff for your user as you see fit:

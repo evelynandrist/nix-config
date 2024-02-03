@@ -17,6 +17,8 @@
     # inputs.hardware.nixosModules.common-cpu-amd
     # inputs.hardware.nixosModules.common-ssd
 
+    inputs.nixos-hardware.nixosModules.lenovo-thinkpad-z
+
     # You can also split up your configuration and import pieces of it here:
     # ./users.nix
 
@@ -24,13 +26,15 @@
     ./hardware-configuration.nix
     # Import home-manager's NixOS module
     inputs.home-manager.nixosModules.home-manager
+
+    ../modules/user-config
   ];
 
   home-manager = {
     extraSpecialArgs = { inherit inputs outputs; };
     users = {
       # Import your home-manager configuration
-      evelyn = import ../home-manager/home.nix;
+      ${config.userConfig.username} = import ../home-manager/home.nix;
     };
   };
 
@@ -82,9 +86,12 @@
   };
 
   # Bootloader.
-  boot.loader.grub.enable = true;
-  boot.loader.grub.device = "/dev/sda";
-  boot.loader.grub.useOSProber = true;
+  boot.loader.grub = {
+    enable = true;
+    device = "nodev";
+    useOSProber = true;
+  };
+
 
   # Grub theme
   boot.loader.grub.theme = pkgs.stdenv.mkDerivation {
@@ -98,6 +105,8 @@
 	  };
 	  installPhase = "cp -r customize/nixos $out";
   };
+
+  boot.kernelPackages = pkgs.linuxKernel.packages.linux_zen; # use linux zen kernel
 
   networking.hostName = "nixpad"; # Define your hostname.
   # Enable networking
@@ -129,7 +138,7 @@
 
   # TODO: Configure your system-wide user settings (groups, etc), add more users as needed.
   users.users = {
-    evelyn = {
+    ${config.userConfig.username} = {
       # TODO: You can set an initial password for your user.
       # If you do, you can skip setting a root password by passing '--no-root-passwd' to nixos-install.
       # Be sure to change it (using passwd) after rebooting!
@@ -140,7 +149,7 @@
         # TODO: Add your SSH public key(s) here, if you plan on using SSH to connect
       ];
       # TODO: Be sure to add any other groups you need (such as networkmanager, audio, docker, etc)
-      extraGroups = ["networkmanager" "wheel"];
+      extraGroups = [ "networkmanager" "video" "network" "rfkill" "power" "lp" "wheel" ];
     };
   };
 
@@ -157,6 +166,9 @@
 
   hardware.opengl.enable = true;
 
+  hardware.bluetooth.enable = true; # enables support for Bluetooth
+  hardware.bluetooth.powerOnBoot = true; # powers up the default Bluetooth controller on boot
+
   # Some programs need SUID wrappers, can be configured further or are
   # started in user sessions.
   # programs.mtr.enable = true;
@@ -166,6 +178,32 @@
   # };
 
   # List services that you want to enable:
+
+  services.greetd = {
+    enable = true;
+    settings = {
+      default_session = {
+        command = "${pkgs.greetd.tuigreet}/bin/tuigreet --user-menu --user-menu-min-uid 1000 --remember --remember-session --time --issue --asterisks";
+        user = "greeter";
+      };
+    };
+  };
+
+  services.tlp = {
+    enable = true;
+    settings = {
+      CPU_SCALING_GOVERNOR_ON_AC = "performance";
+      CPU_SCALING_GOVERNOR_ON_BAT = "powersave";
+
+      CPU_ENERGY_PERF_POLICY_ON_BAT = "power";
+      CPU_ENERGY_PERF_POLICY_ON_AC = "performance";
+
+      #Optional helps save long term battery health
+      START_CHARGE_THRESH_BAT0 = 70; # 70 and bellow it starts to charge
+      STOP_CHARGE_THRESH_BAT0 = 80; # 80 and above it stops charging
+    };
+  };
+
 
   # Enable the OpenSSH daemon.
   services.openssh.enable = true;
