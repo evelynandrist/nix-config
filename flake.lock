@@ -1,5 +1,23 @@
 {
   "nodes": {
+    "WaveFox": {
+      "flake": false,
+      "locked": {
+        "dir": "chrome",
+        "lastModified": 1706388720,
+        "narHash": "sha256-DwiKzro9RlBWf7ntNyfzST+wZ67tCMimwEH0hTUkFco=",
+        "owner": "QNetITQ",
+        "repo": "WaveFox",
+        "rev": "a4ce8ceb530a8456aa52d05fd258acc91f485ed8",
+        "type": "github"
+      },
+      "original": {
+        "dir": "chrome",
+        "owner": "QNetITQ",
+        "repo": "WaveFox",
+        "type": "github"
+      }
+    },
     "base16-schemes": {
       "flake": false,
       "locked": {
@@ -102,12 +120,29 @@
         "type": "github"
       }
     },
+    "nur": {
+      "locked": {
+        "lastModified": 1706956574,
+        "narHash": "sha256-5Gb25HVX5Blw3LNcDrkJ+ZnytpA1GxhMv4aALE4/TvM=",
+        "owner": "nix-community",
+        "repo": "NUR",
+        "rev": "b10111201b4064d90e42db525b2648aa9d0f754b",
+        "type": "github"
+      },
+      "original": {
+        "owner": "nix-community",
+        "repo": "NUR",
+        "type": "github"
+      }
+    },
     "root": {
       "inputs": {
+        "WaveFox": "WaveFox",
         "home-manager": "home-manager",
         "nix-colors": "nix-colors",
         "nixpkgs": "nixpkgs",
-        "nixpkgs-unstable": "nixpkgs-unstable"
+        "nixpkgs-unstable": "nixpkgs-unstable",
+        "nur": "nur"
       }
     }
   },

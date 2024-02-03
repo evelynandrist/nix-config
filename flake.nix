@@ -19,6 +19,10 @@
     # Shameless plug: looking for a way to nixify your themes and make
     # everything match nicely? Try nix-colors!
     nix-colors.url = "github:misterio77/nix-colors";
+
+    WaveFox = { url = "github:QNetITQ/WaveFox?dir=chrome"; flake = false; };
+
+    nur.url = "github:nix-community/NUR";
   };
 
   outputs = {

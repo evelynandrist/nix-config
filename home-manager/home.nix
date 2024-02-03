@@ -23,6 +23,7 @@
     ./kitty.nix
     ./zsh.nix
     ./wofi.nix
+    ./firefox.nix
   ];
 
   colorScheme = inputs.nix-colors.colorSchemes.catppuccin-mocha;
