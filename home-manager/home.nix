@@ -25,6 +25,7 @@
     ./wofi.nix
     ./firefox.nix
     ./doom.nix
+    ./latex.nix
   ];
 
   colorScheme = inputs.nix-colors.colorSchemes.catppuccin-mocha;

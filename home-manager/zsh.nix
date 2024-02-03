@@ -63,6 +63,8 @@ zstyle ':completion:*' cache-path ~/.zsh/cache
       cE = config.colorScheme.palette.base0E;
       cF = config.colorScheme.palette.base0F;
     in ''
+[ $TERM = "dumb" ] && unsetopt zle && PS1='$ ' && exec sh
+
 printf "\033]4;0;#${c0}\033"
 printf "\033]4;1;#${c1}\033"
 printf "\033]4;2;#${c2}\033"
