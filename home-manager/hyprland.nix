@@ -1,4 +1,6 @@
 { config, lib, pkgs, ... }: {
+  imports = [ ./autoname-workspaces.nix ];
+
   xdg.mimeApps.enable = true;
 
   home.packages = with pkgs; [
@@ -9,7 +11,6 @@
     grimblast
     gtk3
     htop-vim
-    hyprland-autoname-workspaces
     imv
     mpvpaper
     rclone
@@ -133,6 +134,7 @@
       ];
       exec = [
         "pkill waybar; waybar &"
+        "pkill hyprland-autona; wait; hyprland-autoname-workspaces &"
         "~/video-paper.sh --restart"
       ];
       blurls = "waybar";
