@@ -37,6 +37,7 @@
   wayland.windowManager.hyprland = {
     enable = true;
     package = pkgs.hyprland.override { wrapRuntimeDeps = false; };
+    xwayland.enable = true;
     systemd = {
       enable = true;
       # Same as default, but stop graphical-session too

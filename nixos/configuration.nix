@@ -136,7 +136,10 @@
     pulse.enable = true;
   };
 
-  programs.zsh.enable = true;
+  programs.zsh = {
+    enable = true;
+    enableCompletion = false;
+  };
 
   # TODO: Configure your system-wide user settings (groups, etc), add more users as needed.
   users.users = {
@@ -166,7 +169,15 @@
 
   environment.pathsToLink = [ "/share/zsh" ]; # required for system packages autocomplete
 
-  #hardware.opengl.enable = true;
+  hardware.opengl = {
+    enable = true;
+    driSupport = true;
+    driSupport32Bit = true;
+#    extraPackages = with pkgs; [
+#      vaapiVdpau
+#      libvdpau-va-gl
+#    ];
+  };
 
   hardware.bluetooth.enable = true; # enables support for Bluetooth
   hardware.bluetooth.powerOnBoot = true; # powers up the default Bluetooth controller on boot
