@@ -1,6 +1,6 @@
 { lib, ... }:
 with lib; {
-  imports = [ ] ++ lib.optional (builtins.pathExists ./config.nix) ./config.nix;
+  imports = [ ./config.nix ];
   options.userConfig = {
     username = mkOption {
       type = types.str;

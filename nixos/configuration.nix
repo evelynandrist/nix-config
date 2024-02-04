@@ -89,6 +89,7 @@
   boot.loader.grub = {
     enable = true;
     device = "nodev";
+    efiSupport = true;
     useOSProber = true;
   };
 
@@ -164,7 +165,7 @@
 
   environment.pathsToLink = [ "/share/zsh" ]; # required for system packages autocomplete
 
-  hardware.opengl.enable = true;
+  #hardware.opengl.enable = true;
 
   hardware.bluetooth.enable = true; # enables support for Bluetooth
   hardware.bluetooth.powerOnBoot = true; # powers up the default Bluetooth controller on boot
