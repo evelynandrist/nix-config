@@ -3,6 +3,7 @@
 
   home.packages = with pkgs; [
     bluetuith
+    cliphist
     fira
     flashfocus
     grimblast
@@ -127,11 +128,11 @@
       "exec-once" = [
         "dbus-update-activation-environment --systemd WAYLAND_DISPLAY XDG_CURRENT_DESKTOP"
         "systemctl --user start hyprland-autoname-workspaces.service"
-        "/usr/bin/emacs --daemon"
+        "emacs --daemon"
         "wl-paste --watch cliphist store"
       ];
       exec = [
-        "killall waybar; waybar &"
+        "pkill waybar; waybar &"
         "~/video-paper.sh --restart"
       ];
       blurls = "waybar";
@@ -169,7 +170,7 @@
         "$mod SHIFT, S, movetoworkspace, special:magic"
         "$mod, F, fullscreen, 1"
         "$mod SHIFT, F, fullscreen, 0"
-        "$mod SHIFT, p, exec, cliphist list | wofi --show dmenu --normal-window --lines 14 --style ~/.config/wpg/templates/wofi | cliphist decode | wl-copy"
+        "$mod SHIFT, p, exec, cliphist list | wofi --show dmenu --normal-window --lines 14 | cliphist decode | wl-copy"
       ] ++
       (
         # workspaces
