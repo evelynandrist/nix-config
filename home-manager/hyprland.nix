@@ -20,12 +20,16 @@
     wlsunset
     wofi
     wpgtk
-    xwayland
   ];
 
   home.sessionVariables = {
     MOZ_ENABLE_WAYLAND = 1;
+    NIXOS_OZONE_WL = 1;
     QT_QPA_PLATFORM = "wayland";
+    XDG_SESSION_TYPE = "wayland";
+    XDG_CURRENT_DESKTOP = "Hyprland";
+    XDG_SESSION_DESKTOP = "Hyprland";
+    XCURSOR_SIZE = 32;
   };
 
   xdg.portal = {
@@ -47,8 +51,14 @@
       ];
     };
     settings = {
-      monitor = ",preferred,auto,auto";
-      env = "XCURSOR_SIZE,24";
+      monitor = ",highres,auto,2";
+      env = [
+        "XCURSOR_SIZE,32"
+        "GDK_SCALE,2"
+      ];
+      xwayland = {
+        force_zero_scaling = true;
+      };
       general = {
         gaps_in = 20;
         gaps_out = 30;
