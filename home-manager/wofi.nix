@@ -3,8 +3,8 @@
     enable = true;
     style = let
       c0 = inputs.nix-colors.lib-core.conversions.hexToRGBString "," config.colorScheme.palette.base00;
-      c9 = inputs.nix-colors.lib-core.conversions.hexToRGBString "," config.colorScheme.palette.base09;
-      cF = inputs.nix-colors.lib-core.conversions.hexToRGBString "," config.colorScheme.palette.base0F;
+      c9 = inputs.nix-colors.lib-core.conversions.hexToRGBString "," config.colorScheme.palette.base0C;
+      cF = inputs.nix-colors.lib-core.conversions.hexToRGBString "," config.colorScheme.palette.base06;
     in ''
 #window {
     background-color: rgba(${c0}, 0.5);
@@ -51,7 +51,7 @@
     padding-left: 10px;
 }
 
-#entry:focus {
+#entry:focus, #entry:selected {
     background: rgba(${c9}, 0.5);
     border: 1px solid rgba(${c9}, 1);
 }

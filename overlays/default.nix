@@ -10,6 +10,7 @@
     # example = prev.example.overrideAttrs (oldAttrs: rec {
     # ...
     # });
+    pcmanfm = prev.pcmanfm.override { withGtk3 = true; };
   };
 
   # When applied, the unstable nixpkgs set (declared in the flake inputs) will

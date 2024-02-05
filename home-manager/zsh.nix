@@ -2,7 +2,40 @@
   home.packages = with pkgs; [
     zsh-powerlevel10k
   ];
-  programs.zsh = {
+  programs.zsh = let
+    c0 = config.colorScheme.palette.base00;
+    c1 = config.colorScheme.palette.base08;
+    c2 = config.colorScheme.palette.base0B;
+    c3 = config.colorScheme.palette.base0C;
+    c4 = config.colorScheme.palette.base07;
+    c5 = config.colorScheme.palette.base04;
+    c6 = config.colorScheme.palette.base06;
+    c7 = config.colorScheme.palette.base0D;
+    c8 = config.colorScheme.palette.base02;
+    c9 = config.colorScheme.palette.base09;
+    cA = config.colorScheme.palette.base0A;
+    cB = config.colorScheme.palette.base01;
+    cC = config.colorScheme.palette.base03;
+    cD = config.colorScheme.palette.base0F;
+    cE = config.colorScheme.palette.base0E;
+    cF = config.colorScheme.palette.base05;
+    # c0 = config.colorScheme.palette.base00;
+    # c1 = config.colorScheme.palette.base01;
+    # c2 = config.colorScheme.palette.base02;
+    # c3 = config.colorScheme.palette.base03;
+    # c4 = config.colorScheme.palette.base04;
+    # c5 = config.colorScheme.palette.base05;
+    # c6 = config.colorScheme.palette.base06;
+    # c7 = config.colorScheme.palette.base07;
+    # c8 = config.colorScheme.palette.base08;
+    # c9 = config.colorScheme.palette.base09;
+    # cA = config.colorScheme.palette.base0A;
+    # cB = config.colorScheme.palette.base0B;
+    # cC = config.colorScheme.palette.base0C;
+    # cD = config.colorScheme.palette.base0D;
+    # cE = config.colorScheme.palette.base0E;
+    # cF = config.colorScheme.palette.base0F;
+  in {
     enable = true;
     enableAutosuggestions = true;
     enableCompletion = true;
@@ -36,24 +69,7 @@
         "fzf"
       ];
     };
-    initExtraFirst = let
-      c0 = config.colorScheme.palette.base00;
-      c1 = config.colorScheme.palette.base01;
-      c2 = config.colorScheme.palette.base02;
-      c3 = config.colorScheme.palette.base03;
-      c4 = config.colorScheme.palette.base04;
-      c5 = config.colorScheme.palette.base05;
-      c6 = config.colorScheme.palette.base06;
-      c7 = config.colorScheme.palette.base07;
-      c8 = config.colorScheme.palette.base08;
-      c9 = config.colorScheme.palette.base09;
-      cA = config.colorScheme.palette.base0A;
-      cB = config.colorScheme.palette.base0B;
-      cC = config.colorScheme.palette.base0C;
-      cD = config.colorScheme.palette.base0D;
-      cE = config.colorScheme.palette.base0E;
-      cF = config.colorScheme.palette.base0F;
-    in ''
+    initExtraFirst = ''
 [ $TERM = "dumb" ] && unsetopt zle && PS1='$ ' && exec sh
 
 printf "\033]4;0;#${c0}\033"
@@ -101,24 +117,7 @@ zstyle ':completion:*' accept-exact '*(N)'
 zstyle ':completion:*' use-cache on
 zstyle ':completion:*' cache-path ~/.zsh-cache
     '';
-    initExtra = let
-      c0 = config.colorScheme.palette.base00;
-      c1 = config.colorScheme.palette.base01;
-      c2 = config.colorScheme.palette.base02;
-      c3 = config.colorScheme.palette.base03;
-      c4 = config.colorScheme.palette.base04;
-      c5 = config.colorScheme.palette.base05;
-      c6 = config.colorScheme.palette.base06;
-      c7 = config.colorScheme.palette.base07;
-      c8 = config.colorScheme.palette.base08;
-      c9 = config.colorScheme.palette.base09;
-      cA = config.colorScheme.palette.base0A;
-      cB = config.colorScheme.palette.base0B;
-      cC = config.colorScheme.palette.base0C;
-      cD = config.colorScheme.palette.base0D;
-      cE = config.colorScheme.palette.base0E;
-      cF = config.colorScheme.palette.base0F;
-    in ''
+    initExtra = ''
 # Set terminal window and tab/icon title
 #
 # usage: title short_tab_title [long_window_title]

@@ -32,12 +32,19 @@ in {
     ./latex.nix
   ];
 
-  # colorScheme = inputs.nix-colors.colorSchemes.catppuccin-mocha;
-  colorScheme = nix-colors-lib.colorSchemeFromPicture {
+  colorScheme = inputs.nix-colors.colorSchemes.catppuccin-mocha;
+  /*colorScheme = nix-colors-lib.colorSchemeFromPicture {
     path = ../wallpaper.png;
     variant = "dark";
+  };*/
+
+  gtk = {
+    enable = true;
+    theme = {
+      name = "${config.colorScheme.slug}";
+      package = nix-colors-lib.gtkThemeFromScheme { scheme = config.colorScheme; };
+    };
   };
-  home.sessionVariables = { TEST = 1; };
 
   fonts.fontconfig.enable = true;
   home.packages = with pkgs; [
@@ -78,9 +85,9 @@ in {
   };
 
   home.pointerCursor = {
-    package = pkgs.vanilla-dmz;
-    name = "Vanilla-DMZ";
-    size = 64;
+    name = "Catppuccin-Mocha-Dark-Cursors";
+    package = pkgs.catppuccin-cursors.mochaDark;
+    size = 32;
   };
 
   # Add stuff for your user as you see fit:

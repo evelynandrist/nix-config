@@ -14,6 +14,7 @@
     htop-vim
     imv
     mpvpaper
+    pcmanfm
     rclone
     rsync
     slurp
@@ -66,7 +67,7 @@
         gaps_in = 20;
         gaps_out = 30;
         border_size = 2;
-        "col.active_border" = "rgba(${config.colorScheme.palette.base09}ff) rgba(${config.colorScheme.palette.base0D}ff) 45deg";
+        "col.active_border" = "rgba(${config.colorScheme.palette.base0C}ff) rgba(${config.colorScheme.palette.base0F}ff) 45deg";
         "col.inactive_border" = "rgba(${config.colorScheme.palette.base01}aa)";
         layout = "dwindle";
         allow_tearing = false;
@@ -130,12 +131,12 @@
       "exec-once" = [
         "dbus-update-activation-environment --systemd WAYLAND_DISPLAY XDG_CURRENT_DESKTOP"
         "systemctl --user start hyprland-autoname-workspaces.service"
-        "emacs --daemon"
+        "zsh -c \"emacs --daemon\""
         "wl-paste --watch cliphist store"
       ];
       exec = [
         "pkill waybar; waybar &"
-        "pkill hyprland-autona; wait; hyprland-autoname-workspaces &"
+        "hyprland-autoname-workspaces"
         "~/video-paper.sh --restart"
       ];
       blurls = "waybar";
@@ -146,7 +147,7 @@
         menu = "wofi --normal-window --show drun --terminal kitty --allow-images --lines 10";
         editor = "emacsclient -c -a \"emacs\"";
         browser = "firefox";
-        fileManager = "dolphin";
+        fileManager = "pcmanfm";
       in [
         "$mod, return, exec, ${terminal}"
         "$mod, Q, killactive,"
