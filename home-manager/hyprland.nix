@@ -205,10 +205,10 @@
     extraConfig = let
       color1 = config.colorScheme.palette.base01;
       color2 = config.colorScheme.palette.base02;
-      color5 = config.colorScheme.palette.base05;
+      color5 = config.colorScheme.palette.base0C;
       color6 = config.colorScheme.palette.base06;
       color7 = config.colorScheme.palette.base07;
-      color10 = config.colorScheme.palette.base0A;
+      color10 = config.colorScheme.palette.base0F;
       color11 = config.colorScheme.palette.base0B;
       color13 = config.colorScheme.palette.base0D;
     in ''
@@ -221,7 +221,7 @@
       binde=,j,resizeactive,0 15
       bind=,escape,submap,reset
       submap=reset
-      $submap_shutdown = <span foreground='##${color10}'></span>  <span foreground='##${color5}'>  <span foreground='##${color10}'>(<b>h</b>)</span>hibernate <span foreground='##${color10}'>(<b>l</b>)</span>lock <span foreground='##${color10}'>(<b>e</b>)</span>logout <span foreground='##${color10}'>(<b>r</b>)</span>reboot <span foreground='##${color10}'>(<b>u</b>)</span>suspend <span foreground='##${color10}'>(<b>s</b>)</span>shutdown </span>
+      $submap_shutdown = <span foreground='##${color10}'></span>  <span foreground='##${color5}'>  <span foreground='##${color10}'>(<b>h</b>)</span>hibernate   <span foreground='##${color10}'>(<b>l</b>)</span>lock   <span foreground='##${color10}'>(<b>e</b>)</span>logout   <span foreground='##${color10}'>(<b>r</b>)</span>reboot   <span foreground='##${color10}'>(<b>u</b>)</span>suspend   <span foreground='##${color10}'>(<b>s</b>)</span>shutdown   </span>
       $purge_cliphist = rm -f $HOME/.cache/cliphist/db
       $locking = swaylock --daemonize --color \"##${color1}\" --inside-color \"##${color1}\" --inside-clear-color \"##${color6}\" --ring-color \"##${color2}\" --ring-clear-color \"##${color11}\" --ring-ver-color \"##${color13}\" --show-failed-attempts --fade-in 0.2 --grace 2 --effect-vignette 0.5:0.5 --effect-blur 7x5 --ignore-empty-password --screenshots --clock
       bind=$mod SHIFT,e,submap,$submap_shutdown
@@ -234,7 +234,7 @@
       bind=,r,exec,$reset_submap && $purge_cliphist; systemctl reboot # reboot
       bind=,escape,submap,reset
       submap=reset
-      $submap_screenshot = <span foreground='##${color10}'></span>  <span foreground='##${color5}'><b>Area</b></span> <span foreground='##${color10}'>(<b>a</b>)</span> <span foreground='##${color5}'><b>Screen</b></span> <span foreground='##${color10}'>(<b>s</b>)</span> <span foreground='##${color7}'>+ <span foreground='##${color10}'><b>Shift</b></span> for 󰆓</span>
+      $submap_screenshot = <span foreground='##${color10}'>󰄄</span>  <span foreground='##${color5}'><b>Area</b></span> <span foreground='##${color10}'>(<b>a</b>)</span>   <span foreground='##${color5}'><b>Screen</b></span> <span foreground='##${color10}'>(<b>s</b>)</span>   <span foreground='##${color7}'>+   <span foreground='##${color10}'><b>Shift</b></span>  for  󰆓</span>
       bind=,print,submap,$submap_screenshot
       submap=$submap_screenshot
       bind=,a,exec,$reset_submap && grimblast copy area

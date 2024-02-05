@@ -65,7 +65,7 @@
             warning = 70;
             critical = 90;
           };
-          on-click = "hyprctl dispatch exec [floating] kitty $HOME/.config/hypr/scripts/htop.sh";
+          on-click = "hyprctl dispatch exec [floating] kitty 'sh -c \"$HOME/.config/color-sequences.sh & htop\"'";
         };
 
         memory = {
@@ -75,7 +75,7 @@
             warning = 70;
             critical = 90;
           };
-          on-click = "hyprctl dispatch exec [floating] kitty $HOME/.config/hypr/scripts/htop.sh";
+          on-click = "hyprctl dispatch exec [floating] kitty 'sh -c \"$HOME/.config/color-sequences.sh & htop\"'";
         };
 
         network = {
@@ -84,7 +84,7 @@
           format-ethernet = "󰈀";
           format-disconnected = "󰖪";
           tooltip-format = "{ifname} ({essid}): {ipaddr}";
-          on-click = "hyprctl dispatch exec [floating] kitty $HOME/.config/hypr/scripts/nmtui.sh";
+          on-click = "hyprctl dispatch exec [floating] kitty 'sh -c \"$HOME/.config/color-sequences.sh & nmtui\"'";
         };
 
         "hyprland/submap" = {
@@ -141,7 +141,7 @@
           format = "{icon} {temperatureC}°";
           format-icons = [ "" "" "" ];
           tooltip = false;
-          on-click = "hyprctl dispatch exec [floating] kitty $HOME/.config/hypr/scripts/sensors.sh\"";
+          on-click = "hyprctl dispatch exec [floating] kitty 'sh -c \"$HOME/.config/color-sequences.sh & watch sensors\"'";
         };
 
         tray = {
