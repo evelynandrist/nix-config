@@ -7,7 +7,9 @@
   config,
   pkgs,
   ...
-}: {
+}: let
+  nix-colors-lib = inputs.nix-colors.lib.contrib { inherit pkgs; };
+in {
   # You can import other home-manager modules here
   imports = [
     # If you want to use modules your own flake exports (from modules/home-manager):
@@ -30,7 +32,11 @@
     ./latex.nix
   ];
 
-  colorScheme = inputs.nix-colors.colorSchemes.catppuccin-mocha;
+  # colorScheme = inputs.nix-colors.colorSchemes.catppuccin-mocha;
+  colorScheme = nix-colors-lib.colorSchemeFromPicture {
+    path = ../wallpaper.png;
+    variant = "dark";
+  };
   home.sessionVariables = { TEST = 1; };
 
   fonts.fontconfig.enable = true;

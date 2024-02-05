@@ -11,7 +11,11 @@
     editorconfig-core-c
     emacs-all-the-icons-fonts
   ];
-  programs.emacs.enable = true;
+  nixpkgs.overlays = [ inputs.emacs-overlay.overlays.emacs ];
+  programs.emacs = {
+    enable = true;
+    package = pkgs.emacs-pgtk;
+  };
   home.sessionPath = [ "${config.xdg.configHome}/emacs/bin" "${config.home.homeDirectory}/.emacs.d/bin" "${pkgs.emacs}/bin" "${pkgs.git}" ];
   home.sessionVariables = {
     DOOMDIR = "${config.xdg.configHome}/doom-config";

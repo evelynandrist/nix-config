@@ -5,6 +5,7 @@
 
   home.packages = with pkgs; [
     bluetuith
+    brightnessctl
     cliphist
     fira
     flashfocus

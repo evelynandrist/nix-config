@@ -27,6 +27,11 @@
     doom-emacs = { url = "github:hlissner/doom-emacs"; flake = false; };
 
     nur.url = "github:nix-community/NUR";
+
+    emacs-overlay = {
+      url = "github:nix-community/emacs-overlay";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
   outputs = {
