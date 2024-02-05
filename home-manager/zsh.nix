@@ -1,4 +1,4 @@
-{ config, lib, pkgs, ... }: {
+{ config, lib, pkgs, inputs, ... }: {
   home.packages = with pkgs; [
     zsh-powerlevel10k
   ];
@@ -56,6 +56,11 @@
         name = "powerlevel10k-config";
         src = ./p10k-config;
         file = "p10k.zsh";
+      }
+      {
+        name = "fzf-tab";
+        src = inputs.fzf-tab;
+        file = "fzf-tab.plugin.zsh";
       }
     ];
     oh-my-zsh = {

@@ -90,6 +90,22 @@
         "type": "github"
       }
     },
+    "fzf-tab": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1706757142,
+        "narHash": "sha256-ilUavAIWmLiMh2PumtErMCpOcR71ZMlQkKhVOTDdHZw=",
+        "owner": "Aloxaf",
+        "repo": "fzf-tab",
+        "rev": "b06e7574577cd729c629419a62029d31d0565a7a",
+        "type": "github"
+      },
+      "original": {
+        "owner": "Aloxaf",
+        "repo": "fzf-tab",
+        "type": "github"
+      }
+    },
     "home-manager": {
       "inputs": {
         "nixpkgs": [
@@ -228,6 +244,7 @@
         "WaveFox": "WaveFox",
         "doom-emacs": "doom-emacs",
         "emacs-overlay": "emacs-overlay",
+        "fzf-tab": "fzf-tab",
         "home-manager": "home-manager",
         "nix-colors": "nix-colors",
         "nixos-hardware": "nixos-hardware",
