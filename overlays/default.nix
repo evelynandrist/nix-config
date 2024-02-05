@@ -1,5 +1,9 @@
 # This file defines overlays
-{inputs, ...}: {
+{inputs, ...}: let
+  addPatches = pkg: patches: pkg.overrideAttrs (oldAttrs: {
+    patches = (oldAttrs.patches or [ ]) ++ patches;
+  });
+in {
   # This one brings our custom packages from the 'pkgs' directory
   additions = final: _prev: import ../pkgs {pkgs = final;};
 
@@ -11,6 +15,8 @@
     # ...
     # });
     pcmanfm = prev.pcmanfm.override { withGtk3 = true; };
+    # add support for pangu markup to the hyprland/submaps module
+    waybar = addPatches prev.waybar [ ./waybar.patch ];
   };
 
   # When applied, the unstable nixpkgs set (declared in the flake inputs) will

@@ -1,0 +1,23 @@
+From 302a748d7b5dadc47aa5448d61ab32c63f841d34 Mon Sep 17 00:00:00 2001
+From: kev1nbam27 <kevin1bam@web.de>
+Date: Thu, 4 Jan 2024 22:38:09 +0100
+Subject: [PATCH] remove sanitize string from hyprland/submap
+
+---
+ src/modules/hyprland/submap.cpp | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
+
+diff --git a/src/modules/hyprland/submap.cpp b/src/modules/hyprland/submap.cpp
+index d1d9a116d..1e320cc71 100644
+--- a/src/modules/hyprland/submap.cpp
++++ b/src/modules/hyprland/submap.cpp
+@@ -51,8 +51,7 @@ void Submap::onEvent(const std::string& ev) {
+     return;
+   }
+ 
+-  auto submapName = ev.substr(ev.find_last_of('>') + 1);
+-  submapName = waybar::util::sanitize_string(submapName);
++  auto submapName = ev.substr(ev.find_first_of('>') + 2);
+ 
+   submap_ = submapName;
+ 
