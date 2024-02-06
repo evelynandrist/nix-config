@@ -32,11 +32,11 @@ in {
     ./latex.nix
   ];
 
-  colorScheme = inputs.nix-colors.colorSchemes.catppuccin-mocha;
-  /*colorScheme = nix-colors-lib.colorSchemeFromPicture {
-    path = ../wallpaper.png;
+  #colorScheme = inputs.nix-colors.colorSchemes.catppuccin-mocha;
+  colorScheme = nix-colors-lib.colorSchemeFromPicture {
+    path = ./Chill-Beach.jpg;
     variant = "dark";
-  };*/
+  };
 
   gtk = {
     enable = true;

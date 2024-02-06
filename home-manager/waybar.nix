@@ -241,8 +241,8 @@
     style = let
       color0 = "#${config.colorScheme.palette.base00}";
       color1 = "#${config.colorScheme.palette.base01}";
-      color15 = "#${config.colorScheme.palette.base0C}";
-      active = "#${config.colorScheme.palette.base0F}";
+      color15 = "#${config.colorScheme.palette.base0F}";
+      active = "#${config.colorScheme.palette.base09}";
     in ''
 /* Default color scheme */
 @define-color bg_color ${color0};

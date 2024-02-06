@@ -17,6 +17,11 @@ in {
     pcmanfm = prev.pcmanfm.override { withGtk3 = true; };
     # add support for pangu markup to the hyprland/submaps module
     waybar = addPatches prev.waybar [ ./waybar.patch ];
+    # change colorSchemeFromPicture backend from flavours to wpgtk
+    # nix-colors = addPatches prev.nix-colors [ ./nix-colors-wpgtk.patch ];
+    /*nix-colors = prev.nix-colors.overrideAttrs (old: {
+      patches = (old.patches or []) ++ [ ./nix-colors-wpgtk.patch ];
+    });*/
   };
 
   # When applied, the unstable nixpkgs set (declared in the flake inputs) will

@@ -3,8 +3,8 @@
     enable = true;
     style = let
       c0 = inputs.nix-colors.lib-core.conversions.hexToRGBString "," config.colorScheme.palette.base00;
-      c9 = inputs.nix-colors.lib-core.conversions.hexToRGBString "," config.colorScheme.palette.base0C;
-      cF = inputs.nix-colors.lib-core.conversions.hexToRGBString "," config.colorScheme.palette.base06;
+      c9 = inputs.nix-colors.lib-core.conversions.hexToRGBString "," config.colorScheme.palette.base09;
+      cF = inputs.nix-colors.lib-core.conversions.hexToRGBString "," config.colorScheme.palette.base0F;
     in ''
 #window {
     background-color: rgba(${c0}, 0.5);

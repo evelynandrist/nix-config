@@ -1,5 +1,8 @@
 { config, lib, pkgs, ... }: {
-  imports = [ ./autoname-workspaces.nix ];
+  imports = [
+    ./autoname-workspaces.nix
+    ./wallpaper.nix
+  ];
 
   xdg.mimeApps.enable = true;
 
@@ -67,7 +70,7 @@
         gaps_in = 20;
         gaps_out = 30;
         border_size = 2;
-        "col.active_border" = "rgba(${config.colorScheme.palette.base0C}ff) rgba(${config.colorScheme.palette.base0F}ff) 45deg";
+        "col.active_border" = "rgba(${config.colorScheme.palette.base09}ff) rgba(${config.colorScheme.palette.base0A}ff) 45deg";
         "col.inactive_border" = "rgba(${config.colorScheme.palette.base01}aa)";
         layout = "dwindle";
         allow_tearing = false;
@@ -205,10 +208,10 @@
     extraConfig = let
       color1 = config.colorScheme.palette.base01;
       color2 = config.colorScheme.palette.base02;
-      color5 = config.colorScheme.palette.base0C;
+      color5 = config.colorScheme.palette.base05;
       color6 = config.colorScheme.palette.base06;
       color7 = config.colorScheme.palette.base07;
-      color10 = config.colorScheme.palette.base0F;
+      color10 = config.colorScheme.palette.base0A;
       color11 = config.colorScheme.palette.base0B;
       color13 = config.colorScheme.palette.base0D;
     in ''
