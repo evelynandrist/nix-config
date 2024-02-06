@@ -100,6 +100,16 @@ in {
     enable = true;
     userEmail = "kevin1bam@web.de";
     userName = "Kevin Bam";
+    signing = {
+      key = "5A71E723055533FE";
+      signByDefault = true;
+    };
+  };
+
+  programs.gpg.enable = true;
+  services.gpg-agent = {
+    enable = true;
+    pinentryFlavor = "tty";
   };
 
   # Nicely reload system units when changing configs

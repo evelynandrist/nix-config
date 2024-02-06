@@ -6,6 +6,11 @@
 
   programs.firefox = {
     enable = true;
+    policies = {
+      PasswordManagerEnabled = false;
+      DefaultDownloadDirectory = "$HOME/Downloads";
+      DisableTelemetry = true;
+    };
     profiles.${config.userConfig.username} = {
       extensions = with config.nur.repos.rycee.firefox-addons; [
         bitwarden
@@ -19,6 +24,26 @@
         "userChrome.Linux.Transparency.VeryHigh.Enabled" = true;
         "gfx.webrender.all" = true;
         "browser.tabs.inTitlebar" = 1;
+
+        # Disable Pocket
+        "browser.newtabpage.activity-stream.feeds.discoverystreamfeed" = false;
+        "browser.newtabpage.activity-stream.feeds.section.topstories" = false;
+        "browser.newtabpage.activity-stream.section.highlights.includePocket" = false;
+        "browser.newtabpage.activity-stream.showSponsored" = false;
+        "extensions.pocket.enabled" = false;
+
+        "identity.fxaccounts.enabled" = false;
+        "browser.search.suggest.enabled" = false;
+        "browser.urlbar.shortcuts.bookmarks" = false;
+        "browser.urlbar.shortcuts.history" = false;
+        "browser.urlbar.shortcuts.tabs" = false;
+        "browser.urlbar.suggest.bookmark" = false;
+        "browser.urlbar.suggest.engines" = false;
+        "browser.urlbar.suggest.history" = false;
+        "browser.urlbar.suggest.openpage" = false;
+        "browser.urlbar.suggest.topsites" = false;
+        "browser.uidensity" = 1;
+        "browser.formfill.enable" = false;
       };
       search = {
         engines = {
