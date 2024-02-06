@@ -18,8 +18,6 @@
     imv
     mpvpaper
     pcmanfm
-    rclone
-    rsync
     slurp
     swaylock-effects
     wdisplays
