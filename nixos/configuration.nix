@@ -34,11 +34,27 @@
   sops = {
     defaultSopsFile = ../secrets/secrets.yaml;
     defaultSopsFormat = "yaml";
-    #gnupg.home = "/home/${config.userConfig.username}/.gnupg";
-    #gnupg.sshKeyPaths = [];
     secrets = {
       "pcloud/access_token" = { };
+      "pcloud/password" = { };
     };
+    templates = {
+      "rclone.conf".content = ''
+        [pcloud]
+        type = pcloud
+        hostname = api.pcloud.com
+        token = {"access_token":"${config.sops.placeholder."pcloud/access_token"}","token_type":"bearer","expiry":"0001-01-01T00:00:00Z"}
+      '';
+    };
+  };
+
+  # backup can be triggered with sudo systemctl start restic-backups-pcloud.service
+  services.restic.backups.pcloud = {
+    repository = "rclone:pcloud:/nixpad-backups";
+    initialize = true;
+    rcloneConfigFile = "${config.sops.templates."rclone.conf".path}";
+    passwordFile = "${config.sops.secrets."pcloud/password".path}";
+    paths = [ "/home/${config.userConfig.username}/nixpad_backup" ];
   };
 
   home-manager = {

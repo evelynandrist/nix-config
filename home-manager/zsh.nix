@@ -355,6 +355,8 @@ function em() {
   exec >/dev/tty
 }
 
+alias backup="sudo systemctl start restic-backups-pcloud.service"
+
 bindkey -v
     '';
   };
