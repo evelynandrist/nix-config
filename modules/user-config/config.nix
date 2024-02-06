@@ -1,5 +1,5 @@
 { lib, ... }:
 with lib;
 {
-  userConfig.username = "evelyn";
+  userConfig.username = "nix";
 }
