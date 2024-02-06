@@ -1,0 +1,9 @@
+keys:
+  - &primary C9E3E6DDB69C7BB37B14F9945A71E723055533FE
+  - &nixpad e047a92689ed03eb9932070722ce2adfcbedc741
+creation_rules:
+  - path_regex: secrets/secrets.yaml$
+    key_groups:
+      - pgp:
+          - *primary
+          - *nixpad

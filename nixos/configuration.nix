@@ -18,6 +18,7 @@
     # inputs.hardware.nixosModules.common-ssd
 
     inputs.nixos-hardware.nixosModules.lenovo-thinkpad-z
+    inputs.sops-nix.nixosModules.sops
 
     # You can also split up your configuration and import pieces of it here:
     # ./users.nix
@@ -29,6 +30,16 @@
 
     ../modules/user-config
   ];
+
+  sops = {
+    defaultSopsFile = ../secrets/secrets.yaml;
+    defaultSopsFormat = "yaml";
+    #gnupg.home = "/home/${config.userConfig.username}/.gnupg";
+    #gnupg.sshKeyPaths = [];
+    secrets = {
+      "pcloud/access_token" = { };
+    };
+  };
 
   home-manager = {
     extraSpecialArgs = { inherit inputs outputs; };

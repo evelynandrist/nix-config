@@ -37,6 +37,8 @@
       url = "github:Aloxaf/fzf-tab";
       flake = false;
     };
+
+    sops-nix.url = "github:Mic92/sops-nix";
   };
 
   outputs = {
