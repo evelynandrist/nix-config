@@ -101,4 +101,4 @@ fi
 
 echo "Installing NixOS..."
 
-nixos-install --flake .\#nixpad
+nixos-install --no-root-passwd --flake .\#nixpad

@@ -39,6 +39,8 @@
     };
 
     sops-nix.url = "github:Mic92/sops-nix";
+
+    impermanence.url = "github:nix-community/impermanence";
   };
 
   outputs = {

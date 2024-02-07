@@ -29,6 +29,7 @@
     inputs.home-manager.nixosModules.home-manager
 
     ../modules/user-config
+    ./impermanence.nix
   ];
 
   sops = {
@@ -124,9 +125,10 @@
     enable = true;
     device = "nodev";
     efiSupport = true;
-    efiInstallAsRemovable = true;
     useOSProber = true;
   };
+
+  boot.loader.efi.canTouchEfiVariables = true;
 
   boot.supportedFilesystems = [ "btrfs" ];
 
