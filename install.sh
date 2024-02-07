@@ -13,8 +13,8 @@ if [[ ${PIPESTATUS[0]} -ne 4 ]]; then
     exit 1
 fi
 
-LONGOPTS=user-name:
-OPTIONS=u:
+LONGOPTS=user-name:,boot-partition:,nixos-partition:
+OPTIONS=u:b:n:
 
 # -regarding ! and PIPESTATUS see above
 # -temporarily store output to be able to check for errors
@@ -29,12 +29,20 @@ fi
 # read getopt’s output this way to handle the quoting right:
 eval set -- "$PARSED"
 
-userName=-
+userName=- mainDrive="/dev/disk/by-label/nixos" bootDrive="/dev/disk/by-label/boot"
 # now enjoy the options in order and nicely split until we see --
 while true; do
     case "$1" in
         -u|--user-name)
             userName="$2"
+            shift 2
+            ;;
+        -b|--boot-partition)
+            bootDrive="$2"
+            shift 2
+            ;;
+        -n|--nixos-partition)
+            mainDrive="$2"
             shift 2
             ;;
         --)
@@ -48,10 +56,49 @@ while true; do
     esac
 done
 
+echo "Creating btrfs subvolumes..."
+
+mount -t btrfs $mainDrive /mnt
+
+# We first create the subvolumes outlined above:
+btrfs subvolume create /mnt/root
+btrfs subvolume create /mnt/home
+btrfs subvolume create /mnt/nix
+btrfs subvolume create /mnt/persist
+btrfs subvolume create /mnt/log
+
+# We then take an empty *readonly* snapshot of the root subvolume,
+# which we'll eventually rollback to on every boot.
+btrfs subvolume snapshot -r /mnt/root /mnt/root-blank
+
+umount /mnt
+
+echo "Mounting subvolumes..."
+
+mount -o subvol=root,compress=zstd,noatime $mainDrive /mnt
+
+mkdir /mnt/home
+mount -o subvol=home,compress=zstd,noatime $mainDrive /mnt/home
+
+mkdir /mnt/nix
+mount -o subvol=nix,compress=zstd,noatime $mainDrive /mnt/nix
+
+mkdir /mnt/persist
+mount -o subvol=persist,compress=zstd,noatime $mainDrive /mnt/persist
+
+mkdir -p /mnt/var/log
+mount -o subvol=log,compress=zstd,noatime $mainDrive /mnt/var/log
+
+echo "Mounting boot partition..."
+
+mkdir /mnt/boot
+mount $bootDrive /mnt/boot
+
 if [[ $userName != - ]]; then
+    echo "Setting username..."
     echo -e "{ lib, ... }:\nwith lib;\n{\n  userConfig.username = \"${userName}\";\n}" > ./modules/user-config/config.nix
 fi
 
-cp /etc/nixos/hardware-configuration.nix ./nixos/hardware-configuration.nix
+echo "Installing NixOS..."
 
-sudo nixos-rebuild switch --flake .#nixpad
+nixos-install --flake .\#nixpad

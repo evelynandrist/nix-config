@@ -158,7 +158,7 @@
         bluetooth = {
           format = "󰂯";
           format-disabled = "󰂲";
-          on-click = "hyprctl dispatch exec [floating] \\$bluetooth";
+          on-click = "hyprctl dispatch exec [floating] kitty 'sh -c \"$HOME/.config/color-sequences.sh & bluetuith\"'";
           on-click-right = "rfkill toggle bluetooth";
           tooltip-format = "{}";
         };

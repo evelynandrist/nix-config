@@ -128,6 +128,7 @@
     useOSProber = true;
   };
 
+  boot.supportedFilesystems = [ "btrfs" ];
 
   # Grub theme
   boot.loader.grub.theme = pkgs.stdenv.mkDerivation {
