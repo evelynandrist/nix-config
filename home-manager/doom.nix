@@ -6,6 +6,7 @@
     fd
     imagemagick
     zstd
+    nixfmt
     nodePackages.javascript-typescript-langserver
     sqlite
     editorconfig-core-c

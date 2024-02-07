@@ -89,5 +89,19 @@
   :config
   )
 
+(use-package! lsp-mode
+  :ensure t)
+
+(use-package! lsp-nix
+  :ensure lsp-mode
+  :after (lsp-mode)
+  :demand t
+  :custom
+  (lsp-nix-nil-formatter ["nixfmt"]))
+
+(use-package! nix-mode
+  :hook (nix-mode . lsp-deferred)
+  :ensure t)
+
 (set-frame-parameter nil 'alpha-background 90)
 (add-to-list 'default-frame-alist '(alpha-background . 90))
