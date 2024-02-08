@@ -1,4 +1,4 @@
-# ❄ ️My NixOS configuration
+# :snowflake: ️My NixOS configuration
 
 ![My setup](desktop.png)
 
@@ -7,12 +7,12 @@
 - Opt-in persistence through impermanence
 - Secrets using sops-nix
 - Global themes matching wallpapers with a fork of nix-colors
-- Hyprland & Dooom Emacs configuration
+- Hyprland & Doom Emacs configuration
 
 ## Installation
 
 > [!NOTE]
-> This is my personal config and as such is tailored exactly to my needs and hardware. You probably don't want to install my exact config. But if you did, you'd need to at least change the sops-nix configuration.
+> This is my personal config and as such is tailored exactly to my needs and hardware. You probably don't want to install my exact config. And if you do, you need to at least change the sops-nix configuration.
 
 Prerequisities:
 
@@ -21,7 +21,7 @@ Prerequisities:
 
 First, create the partitions you need using the tool of your choice, e.g. GParted.
 
-Then, format the boot and the nixos partitions with corresponding labels:
+Then, format the boot and nixos partitions with corresponding labels:
 
 ``` sh
 sudo mkfs.fat -F 32 -n boot /dev/<your boot partition>
