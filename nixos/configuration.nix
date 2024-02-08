@@ -38,6 +38,7 @@
     secrets = {
       "pcloud/access_token" = { };
       "pcloud/password" = { };
+      "user_password".neededForUsers = true;
     };
     templates = {
       "rclone.conf".content = ''
@@ -186,7 +187,8 @@
       # TODO: You can set an initial password for your user.
       # If you do, you can skip setting a root password by passing '--no-root-passwd' to nixos-install.
       # Be sure to change it (using passwd) after rebooting!
-      initialPassword = "changeme";
+      # initialPassword = "changeme";
+      hashedPasswordFile = config.sops.secrets."user_password".path;
       isNormalUser = true;
       shell = pkgs.zsh;
       openssh.authorizedKeys.keys = [
@@ -258,7 +260,20 @@
 
 
   # Enable the OpenSSH daemon.
-  services.openssh.enable = true;
+  services.openssh = {
+    enable = true;
+    hostKeys = [
+      {
+        path = "/persist/etc/ssh/ssh_host_ed25519_key";
+        type = "ed25519";
+      }
+      {
+        path = "/persist/etc/ssh/ssh_host_rsa_key";
+        type = "rsa";
+        bits = 4096;
+      }
+    ];
+  };
 
   # Open ports in the firewall.
   networking.firewall.allowedTCPPorts = [ 22 ];

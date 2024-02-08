@@ -96,9 +96,9 @@ mount $bootDrive /mnt/boot
 
 if [[ $userName != - ]]; then
     echo "Setting username..."
-    echo -e "{ lib, ... }:\nwith lib;\n{\n  userConfig.username = \"${userName}\";\n}" > ./modules/user-config/config.nix
+    echo -e "{ lib, ... }:\nwith lib;\n{\n  userConfig.username = \"${userName}\";\n}" | tee ./modules/user-config/config.nix
 fi
 
 echo "Installing NixOS..."
 
-nixos-install --no-root-passwd --flake .\#nixpad
+nixos-install --flake .\#nixpad
