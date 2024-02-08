@@ -98,7 +98,3 @@ if [[ $userName != - ]]; then
     echo "Setting username..."
     echo -e "{ lib, ... }:\nwith lib;\n{\n  userConfig.username = \"${userName}\";\n}" | tee ./modules/user-config/config.nix
 fi
-
-echo "Installing NixOS..."
-
-nixos-install --flake .\#nixpad
