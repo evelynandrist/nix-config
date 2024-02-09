@@ -19,6 +19,7 @@ in {
     inputs.nix-colors.homeManagerModules.default
 
     ../modules/user-config
+    ../modules/video-paper
 
     # You can also split up your configuration and import pieces of it here:
     # ./nvim.nix
@@ -33,9 +34,15 @@ in {
   ];
 
   #colorScheme = inputs.nix-colors.colorSchemes.catppuccin-mocha;
-  colorScheme = nix-colors-lib.colorSchemeFromPicture {
+  /*colorScheme = nix-colors-lib.colorSchemeFromPicture {
     path = ./Chill-Beach.jpg;
     variant = "dark";
+  };*/
+
+  moewalls = {
+    url = "https://moewalls.com/landscape/gate-torii-sunset-live-wallpaper/";
+    width = 1920;
+    height = 1200;
   };
 
   gtk = {

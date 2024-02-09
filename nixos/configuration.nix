@@ -112,6 +112,8 @@
     experimental-features = "nix-command flakes";
     # Deduplicate and optimize nix store
     auto-optimise-store = true;
+    # Needed for internet access in the video-paper module
+    sandbox = "relaxed";
   };
 
   # Automatic garbage collection
@@ -237,7 +239,7 @@
     enable = true;
     settings = {
       default_session = {
-        command = "${pkgs.greetd.tuigreet}/bin/tuigreet --user-menu --user-menu-min-uid 1000 --remember --remember-session --time --issue --asterisks";
+        command = "${pkgs.greetd.tuigreet}/bin/tuigreet --user-menu --user-menu-min-uid 1000 -c Hpyrland --time --issue --asterisks";
         user = "greeter";
       };
     };
