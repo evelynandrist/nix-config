@@ -53,7 +53,7 @@ in {
         variant = cfg.variant;
       };
       wayland.windowManager.hyprland.settings.exec = [
-        "pkill mpvpaper && mpvpaper -o 'loop' ${cfg.display} ${wallpaperFolder}/wallpaper.mp4"
+        "pkill mpvpaper; mpvpaper -o 'loop' ${cfg.display} ${wallpaperFolder}/wallpaper.mp4"
       ];
     };
 }
