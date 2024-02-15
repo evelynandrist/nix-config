@@ -40,7 +40,7 @@ in {
   };*/
 
   moewalls = {
-    url = "https://moewalls.com/landscape/gate-torii-sunset-live-wallpaper/";
+    url = "https://moewalls.com/landscape/forest-pond-rainy-day-live-wallpaper/";
     width = 1920;
     height = 1200;
   };
