@@ -2,6 +2,7 @@
   imports = [
     ./autoname-workspaces.nix
     ./wallpaper.nix
+    ./vimiv.nix
   ];
 
   xdg.mimeApps.enable = true;
@@ -15,7 +16,6 @@
     grimblast
     gtk3
     htop-vim
-    imv
     mpvpaper
     pcmanfm
     slurp

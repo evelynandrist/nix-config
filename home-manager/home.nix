@@ -40,7 +40,7 @@ in {
   };*/
 
   moewalls = {
-    url = "https://moewalls.com/landscape/forest-pond-rainy-day-live-wallpaper/";
+    url = "https://moewalls.com/lifestyle/japanese-traditional-house-flowers-live-wallpaper/";
     width = 1920;
     height = 1200;
   };
