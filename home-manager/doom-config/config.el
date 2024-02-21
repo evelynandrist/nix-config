@@ -105,3 +105,5 @@
 
 (set-frame-parameter nil 'alpha-background 90)
 (add-to-list 'default-frame-alist '(alpha-background . 90))
+
+(add-hook 'js2-mode-hook #'+javascript|add-node-modules-path)

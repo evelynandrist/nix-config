@@ -57,6 +57,8 @@ in {
   home.packages = with pkgs; [
     (pkgs.nerdfonts.override { fonts = [ "FiraCode" "FiraMono" "JetBrainsMono" ]; })
     nil
+    nodejs
+    jq
   ];
 
   nixpkgs = {
