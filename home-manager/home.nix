@@ -59,6 +59,7 @@ in {
     nil
     nodejs
     jq
+    unzip
   ];
 
   nixpkgs = {

@@ -51,3 +51,4 @@
 
 (package! catppuccin-theme)
 (package! yuck-mode)
+(package! lsp-tailwindcss :recipe (:host github :repo "merrickluo/lsp-tailwindcss"))
