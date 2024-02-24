@@ -173,6 +173,8 @@
         "$mod SHIFT, N, movetoworkspace, empty"
         "$mod, S, togglespecialworkspace, magic"
         "$mod SHIFT, S, movetoworkspace, special:magic"
+        "$mod, A, togglespecialworkspace, magic2"
+        "$mod SHIFT, A, movetoworkspace, special:magic2"
         "$mod, F, fullscreen, 1"
         "$mod SHIFT, F, fullscreen, 0"
         "$mod SHIFT, p, exec, cliphist list | wofi --show dmenu --normal-window --lines 14 | cliphist decode | wl-copy"
