@@ -18,6 +18,8 @@ in {
     # Or modules exported from other flakes (such as nix-colors):
     inputs.nix-colors.homeManagerModules.default
 
+    inputs.nixvim.homeManagerModules.nixvim
+
     ../modules/user-config
     ../modules/video-paper
 
@@ -31,6 +33,7 @@ in {
     ./firefox.nix
     ./doom.nix
     ./latex.nix
+    ./nixvim.nix
   ];
 
   #colorScheme = inputs.nix-colors.colorSchemes.catppuccin-mocha;
@@ -40,7 +43,7 @@ in {
   };*/
 
   moewalls = {
-    url = "https://moewalls.com/lifestyle/japanese-traditional-house-flowers-live-wallpaper/";
+    url = "https://moewalls.com/lifestyle/silhouette-lofi-girl-watching-the-sundown-with-cat-live-wallpaper/";
     width = 1920;
     height = 1200;
   };
@@ -60,6 +63,7 @@ in {
     nodejs
     jq
     unzip
+    xdg-utils
   ];
 
   nixpkgs = {

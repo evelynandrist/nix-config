@@ -32,8 +32,11 @@ DEFAULT="{icon}"
 [title_in_class."(?i)foot"]
 "emerge: (.+?/.+?)-.*" = "{match1}"
 
-[initial_title_in_class."kitty"]
-"zsh" = "Zsh"
+[title_in_class."kitty"]
+"nvim" = ""
+
+# [initial_title_in_class."kitty"]
+# "zsh" = "Zsh"
 
 [title_in_class."(brave-browser|firefox|chrom.*)"]
 "(?i)youtube" = ""

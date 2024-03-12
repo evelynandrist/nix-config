@@ -8,7 +8,7 @@
 - Secrets using sops-nix
 - Animated wallpapers that are automatically pulled from [moewalls.com](https://moewalls.com/) and cropped
 - Global themes matching wallpapers with a fork of nix-colors
-- Hyprland & Doom Emacs configuration
+- Hyprland & Neovim configuration
 
 ## Installation
 
