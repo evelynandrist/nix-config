@@ -277,6 +277,9 @@
     ];
   };
 
+  virtualisation.docker.enable = true;
+  virtualisation.docker.storageDriver = "btrfs";
+
   networking.firewall = {
     allowedTCPPorts = [ 22 ]; # ssh
     # wireguard trips rpfilter up
