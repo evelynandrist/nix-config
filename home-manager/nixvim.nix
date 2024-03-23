@@ -120,7 +120,7 @@
     extraConfigLua = ''
       require("headlines").setup {
 	markdown = {
-	  query = vim.treesitter.query.parse_query(
+	  query = vim.treesitter.query.parse(
 	    "markdown",
             [[
 	      (atx_heading [
@@ -162,7 +162,7 @@
 	  fat_headline_lower_string = "🬂",
 	},
 	rmd = {
-	  query = vim.treesitter.query.parse_query(
+	  query = vim.treesitter.query.parse(
             "markdown",
             [[
 	      (atx_heading [
@@ -205,7 +205,7 @@
 	  fat_headline_lower_string = "🬂",
 	},
 	norg = {
-	  query = vim.treesitter.query.parse_query(
+	  query = vim.treesitter.query.parse(
             "norg",
             [[
 	      [
@@ -254,7 +254,7 @@
 	  fat_headline_lower_string = "🬂",
 	},
 	org = {
-	  query = vim.treesitter.query.parse_query(
+	  query = vim.treesitter.query.parse(
 	    "org",
 	    [[
 	      (headline (stars) @headline)
