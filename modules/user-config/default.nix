@@ -1,6 +1,5 @@
 { lib, ... }:
 with lib; {
-  imports = [ ./config.nix ];
   options.userConfig = {
     username = mkOption {
       type = types.str;
@@ -8,4 +7,6 @@ with lib; {
       default = "nix";
     };
   };
+  
+  config.userConfig.username = import ./username.nix;
 }

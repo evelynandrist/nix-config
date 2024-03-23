@@ -96,5 +96,5 @@ mount $bootDrive /mnt/boot
 
 if [[ $userName != - ]]; then
     echo "Setting username..."
-    echo -e "{ lib, ... }:\nwith lib;\n{\n  userConfig.username = \"${userName}\";\n}" | tee ./modules/user-config/config.nix
+    echo -e "\"${userName}\"" | tee ./modules/user-config/username.nix
 fi
