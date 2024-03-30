@@ -24,9 +24,13 @@
   #   paths = [ "/home/${config.userConfig.username}/nixserver_backup" ];
   # };
 
-  boot.loader.grub = {
-    enable = true;
-    device = "/dev/vda";
+  boot.loader = {
+    grub = {
+      enable = true;
+      device = "nodev";
+      efiSupport = true;
+    };
+    efi.canTouchEfiVariables = true;
   };
 
   home-manager = {
