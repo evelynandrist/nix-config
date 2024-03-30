@@ -16,6 +16,7 @@
     ./nginx.nix
     ./searx.nix
     ./vaultwarden.nix
+    ./umami.nix
   ];
 
   # # backup can be triggered with sudo systemctl start restic-backups-pcloud.service
