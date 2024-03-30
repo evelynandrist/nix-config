@@ -34,15 +34,16 @@
   # Needed for internet access in the video-paper module
   nix.settings.sandbox = "relaxed";
 
-  # Automatic garbage collection
-  nix.gc = {
-    automatic = true;
-    dates = "weekly";
-    options = "--delete-older-than 30d";
-  };
-
   # Bootloader.
-  boot.loader.grub.useOSProber = true;
+  boot.loader = {
+    grub = {
+      enable = true;
+      device = "nodev";
+      efiSupport = true;
+      useOSProber = true;
+    };
+    efi.canTouchEfiVariables = true;
+  };
 
   # Grub theme
   boot.loader.grub.theme = pkgs.stdenv.mkDerivation {
@@ -130,6 +131,7 @@
   };
 
   networking.firewall = {
+    allowedTCPPorts = [ 22 ]; # ssh
     # wireguard trips rpfilter up
     checkReversePath = false;
    #  # if packets are still dropped, they will show up in dmesg

@@ -1,5 +1,6 @@
 { config, lib, pkgs, inputs, ... }: {
   home.packages = with pkgs; [
+    htop-vim
     zsh-powerlevel10k
   ];
   programs.zsh = {

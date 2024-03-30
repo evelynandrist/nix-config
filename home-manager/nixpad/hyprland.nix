@@ -14,7 +14,6 @@
     flashfocus
     grimblast
     gtk3
-    htop-vim
     mpvpaper
     pcmanfm
     slurp

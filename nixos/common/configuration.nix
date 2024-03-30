@@ -105,15 +105,6 @@
     options = "--delete-older-than 30d";
   };
 
-  # Bootloader.
-  boot.loader.grub = {
-    enable = true;
-    device = "nodev";
-    efiSupport = true;
-  };
-
-  boot.loader.efi.canTouchEfiVariables = true;
-
   boot.supportedFilesystems = [ "btrfs" ];
 
   boot.kernelPackages = pkgs.linuxKernel.packages.linux_zen; # use linux zen kernel
@@ -176,9 +167,6 @@
   # virtualisation.docker.enable = true;
   # virtualisation.docker.storageDriver = "btrfs";
 
-  networking.firewall = {
-    allowedTCPPorts = [ 22 ]; # ssh
-  };
   # networking.firewall.allowedUDPPorts = [ ... ];
   # Or disable the firewall altogether.
   # networking.firewall.enable = false;
