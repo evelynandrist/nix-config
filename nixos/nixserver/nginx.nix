@@ -37,6 +37,16 @@
 	  proxyPass = "http://127.0.0.1:8002";
 	};
       };
+      "analytics.qwt.ch" = {
+	locations."/" = {
+	  proxyPass = "http://127.0.0.1:8003";
+	};
+	extraConfig = ''
+	  ${allowCloudflareIPv4s}
+	  ${allowCloudflareIPv6s}
+	  deny all; # block all remaining ips
+	'';
+      };
     };
   };
 

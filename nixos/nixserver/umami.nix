@@ -1,34 +1,35 @@
-{ config, pkgs, ... }:
-{
-  sops.secrets = {
+{ config, lib, pkgs, ... }: {
+  config.sops.secrets = {
     "umami/app_secret" = { };
   };
 
-  sops.templates."umami.env" = {
+  config.sops.templates."umami.env" = {
     content = ''
-      DATABASE_URL=postgresql://umami:umami@127.0.0.1:5000/umami
+      DATABASE_URL=postgresql://umami:umami@[fe80::d898:baff:fe12:953e]:5000/umami
       DATABASE_TYPE=postgresql
       APP_SECRET=${config.sops.placeholder."umami/app_secret"}
       TRACKER_SCRIPT_NAME=donotpanic
     '';
+    owner = "nix";
   };
 
   config.virtualisation.oci-containers.containers.umami = {
     image = "ghcr.io/umami-software/umami:postgresql-latest";
     environmentFiles = [ config.sops.templates."umami.env".path ];
     ports = [ "127.0.0.1:8003:3000" ];
-    dependsOn = "umami-db";
+    dependsOn = [ "umami-db" ];
   };
   config.virtualisation.oci-containers.containers.umami-db = {
-    image = "postgres:15-alpine";
+    image = "docker.io/library/postgres:15-alpine";
     environment = {
       POSTGRES_DB = "umami";
       POSTGRES_USER = "umami";
       POSTGRES_PASSWORD = "umami";
     };
-    ports = [ "127.0.0.1:5000:5432" ];
+    hostname = "umami-db";
+    ports = [ "0.0.0.0:5000:5432" ];
     volumes = [
-      "/perist/data/umami:/var/lib/postgresql/data"
+      "/persist/data/umami:/var/lib/postgresql/data"
     ];
   };
 }
