@@ -6,30 +6,6 @@
 {
   imports = [ (modulesPath + "/installer/scan/not-detected.nix") ];
 
-  boot.initrd.availableKernelModules = [
-    "nvme"
-    "xhci_pci"
-    "thunderbolt"
-    "usb_storage"
-    "uas"
-    "sd_mod"
-    "sdhci_pci"
-  ];
-  boot.initrd.kernelModules = [ ];
-  boot.kernelModules = [ "kvm-amd" "amdgpu" ];
-  boot.extraModulePackages = [ ];
-
-  /* fileSystems."/" =
-       { device = "/dev/disk/by-label/nixos";
-         fsType = "ext4";
-       };
-
-     fileSystems."/boot" =
-       { device = "/dev/disk/by-label/boot";
-         fsType = "vfat";
-       };
-  */
-
   fileSystems."/" = {
     device = "/dev/disk/by-label/nixos";
     fsType = "btrfs";
@@ -76,8 +52,4 @@
   networking.useDHCP = lib.mkDefault true;
   # networking.interfaces.wlp4s0.useDHCP = lib.mkDefault true;
   # networking.interfaces.wwp103s0f4u3u3.useDHCP = lib.mkDefault true;
-
-  nixpkgs.hostPlatform = lib.mkDefault "x86_64-linux";
-  hardware.cpu.amd.updateMicrocode =
-    lib.mkDefault config.hardware.enableRedistributableFirmware;
 }

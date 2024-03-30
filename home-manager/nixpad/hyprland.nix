@@ -1,7 +1,6 @@
 { config, lib, pkgs, ... }: {
   imports = [
     ./autoname-workspaces.nix
-    ./wallpaper.nix
     ./vimiv.nix
   ];
 

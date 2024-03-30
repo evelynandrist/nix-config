@@ -24,8 +24,6 @@
 
     WaveFox = { url = "github:QNetITQ/WaveFox?dir=chrome"; flake = false; };
 
-    doom-emacs = { url = "github:hlissner/doom-emacs"; flake = false; };
-
     nixvim = {
         url = "github:nix-community/nixvim";
         # If using a stable channel you can use `url = "github:nix-community/nixvim/nixos-<version>"`
@@ -92,7 +90,7 @@
         specialArgs = {inherit inputs outputs;};
         modules = [
           # > Our main nixos configuration file <
-          ./nixos/configuration.nix
+          ./nixos/nixpad/configuration.nix
         ];
       };
     };

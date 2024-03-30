@@ -56,22 +56,6 @@
         "type": "github"
       }
     },
-    "doom-emacs": {
-      "flake": false,
-      "locked": {
-        "lastModified": 1710144108,
-        "narHash": "sha256-6YsviSMQ7zOvGBLJAl3mi0ekzVmaesL6OyRgJYiLeBk=",
-        "owner": "hlissner",
-        "repo": "doom-emacs",
-        "rev": "a0344ffc3ad7844075f6b0bc53c5130545d5a1d5",
-        "type": "github"
-      },
-      "original": {
-        "owner": "hlissner",
-        "repo": "doom-emacs",
-        "type": "github"
-      }
-    },
     "emacs-overlay": {
       "inputs": {
         "flake-utils": "flake-utils",
@@ -530,7 +514,6 @@
     "root": {
       "inputs": {
         "WaveFox": "WaveFox",
-        "doom-emacs": "doom-emacs",
         "emacs-overlay": "emacs-overlay",
         "fzf-tab": "fzf-tab",
         "home-manager": "home-manager",

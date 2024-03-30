@@ -7,63 +7,15 @@
   config,
   pkgs,
   ...
-}: let
-  nix-colors-lib = inputs.nix-colors.lib.contrib { inherit pkgs; };
-in {
+}: {
   # You can import other home-manager modules here
   imports = [
-    # If you want to use modules your own flake exports (from modules/home-manager):
-    # outputs.homeManagerModules.example
-
-    # Or modules exported from other flakes (such as nix-colors):
-    inputs.nix-colors.homeManagerModules.default
-
     inputs.nixvim.homeManagerModules.nixvim
 
-    ../modules/user-config
-    ../modules/video-paper
+    ../../modules/user-config
 
-    # You can also split up your configuration and import pieces of it here:
-    # ./nvim.nix
-    ./hyprland.nix
-    ./waybar.nix
-    ./kitty.nix
     ./zsh.nix
-    ./wofi.nix
-    ./firefox.nix
-    ./doom.nix
-    ./latex.nix
     ./nixvim.nix
-  ];
-
-  #colorScheme = inputs.nix-colors.colorSchemes.catppuccin-mocha;
-  /*colorScheme = nix-colors-lib.colorSchemeFromPicture {
-    path = ./Chill-Beach.jpg;
-    variant = "dark";
-  };*/
-
-  moewalls = {
-    url = "https://moewalls.com/lifestyle/silhouette-lofi-girl-watching-the-sundown-with-cat-live-wallpaper/";
-    width = 1920;
-    height = 1200;
-  };
-
-  gtk = {
-    enable = true;
-    theme = {
-      name = "${config.colorScheme.slug}";
-      package = nix-colors-lib.gtkThemeFromScheme { scheme = config.colorScheme; };
-    };
-  };
-
-  fonts.fontconfig.enable = true;
-  home.packages = with pkgs; [
-    (pkgs.nerdfonts.override { fonts = [ "FiraCode" "FiraMono" "JetBrainsMono" ]; })
-    nil
-    nodejs
-    jq
-    unzip
-    xdg-utils
   ];
 
   nixpkgs = {
@@ -98,16 +50,6 @@ in {
     username = "${config.userConfig.username}";
     homeDirectory = "/home/${config.userConfig.username}";
   };
-
-  home.pointerCursor = {
-    name = "Catppuccin-Mocha-Dark-Cursors";
-    package = pkgs.catppuccin-cursors.mochaDark;
-    size = 32;
-  };
-
-  # Add stuff for your user as you see fit:
-  # programs.neovim.enable = true;
-  # home.packages = with pkgs; [ steam ];
 
   # Enable home-manager and git
   programs.home-manager.enable = true;
