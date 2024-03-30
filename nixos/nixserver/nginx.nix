@@ -30,6 +30,18 @@
 	  deny all; # block all remaining ips
 	'';
       };
+      "vault.qwt.ch" = {
+	enableACME = true;
+	forceSSL = true;
+	locations."/" = {
+	  proxyPass = "http://127.0.0.1:8002";
+	};
+      };
     };
+  };
+
+  security.acme = {
+    acceptTerms = true;
+    defaults.email = "kevin1bam@web.de";
   };
 }

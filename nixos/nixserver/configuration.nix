@@ -13,8 +13,9 @@
 
     ./fakeroute.nix
     ./terraria.nix
-    ./searx.nix
     ./nginx.nix
+    ./searx.nix
+    ./vaultwarden.nix
   ];
 
   # # backup can be triggered with sudo systemctl start restic-backups-pcloud.service
