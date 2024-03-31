@@ -47,6 +47,13 @@
 	  deny all; # block all remaining ips
 	'';
       };
+      "books.qwt.ch" = {
+	enableACME = true;
+	forceSSL = true;
+	locations."/" = {
+	  proxyPass = "http://[::1]:8004";
+	};
+      };
     };
   };
 

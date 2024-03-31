@@ -5,7 +5,7 @@
 
   config.sops.templates."umami.env" = {
     content = ''
-      DATABASE_URL=postgresql://umami:umami@[fe80::d898:baff:fe12:953e]:5000/umami
+      DATABASE_URL=postgresql://umami:umami@10.88.0.1:5000/umami
       DATABASE_TYPE=postgresql
       APP_SECRET=${config.sops.placeholder."umami/app_secret"}
       TRACKER_SCRIPT_NAME=donotpanic
