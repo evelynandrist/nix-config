@@ -54,6 +54,16 @@
 	  proxyPass = "http://[::1]:8004";
 	};
       };
+      "asf.qwt.ch" = {
+	locations."/" = {
+	  proxyPass = "http://127.0.0.1:1242";
+	};
+	extraConfig = ''
+	  ${allowCloudflareIPv4s}
+	  ${allowCloudflareIPv6s}
+	  deny all; # block all remaining ips
+	'';
+      };
     };
   };
 

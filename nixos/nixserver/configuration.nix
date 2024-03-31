@@ -18,6 +18,7 @@
     ./vaultwarden.nix
     ./umami.nix
     ./calibre-web.nix
+    ./archisteamfarm.nix
   ];
 
   # # backup can be triggered with sudo systemctl start restic-backups-pcloud.service
