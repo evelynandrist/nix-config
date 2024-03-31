@@ -1,5 +1,5 @@
 { config, lib, pkgs, ... }: {
-  config.sops.secrets = {
+  sops.secrets = {
     "archisteamfarm/ipc_password" = {
       owner = "archisteamfarm";
       group = "archisteamfarm";

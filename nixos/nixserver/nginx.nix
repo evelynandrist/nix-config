@@ -64,6 +64,22 @@
 	  deny all; # block all remaining ips
 	'';
       };
+      "rr.qwt.ch" = {
+	root = ./rickroll;
+	extraConfig = ''
+	  ${allowCloudflareIPv4s}
+	  ${allowCloudflareIPv6s}
+	  deny all; # block all remaining ips
+	'';
+      };
+      "_" = {
+	globalRedirect = "rr.qwt.ch";
+	extraConfig = ''
+	  ${allowCloudflareIPv4s}
+	  ${allowCloudflareIPv6s}
+	  deny all; # block all remaining ips
+	'';
+      };
     };
   };
 
