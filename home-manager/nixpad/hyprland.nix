@@ -102,7 +102,11 @@
       misc = {
         force_default_wallpaper = 0; # Set to 0 to disable the anime mascot wallpapers
       };
-      windowrulev2 = "suppressevent maximize, class:.*"; # You'll probably like this.
+      windowrulev2 = [
+	"suppressevent maximize, class:.*" # You'll probably like this.
+	"float, title:^(Picture-in-Picture)$"
+	"pin, title:^(Picture-in-Picture)$"
+      ];
       decoration = {
         rounding = 10;
         blur = {
@@ -200,6 +204,10 @@
         ", XF86AudioLowerVolume, exec, wpctl set-volume -l 1.5 @DEFAULT_AUDIO_SINK@ 5%-"
         ", XF86MonBrightnessDown, exec, brightnessctl s 10%-"
         ", XF86MonBrightnessUp, exec, brightnessctl s +10%"
+      ];
+      bindm = [
+	"$mod, mouse:272, movewindow" # move window with mouse
+	"$mod SHIFT, mouse:272, resizewindow" # resize window with mouse
       ];
     };
     # This is order sensitive, so it has to come here.
