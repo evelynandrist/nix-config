@@ -4,7 +4,7 @@
   ];
   programs.nixvim = {
     enable = true;
-    options = {
+    opts = {
       number = true;
       relativenumber = true;
 
@@ -38,7 +38,7 @@
     '';
 
     plugins = {
-      comment-nvim.enable = true;
+      comment.enable = true;
       
       lualine.enable = true;
     
@@ -80,16 +80,16 @@
 
       nvim-colorizer.enable = true;
 
-      project-nvim.enable = true;
+      project-nvim = {
+	enable = true;
+	enableTelescope = true;
+      };
 
       quickmath.enable = true;
 
       rainbow-delimiters.enable = true;
 
-      telescope = {
-	enable = true;
-	extensions.project-nvim.enable = true;
-      };
+      telescope.enable = true;
 
       treesitter = {
 	enable = true;

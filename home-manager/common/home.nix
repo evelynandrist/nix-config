@@ -66,7 +66,7 @@
   programs.gpg.enable = true;
   services.gpg-agent = {
     enable = true;
-    pinentryFlavor = "tty";
+    pinentryPackage = pkgs.pinentry-tty;
   };
 
   # Nicely reload system units when changing configs
