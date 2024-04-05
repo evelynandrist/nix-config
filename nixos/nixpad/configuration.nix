@@ -12,6 +12,8 @@
     inputs.nixos-hardware.nixosModules.lenovo-thinkpad-z
 
     ./hardware-configuration.nix
+
+    ./kmonad.nix
   ];
 
   # backup can be triggered with sudo systemctl start restic-backups-pcloud.service

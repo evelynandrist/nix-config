@@ -118,6 +118,7 @@
 
     extraPlugins = [
       pkgs.vimPlugins."headlines-nvim"
+      pkgs.vimPlugins."kmonad-vim"
     ];
 
     extraConfigLua = ''

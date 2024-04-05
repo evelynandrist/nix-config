@@ -31,11 +31,6 @@
 
     nur.url = "github:nix-community/NUR";
 
-    emacs-overlay = {
-      url = "github:nix-community/emacs-overlay";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
-
     fzf-tab = {
       url = "github:Aloxaf/fzf-tab";
       flake = false;
@@ -44,6 +39,9 @@
     sops-nix.url = "github:Mic92/sops-nix";
 
     impermanence.url = "github:nix-community/impermanence";
+
+    kmonad.url = "github:kmonad/kmonad?dir=nix";
+    kmonad.inputs.nixpkgs.follows = "nixpkgs";
   };
 
   outputs = {
