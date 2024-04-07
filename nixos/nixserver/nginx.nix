@@ -35,7 +35,11 @@
 	forceSSL = true;
 	locations."/" = {
 	  proxyPass = "http://127.0.0.1:8002";
+	  recommendedProxySettings = true;
 	};
+	extraConfig = ''
+	  client_max_body_size 500M;
+	'';
       };
       "analytics.qwt.ch" = {
 	locations."/" = {
@@ -52,7 +56,11 @@
 	forceSSL = true;
 	locations."/" = {
 	  proxyPass = "http://[::1]:8004";
+	  recommendedProxySettings = true;
 	};
+	extraConfig = ''
+	  client_max_body_size 500M;
+	'';
       };
       "asf.qwt.ch" = {
 	locations."/" = {
