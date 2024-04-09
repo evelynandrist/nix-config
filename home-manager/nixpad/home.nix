@@ -27,7 +27,7 @@ in {
   ];
 
   moewalls = {
-    url = "https://moewalls.com/lifestyle/silhouette-lofi-girl-watching-the-sundown-with-cat-live-wallpaper/";
+    url = "https://moewalls.com/landscape/japanese-traditional-house-spring-season-live-wallpaper/";
     width = 1920;
     height = 1200;
   };
