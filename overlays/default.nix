@@ -15,8 +15,10 @@ in {
     # ...
     # });
     pcmanfm = prev.pcmanfm.override { withGtk3 = true; };
-    # add support for pangu markup to the hyprland/submaps module
-    waybar = addPatches prev.waybar [ ./waybar.patch ];
+    waybar = addPatches prev.waybar [
+      ./waybar_markup.patch # add support for pangu markup to the hyprland/submaps module
+      ./waybar_workspaces.patch # fix a bug in the hyprland/workspaces module
+    ];
     # change colorSchemeFromPicture backend from flavours to wpgtk
     # nix-colors = addPatches prev.nix-colors [ ./nix-colors-wpgtk.patch ];
     /*nix-colors = prev.nix-colors.overrideAttrs (old: {

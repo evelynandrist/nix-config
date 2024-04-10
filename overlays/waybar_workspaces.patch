@@ -1,0 +1,79 @@
+diff --git a/include/modules/hyprland/workspaces.hpp b/include/modules/hyprland/workspaces.hpp
+index 82872348..e6e05820 100644
+--- a/include/modules/hyprland/workspaces.hpp
++++ b/include/modules/hyprland/workspaces.hpp
+@@ -154,6 +154,9 @@ class Workspaces : public AModule, public EventHandler {
+   void onWorkspaceDestroyed(std::string const& payload);
+   void onWorkspaceCreated(std::string const& workspaceName,
+                           Json::Value const& clientsData = Json::Value::nullRef);
++  void onWorkspaceCreatedV2(std::string const& workspaceId,
++                            std::string const& workspaceName,
++                            Json::Value const& clientsData = Json::Value::nullRef);
+   void onWorkspaceMoved(std::string const& payload);
+   void onWorkspaceRenamed(std::string const& payload);
+ 
+diff --git a/src/modules/hyprland/workspaces.cpp b/src/modules/hyprland/workspaces.cpp
+index 5d7436e7..091b1f5d 100644
+--- a/src/modules/hyprland/workspaces.cpp
++++ b/src/modules/hyprland/workspaces.cpp
+@@ -156,7 +156,7 @@ void Workspaces::registerOrphanWindow(WindowCreationPayload create_window_payloa
+ auto Workspaces::registerIpc() -> void {
+   gIPC->registerForIPC("workspace", this);
+   gIPC->registerForIPC("activespecial", this);
+-  gIPC->registerForIPC("createworkspace", this);
++  gIPC->registerForIPC("createworkspacev2", this);
+   gIPC->registerForIPC("destroyworkspace", this);
+   gIPC->registerForIPC("focusedmon", this);
+   gIPC->registerForIPC("moveworkspace", this);
+@@ -314,8 +314,10 @@ void Workspaces::onEvent(const std::string &ev) {
+     onSpecialWorkspaceActivated(payload);
+   } else if (eventName == "destroyworkspace") {
+     onWorkspaceDestroyed(payload);
+-  } else if (eventName == "createworkspace") {
+-    onWorkspaceCreated(payload);
++  } else if (eventName == "createworkspacev2") {
++    std::string workspaceId(begin(payload), begin(payload) + payload.find_first_of(','));
++    std::string workspaceName = payload.substr(workspaceId.size() + 1);
++    onWorkspaceCreatedV2(workspaceId, workspaceName);
+   } else if (eventName == "focusedmon") {
+     onMonitorFocused(payload);
+   } else if (eventName == "moveworkspace" && !allOutputs()) {
+@@ -385,6 +387,38 @@ void Workspaces::onWorkspaceCreated(std::string const &workspaceName,
+   }
+ }
+ 
++void Workspaces::onWorkspaceCreatedV2(std::string const &workspaceId,
++                                      std::string const &workspaceName,
++                                      Json::Value const &clientsData) {
++  spdlog::debug("Workspace created: {}", workspaceId);
++  auto const workspacesJson = gIPC->getSocket1JsonReply("workspaces");
++
++  if (!isWorkspaceIgnored(workspaceName)) {
++    auto const workspaceRules = gIPC->getSocket1JsonReply("workspacerules");
++    for (Json::Value workspaceJson : workspacesJson) {
++      std::string id = workspaceJson["id"].asString();
++      if (id == workspaceId) {
++        if ((allOutputs() || m_bar.output->name == workspaceJson["monitor"].asString()) &&
++            (showSpecial() || !workspaceName.starts_with("special")) && !isDoubleSpecial(workspaceName)) {
++          for (Json::Value const &rule : workspaceRules) {
++            if (rule["workspaceString"].asString() == workspaceName) {
++              workspaceJson["persistent-rule"] = rule["persistent"].asBool();
++              break;
++            }
++          }
++
++          m_workspacesToCreate.emplace_back(workspaceJson, clientsData);
++          break;
++        }
++      } else {
++        extendOrphans(workspaceJson["id"].asInt(), clientsData);
++      }
++    }
++  } else {
++    spdlog::trace("Not creating workspace because it is ignored: {}", workspaceName);
++  }
++}
++
+ void Workspaces::onWorkspaceMoved(std::string const &payload) {
+   spdlog::debug("Workspace moved: {}", payload);
+   std::string workspaceName = payload.substr(0, payload.find(','));
