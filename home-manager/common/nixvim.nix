@@ -39,6 +39,8 @@
 
     plugins = {
       comment.enable = true;
+
+      copilot-vim.enable = true;
       
       lualine.enable = true;
     
