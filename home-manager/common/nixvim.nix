@@ -77,7 +77,7 @@
 
       nvim-autopairs = {
 	enable = true;
-	checkTs = true; # use TreeSitter
+	settings.check_ts = true; # use TreeSitter
       };
 
       nvim-colorizer.enable = true;

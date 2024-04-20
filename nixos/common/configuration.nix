@@ -120,6 +120,12 @@
     enableCompletion = false;
   };
 
+  # nix helper with beautiful colorful output
+  programs.nh = {
+    enable = true;
+    flake = "/home/${config.userConfig.username}/nix-config";
+  };
+
   users.users = {
     # Without this user nixos doesn't parse my actual user config correctly and deletes the user instead. This just started happening out of nowhere, and I don't know how to fix it without this workaround.
     nix = {
@@ -140,6 +146,7 @@
   environment.systemPackages = with pkgs; [
     man-pages
     neovim
+    nix-output-monitor # colorful output for nix commands
     wget
     git
     gh
