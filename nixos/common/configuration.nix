@@ -31,6 +31,9 @@
     ./impermanence.nix
   ];
 
+  # needed to be able to run dynamically compiled programs for linux
+  programs.nix-ld.enable = true;
+
   sops = {
     defaultSopsFile = ../../secrets/secrets.yaml;
     defaultSopsFormat = "yaml";

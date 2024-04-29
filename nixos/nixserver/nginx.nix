@@ -72,6 +72,27 @@
 	  deny all; # block all remaining ips
 	'';
       };
+ #      "chat.qwt.ch" = {
+	# locations."/" = {
+	#   proxyPass = "http://127.0.0.1:8005";
+	# };
+	# extraConfig = ''
+	#   ${allowCloudflareIPv4s}
+	#   ${allowCloudflareIPv6s}
+	#   deny all; # block all remaining ips
+	# '';
+ #      };
+ #      "post-email.qwt.ch" = {
+	# enableACME = true;
+	# forceSSL = true;
+	# locations."/" = {
+	#   proxyPass = "http://127.0.0.1:8006";
+	#   recommendedProxySettings = true;
+	# };
+ #      };
+      "mail.andrist.dev" = {
+	enableACME = true;
+      };
       "rr.qwt.ch" = {
 	root = ./rickroll;
 	extraConfig = ''
