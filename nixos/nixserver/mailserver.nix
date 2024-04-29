@@ -1,7 +1,7 @@
 { config, lib, pkgs, inputs, ... }: {
   imports = [ inputs.simple-nixos-mailserver.nixosModule ];
 
-  config.sops.secrets = {
+  sops.secrets = {
     "mailserver/logins/felix" = { };
   };
 
