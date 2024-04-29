@@ -1,6 +1,10 @@
 { config, lib, pkgs, inputs, ... }: {
   imports = [ inputs.simple-nixos-mailserver.nixosModule ];
 
+  config.sops.secrets = {
+    "mailserver/logins/felix" = { };
+  };
+
   mailserver = {
     enable = true;
     fqdn = "mail.andrist.dev";
@@ -11,7 +15,7 @@
 
     loginAccounts = {
       "felix@andrist.dev" = {
-	hashedPasswordFile = config.sops.secrets."user_password".path; # TODO: change file
+	hashedPasswordFile = config.sops.secrets."mailserver/logins/felix".path;
 	aliases = [ "postmaster@andrist.dev" ];
       };
     };
