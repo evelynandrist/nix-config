@@ -19,6 +19,9 @@ in {
       ./waybar_markup.patch # add support for pangu markup to the hyprland/submaps module
       ./waybar_workspaces.patch # fix a bug in the hyprland/workspaces module
     ];
+    qemu = addPatches prev.qemu [
+      ./qemu-8.2.0.patch # anti-detection qemu
+    ];
     # change colorSchemeFromPicture backend from flavours to wpgtk
     # nix-colors = addPatches prev.nix-colors [ ./nix-colors-wpgtk.patch ];
     /*nix-colors = prev.nix-colors.overrideAttrs (old: {

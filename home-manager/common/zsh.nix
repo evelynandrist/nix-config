@@ -278,6 +278,7 @@ alias ls='ls $LS_OPTIONS'
 export EDITOR="nvim"
 
 alias backup="sudo systemctl start restic-backups-pcloud.service"
+alias ns="nix-shell --run 'zsh; exit' -p"
 
 bindkey -v
     '';

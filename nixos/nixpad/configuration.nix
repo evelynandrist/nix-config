@@ -16,6 +16,32 @@
     ./kmonad.nix
   ];
 
+  virtualisation = {
+    libvirtd = {
+      enable = true;
+      qemu = {
+	package = pkgs.qemu;
+        runAsRoot = true;
+        swtpm.enable = true;
+	 ovmf = {
+          enable = true;
+        };
+      };
+    };
+  };
+
+  environment.persistence."/persist".directories = [
+    "/var/lib/libvirt"
+  ];
+
+  # low latency windows 10 vm display
+  environment.systemPackages = with pkgs; [
+    looking-glass-client
+  ];
+  systemd.tmpfiles.rules = [
+    "f /dev/shm/looking-glass 0660 ${config.userConfig.username} qemu-libvirtd -"
+  ];
+
   # backup can be triggered with sudo systemctl start restic-backups-pcloud.service
   services.restic.backups.pcloud = {
     repository = "rclone:pcloud:/nixpad-backups";
@@ -106,6 +132,10 @@
   # };
 
   # List services that you want to enable:
+
+  services.udev.packages = [ pkgs.yubikey-personalization ];
+
+  services.pcscd.enable = true; # support YubiKey smart card mode
 
   services.greetd = {
     enable = true;
