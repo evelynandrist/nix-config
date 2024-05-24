@@ -32,7 +32,7 @@ sudo mkfs.btrfs -L nixos /dev/<your nixos partition>
 Now you can clone the repo and cd into it:
 
 ``` sh
-git clone https://github.com/kev1nbam27/nix-config ~/nix-config && cd ~/nix-config
+git clone https://github.com/evelynandrist/nix-config ~/nix-config && cd ~/nix-config
 ```
 
 Then run the pre-install script to create and mount the btrfs subvolumes and choose your username:

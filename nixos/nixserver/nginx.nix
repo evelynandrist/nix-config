@@ -90,6 +90,16 @@
 	#   recommendedProxySettings = true;
 	# };
  #      };
+      "rc-email.qwt.ch" = {
+	locations."/" = {
+	  proxyPass = "http://127.0.0.1:8007";
+	};
+	extraConfig = ''
+	  ${allowCloudflareIPv4s}
+	  ${allowCloudflareIPv6s}
+	  deny all; # block all remaining ips
+	'';
+      };
       "mail.andrist.dev" = {
 	enableACME = true;
       };
@@ -114,6 +124,6 @@
 
   security.acme = {
     acceptTerms = true;
-    defaults.email = "kevin1bam@web.de";
+    defaults.email = "evelyn@andrist.dev";
   };
 }

@@ -2,7 +2,7 @@
   imports = [ inputs.simple-nixos-mailserver.nixosModule ];
 
   sops.secrets = {
-    "mailserver/logins/felix" = { };
+    "mailserver/logins/evelyn" = { };
   };
 
   mailserver = {
@@ -14,9 +14,9 @@
     certificateScheme = "acme";
 
     loginAccounts = {
-      "felix@andrist.dev" = {
-	hashedPasswordFile = config.sops.secrets."mailserver/logins/felix".path;
-	aliases = [ "postmaster@andrist.dev" ];
+      "evelyn@andrist.dev" = {
+	hashedPasswordFile = config.sops.secrets."mailserver/logins/evelyn".path;
+	aliases = [ "postmaster@andrist.dev" "felix@andrist.dev" ];
       };
     };
   };

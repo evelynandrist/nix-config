@@ -55,8 +55,8 @@
   programs.home-manager.enable = true;
   programs.git = {
     enable = true;
-    userEmail = "kevin1bam@web.de";
-    userName = "Kevin Bam";
+    userEmail = "evelyn@andrist.dev";
+    userName = "Evelyn Andrist";
     signing = {
       key = "5A71E723055533FE";
       signByDefault = true;
