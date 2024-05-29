@@ -323,13 +323,13 @@
       "locked": {
         "lastModified": 1709990093,
         "narHash": "sha256-H6bBeDZc48zphcYZGo4833qwn8Kz1pGsjzvCasxf6FE=",
-        "owner": "kev1nbam27",
+        "owner": "evelynandrist",
         "repo": "nix-colors",
         "rev": "7eff54c2f13988dc4d4d8ea69b7035ad708e7477",
         "type": "github"
       },
       "original": {
-        "owner": "kev1nbam27",
+        "owner": "evelynandrist",
         "repo": "nix-colors",
         "type": "github"
       }
