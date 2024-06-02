@@ -56,10 +56,12 @@
 
           bashls.enable = true;
 
-
           ccls.enable = true;
 
           dockerls.enable = true;
+
+	  golangci-lint-ls.enable = true;
+	  gopls.enable = true;
 
           jsonls.enable = true;
 
