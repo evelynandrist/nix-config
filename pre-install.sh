@@ -66,6 +66,7 @@ btrfs subvolume create /mnt/home
 btrfs subvolume create /mnt/nix
 btrfs subvolume create /mnt/persist
 btrfs subvolume create /mnt/log
+btrfs subvolume create /mnt/swap
 
 # We then take an empty *readonly* snapshot of the root subvolume,
 # which we'll eventually rollback to on every boot.
@@ -89,10 +90,17 @@ mount -o subvol=persist,compress=zstd,noatime $mainDrive /mnt/persist
 mkdir -p /mnt/var/log
 mount -o subvol=log,compress=zstd,noatime $mainDrive /mnt/var/log
 
+mkdir -p /mnt/swap
+mount -o subvol=swap,noatime $mainDrive /mnt/swap
+
 echo "Mounting boot partition..."
 
 mkdir /mnt/boot
 mount $bootDrive /mnt/boot
+
+echo "Creating swap file..."
+
+btrfs filesystem mkswapfile --size 16g --uuid clear /swap/swapfile
 
 if [[ $userName != - ]]; then
     echo "Setting username..."
