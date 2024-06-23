@@ -8,6 +8,8 @@
     # at the same time. Here's an working example:
     nixpkgs-master.url = "github:nixos/nixpkgs/master";
     # Also see the 'master-packages' overlay at 'overlays/default.nix'.
+    # qemu antidetection patch only works for 8.2.X, which is included here
+    nixpkgs-24-05.url = "github:nixos/nixpkgs/nixos-24.05";
 
     # Home manager
     home-manager.url = "github:nix-community/home-manager";
