@@ -62,16 +62,16 @@
 	  client_max_body_size 500M;
 	'';
       };
-      "asf.qwt.ch" = {
-	locations."/" = {
-	  proxyPass = "http://127.0.0.1:1242";
-	};
-	extraConfig = ''
-	  ${allowCloudflareIPv4s}
-	  ${allowCloudflareIPv6s}
-	  deny all; # block all remaining ips
-	'';
-      };
+ #      "asf.qwt.ch" = {
+	# locations."/" = {
+	#   proxyPass = "http://127.0.0.1:1242";
+	# };
+	# extraConfig = ''
+	#   ${allowCloudflareIPv4s}
+	#   ${allowCloudflareIPv6s}
+	#   deny all; # block all remaining ips
+	# '';
+ #      };
  #      "chat.qwt.ch" = {
 	# locations."/" = {
 	#   proxyPass = "http://127.0.0.1:8005";

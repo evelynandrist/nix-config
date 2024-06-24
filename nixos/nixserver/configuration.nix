@@ -18,7 +18,7 @@
     ./vaultwarden.nix
     ./umami.nix
     ./calibre-web.nix
-    ./archisteamfarm.nix
+    # ./archisteamfarm.nix
     ./mailserver.nix
   ];
 
