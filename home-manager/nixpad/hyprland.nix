@@ -32,7 +32,7 @@
     XDG_SESSION_TYPE = "wayland";
     XDG_CURRENT_DESKTOP = "Hyprland";
     XDG_SESSION_DESKTOP = "Hyprland";
-    XCURSOR_SIZE = 32;
+    XCURSOR_SIZE = 128;
   };
 
   xdg.portal = {
@@ -56,7 +56,7 @@
     settings = {
       monitor = ",highres,auto,2";
       env = [
-        "XCURSOR_SIZE,32"
+        "XCURSOR_SIZE,128"
         "GDK_SCALE,2"
       ];
       xwayland = {

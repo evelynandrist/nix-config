@@ -1,5 +1,5 @@
 # This file defines overlays
-{inputs, ...}: let
+{inputs, nixpkgs, ...}: let
   addPatches = pkg: patches: pkg.overrideAttrs (oldAttrs: {
     patches = (oldAttrs.patches or [ ]) ++ patches;
   });
@@ -22,6 +22,33 @@ in {
     inputs.nix-pkgs-24-05.qemu = addPatches prev.qemu [
       ./qemu-8.2.0.patch # anti-detection qemu
     ];
+    vimPlugins = prev.vimPlugins.extend (final': prev': {
+      himalaya-vim = prev.vimPlugins.himalaya-vim.overrideAttrs {
+      src = prev.fetchgit {
+	url = "https://git.sr.ht/~soywod/himalaya-vim";
+	rev = "cea041c927a04a841aea53abcedd4a0d153d4ca8";
+	sha256 = "0yrilhvqklfbfknkdskywf95mfhbr9rfjs2gmppnzgfs7fg6jn63";
+      };
+      };
+    });
+
+ #    himalaya = prev.himalaya.overrideAttrs (old: rec {
+ #      name = "himalaya-${version}";
+ #      version = "1.0.0-beta.3";
+	#
+ #      src = prev.fetchFromGitHub {
+	# owner = "soywod";
+	# repo = "himalaya";
+	# rev = "v1.0.0-beta.3";
+	# hash = "sha256-B7eswDq4tKyg881i3pLd6h+HsObK0c2dQnYuvPAGJHk=";
+ #      };
+	#
+ #      cargoDeps = old.cargoDeps.overrideAttrs (nixpkgs.lib.const {
+	# name = "${name}-vendor.tar.gz";
+	# inherit src;
+	# outputHash = "sha256-jOzuCXsrtXp8dmJTBqrEq4nog6smEPbdsFAy+ruPtY8=";
+ #      });
+ #    });
     # change colorSchemeFromPicture backend from flavours to wpgtk
     # nix-colors = addPatches prev.nix-colors [ ./nix-colors-wpgtk.patch ];
     /*nix-colors = prev.nix-colors.overrideAttrs (old: {

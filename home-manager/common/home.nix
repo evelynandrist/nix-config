@@ -16,6 +16,7 @@
 
     ./zsh.nix
     ./nixvim.nix
+    ./email.nix
   ];
 
   nixpkgs = {

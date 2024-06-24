@@ -41,6 +41,9 @@
       "pcloud/access_token" = { };
       "pcloud/password" = { };
       "user_password".neededForUsers = true;
+      "email/logins/evelyn" = {
+	owner = config.userConfig.username;
+      };
     };
     templates = {
       "rclone.conf".content = ''
