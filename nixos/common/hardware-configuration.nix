@@ -43,6 +43,13 @@
     fsType = "vfat";
   };
 
+  fileSystems."/swap" = {
+    device = "/dev/disk/by-label/nixos";
+    fsType = "btrfs";
+    neededForBoot = true;
+    options = [ "subvol=swap" "noatime" ];
+  };
+
   swapDevices = [ {
     device = "/swap/swapfile";
   } ];
