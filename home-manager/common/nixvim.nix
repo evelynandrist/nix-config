@@ -35,6 +35,13 @@
       set undofile
       set undodir=~/.vim/.undoFiles
       set viminfo='100,f1 "save the marks and jumps after close
+
+      syntax on
+      filetype plugin on
+      set hidden
+
+      let g:himalaya_folder_picker = 'telescope'
+      let g:himalaya_folder_picker_telescope_preview = 1
     '';
 
     plugins = {
@@ -123,6 +130,7 @@
     extraPlugins = [
       pkgs.vimPlugins."headlines-nvim"
       pkgs.vimPlugins."kmonad-vim"
+      pkgs.vimPlugins."himalaya-vim"
     ];
 
     extraConfigLua = ''
