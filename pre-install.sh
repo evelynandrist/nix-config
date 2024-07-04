@@ -13,8 +13,8 @@ if [[ ${PIPESTATUS[0]} -ne 4 ]]; then
     exit 1
 fi
 
-LONGOPTS=user-name:,boot-partition:,nixos-partition:
-OPTIONS=u:b:n:
+LONGOPTS=boot-partition:,nixos-partition:
+OPTIONS=b:n:
 
 # -regarding ! and PIPESTATUS see above
 # -temporarily store output to be able to check for errors
@@ -29,14 +29,10 @@ fi
 # read getopt’s output this way to handle the quoting right:
 eval set -- "$PARSED"
 
-userName=- mainDrive="/dev/disk/by-label/nixos" bootDrive="/dev/disk/by-label/boot"
+mainDrive="/dev/disk/by-label/nixos" bootDrive="/dev/disk/by-label/boot"
 # now enjoy the options in order and nicely split until we see --
 while true; do
     case "$1" in
-        -u|--user-name)
-            userName="$2"
-            shift 2
-            ;;
         -b|--boot-partition)
             bootDrive="$2"
             shift 2
@@ -101,8 +97,3 @@ mount $bootDrive /mnt/boot
 echo "Creating swap file..."
 
 btrfs filesystem mkswapfile --size 16g --uuid clear /swap/swapfile
-
-if [[ $userName != - ]]; then
-    echo "Setting username..."
-    echo -e "\"${userName}\"" | tee ./modules/user-config/username.nix
-fi

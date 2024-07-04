@@ -24,6 +24,8 @@ in {
     ./wofi.nix
     ./firefox.nix
     ./latex.nix
+
+    ../../nixos/nixpad/userconfig.nix
   ];
 
   moewalls = {

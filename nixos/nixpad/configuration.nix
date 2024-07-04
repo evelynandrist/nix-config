@@ -14,6 +14,8 @@
     ./hardware-configuration.nix
 
     ./kmonad.nix
+
+    ./userconfig.nix
   ];
 
   virtualisation = {

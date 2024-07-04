@@ -7,6 +7,4 @@ with lib; {
       default = "nix";
     };
   };
-  
-  config.userConfig.username = import ./username.nix;
 }

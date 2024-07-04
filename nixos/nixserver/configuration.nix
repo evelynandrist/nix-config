@@ -18,10 +18,12 @@
     ./vaultwarden.nix
     ./umami.nix
     ./calibre-web.nix
-    ./archisteamfarm.nix
+    # ./archisteamfarm.nix
     ./mailserver.nix
-  ];
 
+    ./userconfig.nix
+  ];
+  
   # # backup can be triggered with sudo systemctl start restic-backups-pcloud.service
   # services.restic.backups.pcloud = {
   #   repository = "rclone:pcloud:/nixpad-backups";

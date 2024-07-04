@@ -12,8 +12,6 @@
   imports = [
     inputs.nixvim.homeManagerModules.nixvim
 
-    ../../modules/user-config
-
     ./zsh.nix
     ./nixvim.nix
   ];

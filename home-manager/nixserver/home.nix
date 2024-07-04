@@ -10,5 +10,6 @@
 }: {
   imports = [
     ../common/home.nix
+    ../../nixos/nixserver/userconfig.nix
   ];
 }

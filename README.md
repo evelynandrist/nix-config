@@ -35,10 +35,10 @@ Now you can clone the repo and cd into it:
 git clone https://github.com/evelynandrist/nix-config ~/nix-config && cd ~/nix-config
 ```
 
-Then run the pre-install script to create and mount the btrfs subvolumes and choose your username:
+Then run the pre-install script to create and mount the btrfs subvolumes:
 
 ``` sh
-sudo ./pre-install.sh --user-name <your username>
+sudo ./pre-install.sh
 ```
 
 Now you need to configure sops-nix, mount the persist subvolume and copy your ssh keys to persist/etc/ssh/.
