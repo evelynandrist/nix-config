@@ -94,7 +94,7 @@
         preserve_split = "yes"; # you probably want this
       };
       master = {
-        new_is_master = true;
+        new_status = "master";
       };
       gestures = {
         workspace_swipe = "off";
