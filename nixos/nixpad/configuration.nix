@@ -32,6 +32,13 @@
     };
   };
 
+  # for osx-kvm
+  boot.extraModprobeConfig = ''
+    options kvm_intel nested=1
+    options kvm_intel emulate_invalid_guest_state=0
+    options kvm ignore_msrs=1
+  '';
+
   environment.persistence."/persist".directories = [
     "/var/lib/libvirt"
   ];
@@ -110,7 +117,7 @@
 
   programs.dconf.enable = true; # required for gtk
 
-  users.users.${config.userConfig.username}.extraGroups = [ "networkmanager" "video" "network" "rfkill" "power" "lp" "wheel" ];
+  users.users.${config.userConfig.username}.extraGroups = [ "networkmanager" "video" "network" "rfkill" "power" "lp" "wheel" "libvirtd" ];
 
   hardware.opengl = {
     enable = true;
@@ -161,6 +168,31 @@
       START_CHARGE_THRESH_BAT0 = 70; # 70 and bellow it starts to charge
       STOP_CHARGE_THRESH_BAT0 = 80; # 80 and above it stops charging
     };
+  };
+
+  services.thinkfan = {
+    enable = true;
+    sensors = [
+      {
+	type = "hwmon";
+	query = "/sys/class/hwmon";
+	name = "thinkpad";
+	indices = [ 1 2 ];
+	correction = [ 0 5 ];
+      }
+    ];
+    fans = [
+      {
+	type = "tpacpi";
+	query = "/proc/acpi/ibm/fan";
+      }
+    ];
+    levels = [
+      [ 0 0 50 ]
+      [ "level auto" 45 75 ]
+      [ 200 70 85 ]
+      [ "level disengaged" 80 255 ]
+    ];
   };
 
   networking.firewall = {
