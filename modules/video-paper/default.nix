@@ -25,7 +25,7 @@ in {
     display = mkOption {
       type = types.str;
       description = "Output display for mpvpaper.";
-      default = "eDP-1";
+      default = "'*'";
     };
     ffmpegThreads = mkOption {
       type = types.int;
@@ -53,7 +53,7 @@ in {
         variant = cfg.variant;
       };
       wayland.windowManager.hyprland.settings.exec = [
-        "pkill mpvpaper; mpvpaper -o 'loop' ${cfg.display} ${wallpaperFolder}/wallpaper.mp4"
+        "pkill mpvpaper; mpvpaper -o 'loop panscan=1.0' ${cfg.display} ${wallpaperFolder}/wallpaper.mp4"
       ];
     };
 }

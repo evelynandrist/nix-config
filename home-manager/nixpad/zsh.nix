@@ -1,4 +1,8 @@
 { config, lib, pkgs, inputs, ... }: {
+  home.packages = with pkgs; [
+    terminal-magic
+  ];
+
   home.file."color-sequences.sh" = {
     target = ".config/color-sequences.sh";
     executable = true;
@@ -64,4 +68,9 @@ printf "\033]257;#${c0}\033\\"
 printf "\033]708;#${c0}\033\\"
     '';
   };
+
+  programs.zsh.initExtra = ''
+# needed for UbiqueInnovation terminal-magic-cli
+source ~/.terminal-magic/env
+  '';
 }

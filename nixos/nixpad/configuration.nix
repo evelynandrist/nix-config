@@ -30,6 +30,8 @@
         };
       };
     };
+    docker.enable = true;
+    docker.storageDriver = "btrfs";
   };
 
   # for osx-kvm
@@ -117,7 +119,7 @@
 
   programs.dconf.enable = true; # required for gtk
 
-  users.users.${config.userConfig.username}.extraGroups = [ "networkmanager" "video" "network" "rfkill" "power" "lp" "wheel" "libvirtd" ];
+  users.users.${config.userConfig.username}.extraGroups = [ "networkmanager" "video" "network" "rfkill" "power" "lp" "wheel" "libvirtd" "docker" ];
 
   hardware.opengl = {
     enable = true;
