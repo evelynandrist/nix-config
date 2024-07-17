@@ -22,6 +22,28 @@
         action = "<cmd>Telescope find_files<CR>";
         key = "<leader>ff";
       }
+      {
+	action = "<cmd>Telescope buffers<CR>";
+	key = "<leader>fb";
+      }
+      {
+	action = "<cmd>Telescope help_tags<CR>";
+	key = "<leader>fh";
+      }
+      {
+	action = ":if &modifiable && !&readonly && &modified <CR> :write<CR> :endif<CR>:bnext<CR>";
+	key = "<tab>";
+	options = {
+	  silent = true;
+	};
+      }
+      {
+	action = ":if &modifiable && !&readonly && &modified <CR> :write<CR> :endif<CR>:bprevious<CR>";
+	key = "<s-tab>";
+	options = {
+	  silent = true;
+	};
+      }
     ];
 
     colorschemes.catppuccin = {
@@ -45,11 +67,15 @@
     '';
 
     plugins = {
+      bufferline.enable = true;
+
       comment.enable = true;
 
       copilot-vim.enable = true;
       
       lualine.enable = true;
+
+      neo-tree.enable = true;
     
       lsp = {
         enable = true;
@@ -69,6 +95,8 @@
 
 	  golangci-lint-ls.enable = true;
 	  gopls.enable = true;
+
+	  java-language-server.enable = true;
 
           jsonls.enable = true;
 

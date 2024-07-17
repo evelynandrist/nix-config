@@ -62,6 +62,11 @@
     };
   };
 
+  programs.gh = {
+    enable = true;
+    extensions = [ pkgs.gh-copilot ];
+  };
+
   programs.gpg.enable = true;
   services.gpg-agent = {
     enable = true;

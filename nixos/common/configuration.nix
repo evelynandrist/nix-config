@@ -154,7 +154,6 @@
     nix-output-monitor # colorful output for nix commands
     wget
     git
-    gh
   ];
 
   environment.pathsToLink = [ "/share/zsh" ]; # required for system packages autocomplete
