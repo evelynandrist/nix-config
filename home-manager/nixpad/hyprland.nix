@@ -1,7 +1,8 @@
 { config, lib, pkgs, ... }: {
   imports = [
     ./autoname-workspaces.nix
-    ./vimiv.nix
+    # currently broken https://github.com/NixOS/nixpkgs/issues/326048
+    # ./vimiv.nix
   ];
 
   xdg.mimeApps.enable = true;
