@@ -34,6 +34,9 @@
     docker.storageDriver = "btrfs";
   };
 
+  # needed for hyprlock
+  security.pam.services.hyprlock = { };
+
   # for osx-kvm
   boot.extraModprobeConfig = ''
     options kvm_intel nested=1
@@ -160,9 +163,11 @@
     enable = true;
     settings = {
       CPU_SCALING_GOVERNOR_ON_AC = "performance";
-      CPU_SCALING_GOVERNOR_ON_BAT = "powersave";
+      # CPU_SCALING_GOVERNOR_ON_BAT = "powersave";
+      CPU_SCALING_GOVERNOR_ON_BAT = "performance";
 
-      CPU_ENERGY_PERF_POLICY_ON_BAT = "power";
+      # CPU_ENERGY_PERF_POLICY_ON_BAT = "power";
+      CPU_ENERGY_PERF_POLICY_ON_BAT = "performance";
       CPU_ENERGY_PERF_POLICY_ON_AC = "performance";
 
       #Optional helps save long term battery health

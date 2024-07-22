@@ -18,13 +18,152 @@
     mpvpaper
     pcmanfm
     slurp
-    swaylock-effects
     wdisplays
     wl-clipboard
     wlsunset
     wofi
     wpgtk
   ];
+
+  programs.hyprlock = {
+    enable = true;
+    settings = {
+      general = {
+	disable_loading_bar = true;
+	hide_cursor = true;
+	no_fade_in = false;
+	no_fade_out = false;
+      };
+
+      background = [
+	{
+	  path = "screenshot";
+	  blur_passes = 3;
+	  blur_size = 8;
+	}
+      ];
+
+      input-field = [
+      {
+	monitor = "";
+	size = "200, 50";
+	bothlock_color = -1;
+	capslock_color = -1;
+	check_color = "rgb(204, 136, 34)";
+	dots_center = true;
+	dots_rounding = -1;
+	dots_size = 0.330000;
+	dots_spacing = 0.150000;
+	fade_on_empty = false;
+	fade_timeout = 2000;
+	fail_color = "rgb(204, 34, 34)";
+	fail_text = "<i>$FAIL</i>";
+	fail_transition = 300;
+	font_color = "rgb(202, 211, 245)";
+	halign = "center";
+	hide_input = false;
+	inner_color = "rgb(91, 96, 120)";
+	invert_numlock = false;
+	numlock_color = -1;
+	outer_color = "rgb(24, 25, 38)";
+	outline_thickness = 5;
+	placeholder_text = "<span foreground=\"##cad3f5\">Password...</span>";
+	position = "0, -80";
+	rounding = -1;
+	swap_font_color = false;
+	valign = "center";
+      }
+      ];
+
+      label = [
+      {
+	monitor = "";
+	color = "rgb(202, 211, 245)";
+	font_family = "JetBrainsMono Nerd Font";
+	font_size = 100;
+	halign = "center";
+	position = "0, 330";
+	text = "<span font_weight=\"ultrabold\">$TIME</span>";
+	valign = "center";
+      }
+      {
+	monitor = "";
+	color = "rgb(202, 211, 245)";
+	font_family = "JetBrainsMono Nerd Font";
+	font_size = 50;
+	halign = "center";
+	position = "15, -350";
+	text = "<span font_weight=\"ultrabold\">󰌾 </span>";
+	valign = "center";
+
+      }
+      {
+	monitor = "";
+	color = "rgb(202, 211, 245)";
+	font_family = "JetBrainsMono Nerd Font";
+	font_size = "25";
+	halign = "center";
+	position = "0, 45";
+	text = "<span font_weight=\"semibold\">Hi there, $USER!</span>";
+	valign = "center";
+
+      }
+      {
+	monitor = "";
+	color = "rgb(202, 211, 245)";
+	font_family = "JetBrainsMono Nerd Font";
+	font_size = 25;
+	halign = "center";
+	position = "0, -430";
+	text = "<span font_weight=\"bold\">Locked</span>";
+	valign = "center";
+      }
+      {
+	monitor = "";
+	color = "rgb(202, 211, 245)";
+	font_family = "JetBrainsMono Nerd Font";
+	font_size = 30;
+	halign = "center";
+	position = "0, 210";
+	text = "cmd[update:120000] echo \"<span font_weight='bold'>$(date +'%a %d %B')</span>\"";
+	valign = "center";
+      }
+      {
+	monitor = "";
+	color = "rgb(202, 211, 245)";
+	font_family = "JetBrainsMono Nerd Font";
+	font_size = 25;
+	halign = "right";
+	position = "5, 8";
+	text = "<span font_weight=\"ultrabold\"> </span>";
+	valign = "bottom";
+      }
+      ];
+    };
+  };
+
+  services.hypridle = {
+    enable = true;
+    settings = {
+      general = {
+	after_sleep_cmd = "hyprctl dispatch dpms on";
+	ignore_dbus_inhibit = false;
+	lock_cmd = "hyprlock";
+      };
+
+      listener = [
+      { # lock after 15 minutes
+	timeout = 900;
+	on-timeout = "hyprlock";
+      }
+      {
+	timeout = 1200; # turn off screen after 20 minutes
+	on-timeout = "hyprctl dispatch dpms off";
+	on-resume = "hyprctl dispatch dpms on";
+      }
+      ];
+    };
+  };
 
   home.sessionVariables = {
     MOZ_ENABLE_WAYLAND = 1;
@@ -233,7 +372,7 @@
       submap=reset
       $submap_shutdown = <span foreground='##${color10}'></span>  <span foreground='##${color5}'>  <span foreground='##${color10}'>(<b>h</b>)</span>hibernate   <span foreground='##${color10}'>(<b>l</b>)</span>lock   <span foreground='##${color10}'>(<b>e</b>)</span>logout   <span foreground='##${color10}'>(<b>r</b>)</span>reboot   <span foreground='##${color10}'>(<b>u</b>)</span>suspend   <span foreground='##${color10}'>(<b>s</b>)</span>shutdown   </span>
       $purge_cliphist = rm -f $HOME/.cache/cliphist/db
-      $locking = swaylock --daemonize --color \"##${color1}\" --inside-color \"##${color1}\" --inside-clear-color \"##${color6}\" --ring-color \"##${color2}\" --ring-clear-color \"##${color11}\" --ring-ver-color \"##${color13}\" --show-failed-attempts --fade-in 0.2 --grace 2 --effect-vignette 0.5:0.5 --effect-blur 7x5 --ignore-empty-password --screenshots --clock
+      $locking = hyprlock
       bind=$mod SHIFT,e,submap,$submap_shutdown
       submap=$submap_shutdown
       bind=,l,exec,$reset_submap && $locking # lock
