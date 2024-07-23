@@ -57,7 +57,7 @@
     userEmail = "evelyn@andrist.dev";
     userName = "Evelyn Andrist";
     signing = {
-      key = "5A71E723055533FE";
+      key = "E264A88262066B52";
       signByDefault = true;
     };
   };
