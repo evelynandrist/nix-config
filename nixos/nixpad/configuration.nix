@@ -37,6 +37,12 @@
   # needed for hyprlock
   security.pam.services.hyprlock = { };
 
+  security.pam.yubico = {
+    enable = true;
+    mode = "challenge-response";
+    id = "26701425";
+  };
+
   # for osx-kvm
   boot.extraModprobeConfig = ''
     options kvm_intel nested=1
