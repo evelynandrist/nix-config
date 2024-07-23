@@ -5,10 +5,6 @@
     address = "evelyn@andrist.dev";
     himalaya = {
       enable = true;
- #      settings = {
-	# default = true;
-	# email = "test";
- #      };
     };
     imap = {
       host = "mail.andrist.dev";
@@ -22,5 +18,9 @@
     primary = true;
     realName = "Evelyn Andrist";
     userName = "evelyn@andrist.dev";
+    gpg = {
+      key = "0xE264A88262066B52";
+      signByDefault = true;
+    };
   };
 }

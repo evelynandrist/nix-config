@@ -149,6 +149,7 @@
   # List packages installed in system profile. To search, run:
   # $ nix search wget
   environment.systemPackages = with pkgs; [
+    file
     man-pages
     neovim
     nix-output-monitor # colorful output for nix commands

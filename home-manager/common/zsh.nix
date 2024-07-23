@@ -280,6 +280,41 @@ export EDITOR="nvim"
 alias backup="sudo systemctl start restic-backups-pcloud.service"
 alias ns="nix-shell --run 'zsh; exit' -p"
 
+export KEYID=0xE264A88262066B52
+
+secret () {
+  output="''${1}".$(date +%s).asc
+  gpg --encrypt --armor --output ''${output} \
+    -r $KEYID "''${1}" && echo "''${1} -> ''${output}"
+}
+
+secretb () {
+  output="''${1}".$(date +%s).gpg
+  gpg --encrypt --output ''${output} \
+    -r $KEYID "''${1}" && echo "''${1} -> ''${output}"
+}
+
+reveal () {
+  output=$(echo "''${1}" | rev | cut -c16- | rev)
+  gpg --decrypt --output ''${output} "''${1}" && \
+    echo "''${1} -> ''${output}"
+}
+
+sign () {
+  case $(file -b --mime-type - < "''${1}") in
+    (text/*)
+      gpg --clearsign -u $KEYID --output - "''${1}"
+      ;;
+    (*)
+      gpg --detach-sign -u $KEYID "''${1}"
+      echo "''${1} -> ''${1}.sig"
+  esac
+}
+
+verify () {
+  gpg --verify "''${*}" 2>&1 | sed 's/Good/\x1b[38;5;46mGood\x1b[33;0m/' | sed 's/BAD/\x1b[38;5;196mBAD\x1b[33;0m/' 1>&2
+}
+
 bindkey -v
     '';
   };
