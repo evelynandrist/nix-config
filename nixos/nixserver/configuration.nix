@@ -33,6 +33,12 @@
   #   paths = [ "/home/${config.userConfig.username}/nixserver_backup" ];
   # };
 
+
+  openssh.authorizedKeys.keys = [
+    "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIJXIHguo2D+mPHhGFrQKJRZFsDdAN0ETCCfTWpJYUKgi" # ssh key
+    "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIPU9h8nXlYgAmdVbRr3uzuEipNtJDbPGcbbuNr3YRaxJ" # gpg key
+  ];
+
   boot.loader = {
     grub = {
       enable = true;

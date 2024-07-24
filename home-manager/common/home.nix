@@ -70,6 +70,10 @@
   programs.gpg.enable = true;
   services.gpg-agent = {
     enable = true;
+    enableSshSupport = true;
+    sshKeys = [
+      "6CEBAD8E8B33D245E1E25D05468D0A92F6A02E3B"
+    ];
     pinentryPackage = pkgs.pinentry-tty;
   };
 
