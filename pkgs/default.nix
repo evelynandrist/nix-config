@@ -3,4 +3,5 @@
 pkgs: {
   # example = pkgs.callPackage ./example { };
   terminal-magic = pkgs.pkgs.callPackage ./terminal-magic { };
+  steamlink = pkgs.pkgs.callPackage ./steamlink { };
 }

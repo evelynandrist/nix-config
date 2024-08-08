@@ -18,6 +18,8 @@
     ./userconfig.nix
   ];
 
+  programs.ssh.startAgent = false;
+
   virtualisation = {
     libvirtd = {
       enable = true;

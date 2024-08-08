@@ -48,6 +48,7 @@ in {
     nil
     nodejs
     jq
+    steamlink
     unzip
     xdg-utils
   ];
