@@ -111,6 +111,28 @@
 	  deny all; # block all remaining ips
 	'';
       };
+      "photos.qwt.ch" = {
+	enableACME = true;
+	forceSSL = true;
+	locations."/" = {
+	  proxyPass = "http://127.0.0.1:2283";
+	  proxyWebsockets = true;
+	};
+	extraConfig = ''
+	  # allow large file uploads
+	  client_max_body_size 50000M;
+
+	  # set timeout
+	  proxy_read_timeout 600s;
+	  proxy_send_timeout 600s;
+	  send_timeout       600s;
+	'';
+      };
+      "banjomin.ch" = {
+	enableACME = true;
+	forceSSL = true;
+	root = "/persist/data/banjomin";
+      };
       "_" = {
 	globalRedirect = "rr.qwt.ch";
 	extraConfig = ''

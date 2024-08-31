@@ -27,7 +27,7 @@
       POSTGRES_PASSWORD = "umami";
     };
     hostname = "umami-db";
-    ports = [ "0.0.0.0:5000:5432" ];
+    ports = [ "10.88.0.1:5000:5432" ];
     volumes = [
       "/persist/data/umami:/var/lib/postgresql/data"
     ];

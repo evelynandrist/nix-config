@@ -20,6 +20,7 @@
     ./calibre-web.nix
     # ./archisteamfarm.nix
     ./mailserver.nix
+    ./immich.nix
 
     ./userconfig.nix
   ];
@@ -32,12 +33,6 @@
   #   passwordFile = "${config.sops.secrets."pcloud/password".path}";
   #   paths = [ "/home/${config.userConfig.username}/nixserver_backup" ];
   # };
-
-
-  openssh.authorizedKeys.keys = [
-    "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIJXIHguo2D+mPHhGFrQKJRZFsDdAN0ETCCfTWpJYUKgi" # ssh key
-    "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIPU9h8nXlYgAmdVbRr3uzuEipNtJDbPGcbbuNr3YRaxJ" # gpg key
-  ];
 
   boot.loader = {
     grub = {
@@ -82,9 +77,10 @@
 
   virtualisation.docker.enable = true;
   virtualisation.docker.storageDriver = "btrfs";
+  virtualisation.oci-containers.backend = "docker";
 
   networking.firewall = {
     allowedTCPPorts = [ 22 80 81 443 7777 ];
-    allowedUDPPorts = [ 7777 ];
+    allowedUDPPorts = [ 2757 2759 7777 ];
   };
 }
