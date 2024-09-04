@@ -20,6 +20,8 @@
 
   programs.ssh.startAgent = false;
 
+  hardware.keyboard.qmk.enable = true;
+
   virtualisation = {
     libvirtd = {
       enable = true;
@@ -140,6 +142,8 @@
 #    ];
   };
 
+  hardware.amdgpu.opencl.enable = true;
+
   hardware.bluetooth.enable = true; # enables support for Bluetooth
   hardware.bluetooth.powerOnBoot = true; # powers up the default Bluetooth controller on boot
 
@@ -184,30 +188,33 @@
     };
   };
 
-  services.thinkfan = {
-    enable = true;
-    sensors = [
-      {
-	type = "hwmon";
-	query = "/sys/class/hwmon";
-	name = "thinkpad";
-	indices = [ 1 2 ];
-	correction = [ 0 5 ];
-      }
-    ];
-    fans = [
-      {
-	type = "tpacpi";
-	query = "/proc/acpi/ibm/fan";
-      }
-    ];
-    levels = [
-      [ 0 0 50 ]
-      [ "level auto" 45 75 ]
-      [ 200 70 85 ]
-      [ "level disengaged" 80 255 ]
-    ];
-  };
+
+  # currently broken, already fixed in master branch, but not yet in unstable
+
+ #  services.thinkfan = {
+ #    enable = true;
+ #    sensors = [
+ #      {
+	# type = "hwmon";
+	# query = "/sys/class/hwmon";
+	# name = "thinkpad";
+	# indices = [ 1 2 ];
+	# correction = [ 0 5 ];
+ #      }
+ #    ];
+ #    fans = [
+ #      {
+	# type = "tpacpi";
+	# query = "/proc/acpi/ibm/fan";
+ #      }
+ #    ];
+ #    levels = [
+ #      [ 0 0 50 ]
+ #      [ "level auto" 45 75 ]
+ #      [ 200 70 85 ]
+ #      [ "level disengaged" 80 255 ]
+ #    ];
+ #  };
 
   networking.firewall = {
     allowedTCPPorts = [ 22 ]; # ssh

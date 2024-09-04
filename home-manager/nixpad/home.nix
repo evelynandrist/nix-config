@@ -49,6 +49,7 @@ in {
     nodejs
     jq
     steamlink
+    qmk
     unzip
     xdg-utils
   ];

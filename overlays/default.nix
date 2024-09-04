@@ -15,10 +15,11 @@ in {
     # ...
     # });
     pcmanfm = prev.pcmanfm.override { withGtk3 = true; };
-    waybar = addPatches prev.waybar [
-      ./waybar_markup.patch # add support for pangu markup to the hyprland/submaps module
-      ./waybar_workspaces.patch # fix a bug in the hyprland/workspaces module
-    ];
+    # currently broken, will need to look into it
+    # waybar = addPatches prev.waybar [
+    #   ./waybar_markup.patch # add support for pangu markup to the hyprland/submaps module
+    #   ./waybar_workspaces.patch # fix a bug in the hyprland/workspaces module
+    # ];
     inputs.nix-pkgs-24-05.qemu = addPatches prev.qemu [
       ./qemu-8.2.0.patch # anti-detection qemu
     ];

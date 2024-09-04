@@ -7,13 +7,14 @@
 }:
 pkgs.stdenvNoCC.mkDerivation {
   name = "fetched-wallpaper";
-  buildInputs = with pkgs; [ curl toybox ffmpeg cacert ];
+  buildInputs = with pkgs; [ curl toybox ffmpeg cacert xidel ];
   unpackPhase = "true";
   buildPhase = ''
-    path=$(curl --silent "${url}" | grep 'https://moewalls.com/download.php?' | sed "s/^.*https:\/\/moewalls\.com\/download\.php?video=\(.*\.mp4\).*$/\1/")
+    echo "hello"
+    path=$(curl --silent ${url} | xidel --xpath '//*[@id="moe-download"]/@data-url')
+    echo $path
 
-    curl -L -o video.mp4 https://static.moewalls.com/videos/download$path
-
+    curl -L -o video.mp4 -H "Referer: https://moewalls.com" "https://moewalls.com/download.php?video=$path"
     original_height="$(ffprobe -v error -show_entries stream=height -of csv=p=0 video.mp4)"
     crop_width="$(($original_height*(${width}*1000/${height})/1000))"
 
