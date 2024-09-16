@@ -133,13 +133,9 @@
 
   users.users.${config.userConfig.username}.extraGroups = [ "networkmanager" "video" "network" "rfkill" "power" "lp" "wheel" "libvirtd" "docker" ];
 
-  hardware.opengl = {
+  hardware.graphics = {
     enable = true;
-    driSupport32Bit = true;
-#    extraPackages = with pkgs; [
-#      vaapiVdpau
-#      libvdpau-va-gl
-#    ];
+    enable32Bit = true;
   };
 
   hardware.amdgpu.opencl.enable = true;
@@ -188,33 +184,30 @@
     };
   };
 
-
-  # currently broken, already fixed in master branch, but not yet in unstable
-
- #  services.thinkfan = {
- #    enable = true;
- #    sensors = [
- #      {
-	# type = "hwmon";
-	# query = "/sys/class/hwmon";
-	# name = "thinkpad";
-	# indices = [ 1 2 ];
-	# correction = [ 0 5 ];
- #      }
- #    ];
- #    fans = [
- #      {
-	# type = "tpacpi";
-	# query = "/proc/acpi/ibm/fan";
- #      }
- #    ];
- #    levels = [
- #      [ 0 0 50 ]
- #      [ "level auto" 45 75 ]
- #      [ 200 70 85 ]
- #      [ "level disengaged" 80 255 ]
- #    ];
- #  };
+  services.thinkfan = {
+    enable = true;
+    sensors = [
+      {
+	type = "hwmon";
+	query = "/sys/class/hwmon";
+	name = "thinkpad";
+	indices = [ 1 2 ];
+	correction = [ 0 5 ];
+      }
+    ];
+    fans = [
+      {
+	type = "tpacpi";
+	query = "/proc/acpi/ibm/fan";
+      }
+    ];
+    levels = [
+      [ 0 0 50 ]
+      [ "level auto" 45 75 ]
+      [ 200 70 85 ]
+      [ "level disengaged" 80 255 ]
+    ];
+  };
 
   networking.firewall = {
     allowedTCPPorts = [ 22 ]; # ssh

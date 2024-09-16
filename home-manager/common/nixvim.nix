@@ -117,7 +117,7 @@
           ltex.enable = true;
           texlab.enable = true;
 
-          nil_ls.enable = true;
+          nil-ls.enable = true;
 
           pylsp.enable = true;
 
@@ -168,7 +168,7 @@
 
       treesitter = {
 	enable = true;
-	indent = true;
+	settings.indent.enable = true;
       };
       cmp-treesitter.enable = true;
 

@@ -22,15 +22,15 @@ in {
     inputs.nix-pkgs-24-05.qemu = addPatches prev.qemu [
       ./qemu-8.2.0.patch # anti-detection qemu
     ];
-    vimPlugins = prev.vimPlugins.extend (final': prev': {
-      himalaya-vim = prev.vimPlugins.himalaya-vim.overrideAttrs {
-      src = prev.fetchgit {
-	url = "https://git.sr.ht/~soywod/himalaya-vim";
-	rev = "cea041c927a04a841aea53abcedd4a0d153d4ca8";
-	sha256 = "0yrilhvqklfbfknkdskywf95mfhbr9rfjs2gmppnzgfs7fg6jn63";
-      };
-      };
-    });
+ #    vimPlugins = prev.vimPlugins.extend (final': prev': {
+ #      himalaya-vim = prev.vimPlugins.himalaya-vim.overrideAttrs {
+ #      src = prev.fetchgit {
+	# url = "https://git.sr.ht/~soywod/himalaya-vim";
+	# rev = "cea041c927a04a841aea53abcedd4a0d153d4ca8";
+	# sha256 = "0yrilhvqklfbfknkdskywf95mfhbr9rfjs2gmppnzgfs7fg6jn63";
+ #      };
+ #      };
+ #    });
 
  #    himalaya = prev.himalaya.overrideAttrs (old: rec {
  #      name = "himalaya-${version}";

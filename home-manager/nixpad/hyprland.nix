@@ -1,8 +1,7 @@
 { config, lib, pkgs, ... }: {
   imports = [
     ./autoname-workspaces.nix
-    # currently broken https://github.com/NixOS/nixpkgs/issues/326048
-    # ./vimiv.nix
+    ./vimiv.nix
   ];
 
   xdg.mimeApps.enable = true;
@@ -178,8 +177,7 @@
   xdg.portal = {
       enable = true;
       extraPortals = [
-	# currently broken in unstable
-	# pkgs.xdg-desktop-portal-hyprland
+	pkgs.xdg-desktop-portal-hyprland
 	pkgs.xdg-desktop-portal-gtk
       ];
       configPackages = [ config.wayland.windowManager.hyprland.package ];
