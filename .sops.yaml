@@ -2,6 +2,7 @@ keys:
   - &primary 55B96CBF98D05B66B145428FE264A88262066B52
   - &nixpad e047a92689ed03eb9932070722ce2adfcbedc741
   - &nixserver 84cd2d946f6b71aaa4f1609e5766e1b71b9a8f85
+  - &packardserver 8b8039a072ba2ae185e969fddfe8008b7f7a87ae
 creation_rules:
   - path_regex: secrets/secrets.yaml$
     key_groups:
@@ -9,3 +10,4 @@ creation_rules:
           - *primary
           - *nixpad
           - *nixserver
+          - *packardserver

@@ -97,8 +97,14 @@
       nixserver = nixpkgs.lib.nixosSystem {
         specialArgs = {inherit inputs outputs;};
         modules = [
-          # > Our main nixos configuration file <
           ./nixos/nixserver/configuration.nix
+        ];
+      };
+      packardserver = nixpkgs.lib.nixosSystem {
+        specialArgs = {inherit inputs outputs;};
+        modules = [
+          # > Our main nixos configuration file <
+          ./nixos/packardserver/configuration.nix
         ];
       };
     };
