@@ -22,11 +22,42 @@
     virtualHosts = {
       "_" = {
 	globalRedirect = "rr.qwt.ch";
-	extraConfig = ''
-	  ${allowCloudflareIPv4s}
-	  ${allowCloudflareIPv6s}
-	  deny all; # block all remaining ips
-	'';
+	default = true;
+      };
+      "jellyfin.qwt.ch" = {
+	enableACME = true;
+	forceSSL = true;
+	locations."/" = {
+	  proxyPass = "http://127.0.0.1:8096";
+	};
+      };
+      "sonarr.qwt.ch" = {
+	enableACME = true;
+	forceSSL = true;
+	locations."/" = {
+	  proxyPass = "http://127.0.0.1:8989";
+	};
+      };
+      "radarr.qwt.ch" = {
+	enableACME = true;
+	forceSSL = true;
+	locations."/" = {
+	  proxyPass = "http://127.0.0.1:7878";
+	};
+      };
+      "jellyseerr.qwt.ch" = {
+	enableACME = true;
+	forceSSL = true;
+	locations."/" = {
+	  proxyPass = "http://127.0.0.1:5055";
+	};
+      };
+      "sabnzbd.qwt.ch" = {
+	enableACME = true;
+	forceSSL = true;
+	locations."/" = {
+	  proxyPass = "http://127.0.0.1:8080";
+	};
       };
     };
   };

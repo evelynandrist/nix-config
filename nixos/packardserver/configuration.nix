@@ -12,6 +12,7 @@
     ./hardware-configuration.nix
 
     ./nginx.nix
+    ./media-stack.nix
 
     ./userconfig.nix
   ];
