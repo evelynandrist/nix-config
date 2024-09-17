@@ -96,4 +96,4 @@ mount $bootDrive /mnt/boot
 
 echo "Creating swap file..."
 
-btrfs filesystem mkswapfile --size 16g --uuid clear /swap/swapfile
+btrfs filesystem mkswapfile --size 16g --uuid clear /mnt/swap/swapfile
