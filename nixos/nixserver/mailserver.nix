@@ -34,4 +34,13 @@
       $config['smtp_pass'] = "%p";
     '';
   };
+
+  # increase greylist threshold to let mails from openai.com through
+  services.rspamd.extraConfig = ''
+    actions {
+      reject = 15; # Reject message when reaching this score
+      greylist = 9; # Apply greylisting when reaching this score, default is 4
+      add_header = 6; # Add header when reaching this score
+    }
+  '';
 }

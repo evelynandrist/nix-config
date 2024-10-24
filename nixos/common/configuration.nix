@@ -141,7 +141,8 @@
       isNormalUser = true;
       shell = pkgs.zsh;
       openssh.authorizedKeys.keys = [
-        # TODO: Add your SSH public key(s) here, if you plan on using SSH to connect
+	# "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIJXIHguo2D+mPHhGFrQKJRZFsDdAN0ETCCfTWpJYUKgi" # ssh key
+	"ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIPU9h8nXlYgAmdVbRr3uzuEipNtJDbPGcbbuNr3YRaxJ" # gpg key
       ];
     };
   };
