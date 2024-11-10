@@ -95,7 +95,7 @@
         enable = true;
         servers = {
           # webdev
-          tsserver.enable = true;
+          ts_ls.enable = true;
           tailwindcss.enable = true;
           eslint.enable = true;
           html.enable = true;
@@ -110,14 +110,14 @@
 	  # golangci-lint-ls.enable = true;
 	  gopls.enable = true;
 
-	  java-language-server.enable = true;
+	  java_language_server.enable = true;
 
           jsonls.enable = true;
 
           ltex.enable = true;
           texlab.enable = true;
 
-          nil-ls.enable = true;
+          nil_ls.enable = true;
 
           pylsp.enable = true;
 
@@ -171,6 +171,8 @@
 	settings.indent.enable = true;
       };
       cmp-treesitter.enable = true;
+
+      web-devicons.enable = true;
 
       which-key.enable = true;
 
