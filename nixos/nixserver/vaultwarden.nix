@@ -1,4 +1,10 @@
 { config, lib, pkgs, ... }: {
+  environment.persistence."/persist".directories = [
+    {
+      directory = "/var/lib/bitwarden_rs";
+    }
+  ];
+
   services.vaultwarden = {
     enable = true;
     backupDir = "/persist/data/vaultwarden";
