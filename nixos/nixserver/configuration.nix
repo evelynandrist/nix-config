@@ -21,6 +21,8 @@
     # ./archisteamfarm.nix
     ./mailserver.nix
     ./immich.nix
+    # ./mediawiki-legends.nix
+    ./nix-minecraft.nix
 
     ./userconfig.nix
   ];

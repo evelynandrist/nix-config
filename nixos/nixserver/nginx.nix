@@ -30,6 +30,16 @@
 	  deny all; # block all remaining ips
 	'';
       };
+ #      "legends.qwt.ch" = {
+	# locations."/" = {
+	#   proxyPass = "http://127.0.0.1:8203";
+	# };
+	# extraConfig = ''
+	#   ${allowCloudflareIPv4s}
+	#   ${allowCloudflareIPv6s}
+	#   deny all; # block all remaining ips
+	# '';
+ #      };
       "vault.qwt.ch" = {
 	enableACME = true;
 	forceSSL = true;
