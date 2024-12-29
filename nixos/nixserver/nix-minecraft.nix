@@ -5,6 +5,7 @@
   services.minecraft-servers = {
     enable = true;
     eula = true;
+    dataDir = "/persist/data/minecraft-servers";
 
     servers = {
       "TheTransAgenda" = {
