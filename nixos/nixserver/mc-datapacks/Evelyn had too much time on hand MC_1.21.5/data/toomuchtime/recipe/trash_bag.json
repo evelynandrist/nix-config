@@ -1,0 +1,27 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "kkk",
+    "kbk",
+    "kkk"
+  ],
+  "key": {
+    "b": [
+      "minecraft:bundle"
+    ],
+    "k": [
+      "minecraft:dried_kelp"
+    ]
+  },
+  "result": {
+    "id": "minecraft:snowball",
+    "components": {
+      "minecraft:item_model": "toomuchtime:trash_bag",
+      "minecraft:item_name": {
+	"bold": true,
+	"color": "dark_green",
+	"text": "Trash Bag"
+      }
+    }
+  }
+}

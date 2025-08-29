@@ -1,0 +1,43 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "pattern": [
+    "l",
+    "d"
+  ],
+  "key": {
+    "d": [
+      "minecraft:diamond"
+    ],
+    "l": [
+      "minecraft:pale_oak_planks"
+    ]
+  },
+  "result": {
+    "id": "minecraft:diamond_leggings",
+    "components": {
+      "minecraft:item_model": "toomuchtime:butt_plug",
+      "minecraft:item_name": {
+	"bold": true,
+	"color": "aqua",
+	"text": "Butt Plug"
+      },
+      "minecraft:attribute_modifiers": [
+	{
+	  "type": "minecraft:movement_speed",
+	  "id": "minecraft:movement_speed",
+	  "amount": 0.4269,
+	  "operation": "add_multiplied_base",
+	  "slot": "legs"
+	}
+      ],
+      "minecraft:equippable": {
+        "slot": "legs",
+        "equip_sound": "minecraft:entity.chicken.egg",
+        "asset_id": "toomuchtime:butt_plug"
+      },
+      "minecraft:unbreakable": {}
+    }
+  }
+}
+

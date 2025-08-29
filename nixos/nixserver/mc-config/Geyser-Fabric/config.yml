@@ -1,0 +1,3 @@
+bedrock:
+  port: 19132
+  auth-type: floodgate

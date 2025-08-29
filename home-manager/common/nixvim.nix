@@ -18,6 +18,9 @@
   ];
   programs.nixvim = {
     enable = true;
+    nixpkgs.config = {
+      allowUnfree = true;
+    };
     opts = {
       number = true;
       relativenumber = true;
