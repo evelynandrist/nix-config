@@ -5,6 +5,9 @@
   #                                Wipe script                                #
   #############################################################################
 
+  # Explicitly disable systemd in stage 1 so postDeviceCommands will execute
+  boot.initrd.systemd.enable = false;
+
   boot.initrd.postDeviceCommands = lib.mkAfter ''
     mkdir /btrfs_tmp
     mount ${config.fileSystems."/".device} /btrfs_tmp

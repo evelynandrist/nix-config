@@ -45,7 +45,7 @@
     kmonad.url = "github:kmonad/kmonad?dir=nix";
     kmonad.inputs.nixpkgs.follows = "nixpkgs";
 
-    simple-nixos-mailserver.url = "gitlab:simple-nixos-mailserver/nixos-mailserver/master";
+    simple-nixos-mailserver.url = "gitlab:simple-nixos-mailserver/nixos-mailserver/main";
 
     nix-minecraft.url = "github:Infinidoge/nix-minecraft";
   };

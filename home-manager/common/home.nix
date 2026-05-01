@@ -64,7 +64,7 @@
 
   programs.gh = {
     enable = true;
-    extensions = [ pkgs.gh-copilot ];
+    extensions = [ pkgs.github-copilot-cli ];
   };
 
   programs.gpg.enable = true;

@@ -30,6 +30,9 @@
     ./impermanence.nix
   ];
 
+  boot.kernelParams = [ "initcall_blacklist=algif_aead_init" ];
+
+
   # needed to be able to run dynamically compiled programs for linux
   programs.nix-ld.enable = true;
 

@@ -13,7 +13,7 @@
     domains = [ "andrist.dev" ];
     mailDirectory = "/persist/data/mailserver/vmail";
     dkimKeyDirectory = "/persist/data/mailserver/dkim";
-    certificateScheme = "acme";
+    x509.useACMEHost = config.mailserver.fqdn;
     enableImap = true;
 
     loginAccounts = {
