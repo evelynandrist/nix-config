@@ -6,6 +6,6 @@
     options = {
       enableBookUploading = true;
     };
-    dataDir = "../../persist/data/calibre-web/config";
+    dataDir = "/persist/data/calibre-web/config";
   };
 }

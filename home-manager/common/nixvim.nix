@@ -9,7 +9,7 @@
     html-tidy
     luajitPackages.luacheck
     markdownlint-cli
-    nodePackages.jsonlint
+    # nodePackages.jsonlint
     pylint
     ruff
     shellcheck
@@ -137,7 +137,7 @@
 	  go = ["golangcilint"];
 	  javascript = ["eslint_d"];
 	  javascriptreact = ["eslint_d"];
-	  json = ["jsonlint"];
+	  # json = ["jsonlint"];
 	  lua = ["luacheck"];
 	  markdownlint = ["markdownlint"];
 	  nix = ["nix"];
