@@ -22,6 +22,14 @@
 
   hardware.keyboard.qmk.enable = true;
 
+  services.flatpak.enable = true;
+  xdg.portal = {
+      enable = true;
+      extraPortals = [
+	pkgs.xdg-desktop-portal-gtk
+      ];
+  };
+
   virtualisation = {
     libvirtd = {
       enable = true;
@@ -131,7 +139,7 @@
 
   programs.dconf.enable = true; # required for gtk
 
-  users.users.${config.userConfig.username}.extraGroups = [ "networkmanager" "video" "network" "rfkill" "power" "lp" "wheel" "libvirtd" "docker" ];
+  users.users.${config.userConfig.username}.extraGroups = [ "networkmanager" "video" "network" "rfkill" "power" "lp" "wheel" "libvirtd" "docker" "dialout" ];
 
   hardware.graphics = {
     enable = true;
@@ -153,7 +161,11 @@
 
   # List services that you want to enable:
 
-  services.udev.packages = [ pkgs.yubikey-personalization ];
+  services.udev.packages = [
+    pkgs.openocd
+    pkgs.platformio-core.udev
+    pkgs.yubikey-personalization
+  ];
 
   services.pcscd.enable = true; # support YubiKey smart card mode
 
@@ -167,47 +179,76 @@
     };
   };
 
-  services.tlp = {
-    enable = true;
-    settings = {
-      CPU_SCALING_GOVERNOR_ON_AC = "performance";
-      # CPU_SCALING_GOVERNOR_ON_BAT = "powersave";
-      CPU_SCALING_GOVERNOR_ON_BAT = "performance";
+  # Disable due to EC locking issues
+  services.tlp.enable = false;
+  services.thinkfan.enable = false;
 
-      # CPU_ENERGY_PERF_POLICY_ON_BAT = "power";
-      CPU_ENERGY_PERF_POLICY_ON_BAT = "performance";
-      CPU_ENERGY_PERF_POLICY_ON_AC = "performance";
-
-      #Optional helps save long term battery health
-      START_CHARGE_THRESH_BAT0 = 70; # 70 and bellow it starts to charge
-      STOP_CHARGE_THRESH_BAT0 = 80; # 80 and above it stops charging
+  # Fix
+  services.power-profiles-daemon.enable = true;
+  boot.kernelParams = [ "amd_pstate=active" ];
+  systemd.services.battery-thresholds = {
+    description = "Set ThinkPad Battery Charge Thresholds";
+    wantedBy = [ "multi-user.target" ];
+    after = [ "multi-user.target" ];
+    startLimitBurst = 0; # Retry indefinitely if needed
+    serviceConfig = {
+      Type = "oneshot";
+      Restart = "on-failure";
+      # Modern ThinkPads (Z16 Gen 2) use the standard sysfs interface
+      ExecStart = pkgs.writeShellScript "set-battery-thresholds" ''
+        # Check if BAT0 exists
+        if [ -d /sys/class/power_supply/BAT0 ]; then
+          echo 70 > /sys/class/power_supply/BAT0/charge_control_start_threshold
+          echo 80 > /sys/class/power_supply/BAT0/charge_control_end_threshold
+          echo "Battery thresholds set: 70-80%"
+        else
+          echo "BAT0 not found, skipping thresholds."
+        fi
+      '';
     };
   };
 
-  services.thinkfan = {
-    enable = true;
-    sensors = [
-      {
-	type = "hwmon";
-	query = "/sys/class/hwmon";
-	name = "thinkpad";
-	indices = [ 1 2 ];
-	correction = [ 0 5 ];
-      }
-    ];
-    fans = [
-      {
-	type = "tpacpi";
-	query = "/proc/acpi/ibm/fan";
-      }
-    ];
-    levels = [
-      [ 0 0 50 ]
-      [ "level auto" 45 75 ]
-      [ 200 70 85 ]
-      [ "level disengaged" 80 255 ]
-    ];
-  };
+ #  services.tlp = {
+ #    enable = true;
+ #    settings = {
+ #      CPU_SCALING_GOVERNOR_ON_AC = "performance";
+ #      # CPU_SCALING_GOVERNOR_ON_BAT = "powersave";
+ #      CPU_SCALING_GOVERNOR_ON_BAT = "performance";
+	#
+ #      # CPU_ENERGY_PERF_POLICY_ON_BAT = "power";
+ #      CPU_ENERGY_PERF_POLICY_ON_BAT = "performance";
+ #      CPU_ENERGY_PERF_POLICY_ON_AC = "performance";
+	#
+ #      #Optional helps save long term battery health
+ #      START_CHARGE_THRESH_BAT0 = 70; # 70 and bellow it starts to charge
+ #      STOP_CHARGE_THRESH_BAT0 = 80; # 80 and above it stops charging
+ #    };
+ #  };
+	#
+ #  services.thinkfan = {
+ #    enable = true;
+ #    sensors = [
+ #      {
+	# type = "hwmon";
+	# query = "/sys/class/hwmon";
+	# name = "thinkpad";
+	# indices = [ 1 2 ];
+	# correction = [ 0 5 ];
+ #      }
+ #    ];
+ #    fans = [
+ #      {
+	# type = "tpacpi";
+	# query = "/proc/acpi/ibm/fan";
+ #      }
+ #    ];
+ #    levels = [
+ #      [ 0 0 50 ]
+ #      [ "level auto" 45 75 ]
+ #      [ 200 70 85 ]
+ #      [ "level disengaged" 80 255 ]
+ #    ];
+ #  };
 
   networking.firewall = {
     allowedTCPPorts = [ 22 ]; # ssh

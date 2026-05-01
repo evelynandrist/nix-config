@@ -54,9 +54,11 @@ in {
     xdg-utils
   ];
 
-  home.pointerCursor = {
-    name = "Catppuccin-Mocha-Dark-Cursors";
-    package = pkgs.catppuccin-cursors.mochaDark;
-    size = 128;
-  };
+  # home.pointerCursor = {
+  #   name = "Catppuccin-Mocha-Dark-Cursors";
+  #   package = pkgs.catppuccin-cursors.mochaDark;
+  #   size = 128;
+  #   x11.enable = true;
+  #   gtk.enable = true;
+  # };
 }

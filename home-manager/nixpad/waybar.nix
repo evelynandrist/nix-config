@@ -12,7 +12,7 @@
         modules-right = [
           # informational
           "hyprland/language"
-          "custom/github"
+          # "custom/github"
           "cpu"
           "memory"
           "battery"
@@ -25,12 +25,13 @@
           # media
           "custom/playerctl"
           "idle_inhibitor"
-          "custom/dnd"
+          # "custom/dnd"
           "pulseaudio"
           "backlight"
 
           # system
-          "custom/sunset"
+          # "custom/sunset"
+	  "power-profiles-daemon"
 
           "tray"
           "clock"
@@ -236,6 +237,18 @@
           exec = "printf '{\"alt\":\"%s\",\"tooltip\":\"mode: %s\"}' $(makoctl mode | grep -q 'do-not-disturb' && echo dnd || echo default) $(makoctl mode | tail -1)";
           signal = 11;
         };
+
+	"power-profiles-daemon" = {
+	  format = "{icon}";
+	  tooltip-format = "Power profile: {profile}\nDriver: {driver}";
+	  tooltip = true;
+	  format-icons = {
+	    default = "";
+	    performance = "";
+	    balanced = "";
+	    power-saver = "";
+	  };
+	};
       };
     };
     style = let
@@ -383,6 +396,7 @@ window#waybar {
 #custom-adaptive-light,
 #custom-sunset,
 #custom-playerctl,
+#power-profiles-daemon,
 #tray {
     color: @theme_fg_color;
     padding-left: 10px;
@@ -392,6 +406,10 @@ window#waybar {
 /* -----------------------------------------------------------------------------
  * Module styles
  * -------------------------------------------------------------------------- */
+
+#power-profiles-daemon {
+  padding-right: 20px;
+}
 
 #custom-scratchpad,
 #custom-menu,
