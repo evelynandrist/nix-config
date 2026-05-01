@@ -177,7 +177,7 @@
   xdg.portal = {
       enable = true;
       extraPortals = [
-	pkgs.xdg-desktop-portal-hyprland
+	# pkgs.xdg-desktop-portal-hyprland
 	pkgs.xdg-desktop-portal-gtk
       ];
       configPackages = [ config.wayland.windowManager.hyprland.package ];
@@ -256,10 +256,10 @@
           size = 3;
           passes = 2;
         };
-        drop_shadow = "yes";
-        shadow_range = 20;
-        shadow_render_power = 4;
-        "col.shadow" = "rgba(1a1a1aee)";
+        # drop_shadow = "yes";
+        # shadow_range = 20;
+        # shadow_render_power = 4;
+        # "col.shadow" = "rgba(1a1a1aee)";
       };
       animations = {
         enabled = "yes";
@@ -386,6 +386,7 @@
       bind=,escape,submap,reset
       submap=reset
       $submap_screenshot = <span foreground='##${color10}'>󰄄</span>  <span foreground='##${color5}'><b>Area</b></span> <span foreground='##${color10}'>(<b>a</b>)</span>   <span foreground='##${color5}'><b>Screen</b></span> <span foreground='##${color10}'>(<b>s</b>)</span>   <span foreground='##${color7}'>+   <span foreground='##${color10}'><b>Shift</b></span>  for  󰆓</span>
+      # $submap_screenshot = 󰄄 Area (a)   Screen (<b>s</b>)</span>   <span foreground='##${color7}'>+   <span foreground='##${color10}'><b>Shift</b></span>  for  󰆓</span>
       bind=,print,submap,$submap_screenshot
       submap=$submap_screenshot
       bind=,a,exec,$reset_submap && grimblast copy area
