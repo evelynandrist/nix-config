@@ -6,8 +6,8 @@
 
   sops.templates."searx.env" = {
     content = ''
-      SEARX_BASE_URL=${config.sops.placeholder."searx/base_url"}
-      SEARX_SECRET_KEY=${config.sops.placeholder."searx/secret_key"}
+      SEARXNG_BASE_URL=${config.sops.placeholder."searx/base_url"}
+      SEARXNG_SECRET=${config.sops.placeholder."searx/secret_key"}
     '';
   };
 
@@ -17,10 +17,8 @@
     environmentFile = config.sops.templates."searx.env".path;
     settings = {
       server = {
-	base_url = "@SEARX_BASE_URL@";
 	port = 8001;
 	bind_address = "127.0.0.1";
-	secret_key = "@SEARX_SECRET_KEY@";
 	image_proxy = true;
       };
       search = {
