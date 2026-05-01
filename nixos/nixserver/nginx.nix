@@ -20,6 +20,22 @@
     recommendedProxySettings = true;
     recommendedTlsSettings = true;
     virtualHosts = {
+      "_" = {
+	globalRedirect = "rr.qwt.ch";
+	# extraConfig = ''
+	#   ${allowCloudflareIPv4s}
+	#   ${allowCloudflareIPv6s}
+	#   deny all; # block all remaining ips
+	# '';
+      };
+      "holysnit.ch" = {
+	globalRedirect = "rr.qwt.ch";
+	extraConfig = ''
+	  ${allowCloudflareIPv4s}
+	  ${allowCloudflareIPv6s}
+	  deny all; # block all remaining ips
+	'';
+      };
       "search.qwt.ch" = {
 	locations."/" = {
 	  proxyPass = "http://127.0.0.1:8001";
@@ -138,19 +154,11 @@
 	  send_timeout       600s;
 	'';
       };
-      "banjomin.ch" = {
-	enableACME = true;
-	forceSSL = true;
-	root = "/persist/data/banjomin";
-      };
-      "_" = {
-	globalRedirect = "rr.qwt.ch";
-	extraConfig = ''
-	  ${allowCloudflareIPv4s}
-	  ${allowCloudflareIPv6s}
-	  deny all; # block all remaining ips
-	'';
-      };
+ #      "banjomin.ch" = {
+	# enableACME = true;
+	# forceSSL = true;
+	# root = "/persist/data/banjomin";
+ #      };
     };
   };
 

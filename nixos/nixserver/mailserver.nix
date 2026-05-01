@@ -5,6 +5,8 @@
     "mailserver/logins/evelyn" = { };
   };
 
+  mailserver.stateVersion = 3;
+
   mailserver = {
     enable = true;
     fqdn = "mail.andrist.dev";
@@ -12,6 +14,7 @@
     mailDirectory = "/persist/data/mailserver/vmail";
     dkimKeyDirectory = "/persist/data/mailserver/dkim";
     certificateScheme = "acme";
+    enableImap = true;
 
     loginAccounts = {
       "evelyn@andrist.dev" = {
