@@ -1,6 +1,6 @@
 { config, lib, pkgs, inputs, ... }: {
   imports = [
-    inputs.nur.hmModules.nur
+    inputs.nur.modules.homeManager.default
   ];
   home.file.".mozilla/firefox/${config.userConfig.username}/chrome".source = "${inputs.WaveFox}/chrome";
 

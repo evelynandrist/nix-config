@@ -22,7 +22,7 @@ in {
     ./kitty.nix
     ./zsh.nix
     ./wofi.nix
-    ./firefox.nix
+    # ./firefox.nix
     ./latex.nix
 
     ../../nixos/nixpad/userconfig.nix
@@ -44,11 +44,13 @@ in {
 
   fonts.fontconfig.enable = true;
   home.packages = with pkgs; [
-    (pkgs.nerdfonts.override { fonts = [ "FiraCode" "FiraMono" "JetBrainsMono" ]; })
+    nerd-fonts.fira-code
+    nerd-fonts.fira-mono
+    nerd-fonts.jetbrains-mono
     nil
     nodejs
     jq
-    steamlink
+    # steamlink
     qmk
     unzip
     xdg-utils
