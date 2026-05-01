@@ -39,7 +39,7 @@ in {
       "wyoming"
     ];
     customComponents = with pkgs; [
-      extended-openai-conversation
+      # extended-openai-conversation
     ];
     config = {
       # Includes dependencies for a basic setup

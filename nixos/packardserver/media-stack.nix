@@ -40,13 +40,16 @@ in {
     group = "${group}";
   };
 
-  services.jellyseerr.enable = true;
-  # we need to override some options to use /persist as a data dir since the module doesn't support it
-  systemd.services.jellyseerr.serviceConfig.BindPaths = lib.mkForce [
-    "${dataDir}/jellyseerr/:${config.services.jellyseerr.package}/libexec/jellyseerr/deps/jellyseerr/config/"
-  ];
-  systemd.services.jellyseerr.serviceConfig.ReadWritePaths = [ "${dataDir}/jellyseerr/" ];
-  systemd.services.jellyseerr.serviceConfig.Group = "${group}";
+  services.seerr = {
+    enable = true;
+    configDir = "${dataDir}/jellyseerr";
+  };
+  # # we need to override some options to use /persist as a data dir since the module doesn't support it
+  # systemd.services.seerr.serviceConfig.BindPaths = lib.mkForce [
+  #   "${dataDir}/jellyseerr/:${config.services.seerr.package}/share/config/"
+  # ];
+  systemd.services.seerr.serviceConfig.ReadWritePaths = [ "${dataDir}/jellyseerr/" ];
+  systemd.services.seerr.serviceConfig.Group = "${group}";
 
   services.sabnzbd = {
     enable = true;

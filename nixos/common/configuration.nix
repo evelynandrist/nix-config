@@ -30,6 +30,7 @@
     ./impermanence.nix
   ];
 
+  # copyfail cve
   boot.kernelParams = [ "initcall_blacklist=algif_aead_init" ];
 
 
