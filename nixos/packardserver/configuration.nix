@@ -13,6 +13,7 @@
 
     ./nginx.nix
     ./media-stack.nix
+    ./home-assistant
 
     ./userconfig.nix
   ];

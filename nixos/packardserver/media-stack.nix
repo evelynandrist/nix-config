@@ -3,7 +3,21 @@ let
   dataDir = "/persist/data/media-stack";
   group = "mediastack";
 in {
-  users.groups."${group}" = {};
+  # imports = [ ./bitthief.nix ];
+
+  fileSystems."/mnt/neocortexmedia" = {
+    device = "//192.168.1.56/Media";
+    fsType = "cifs";
+    options = let
+      # this line prevents hanging on network split
+      automount_opts = "x-systemd.automount,noauto,x-systemd.idle-timeout=60,x-systemd.device-timeout=5s,x-systemd.mount-timeout=5s";
+      performance_opts = "vers=3.0,cache=none,rsize=1048576,wsize=1048576,actimeo=30,soft";
+      credentials = "username=media-stack,password=thisisnotsecurebutitdoesnotmatter";
+
+    in ["${automount_opts},${credentials},${performance_opts},uid=1000,gid=992,noperm"];
+  };
+
+  users.groups."${group}".gid = 992;
 
   services.jellyfin = {
     enable = true;
