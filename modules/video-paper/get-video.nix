@@ -11,10 +11,10 @@ pkgs.stdenvNoCC.mkDerivation {
   unpackPhase = "true";
   buildPhase = ''
     echo "hello"
-    path=$(curl --silent ${url} | xidel --xpath '//*[@id="moe-download"]/@data-url')
+    path=$(curl --silent ${url} --compressed -H 'User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:130.0) Gecko/20100101 Firefox/130.0' | xidel --xpath '//*[@id="moe-download"]/@data-url')
     echo $path
 
-    curl -L -o video.mp4 -H "Referer: https://moewalls.com" "https://moewalls.com/download.php?video=$path"
+    curl -L -o video.mp4 -H "Referer: https://moewalls.com" -H 'User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:130.0) Gecko/20100101 Firefox/130.0' "https://go.moewalls.com/download.php?video=$path"
     original_height="$(ffprobe -v error -show_entries stream=height -of csv=p=0 video.mp4)"
     crop_width="$(($original_height*(${width}*1000/${height})/1000))"
 
