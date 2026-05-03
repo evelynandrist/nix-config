@@ -37,9 +37,9 @@
 	package = pkgs.qemu;
         runAsRoot = true;
         swtpm.enable = true;
-	 ovmf = {
-          enable = true;
-        };
+	 # ovmf = {
+  #         enable = true;
+  #       };
       };
     };
     docker.enable = true;
