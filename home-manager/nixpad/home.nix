@@ -29,7 +29,7 @@ in {
   ];
 
   moewalls = {
-    url = "https://moewalls.com/landscape/japanese-traditional-house-spring-season-live-wallpaper/";
+    url = "https://moewalls.com/movies/rick-sanchez-in-the-field-rick-and-morty-live-wallpaper/";
     width = 1920;
     height = 1200;
   };

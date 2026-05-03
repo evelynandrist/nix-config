@@ -196,7 +196,7 @@
       ];
     };
     settings = {
-      monitor = ",highres,auto,auto";
+      monitor = ",highres,auto,2.5";
       env = [
         "XCURSOR_SIZE,128"
         "GDK_SCALE,2"
