@@ -24,14 +24,26 @@
 
     nixos-hardware.url = "github:NixOS/nixos-hardware/master";
 
-    WaveFox = { url = "github:QNetITQ/WaveFox?dir=chrome"; flake = false; };
+    # WaveFox = { url = "github:QNetITQ/WaveFox?dir=chrome"; flake = false; };
+
+    zen-browser = {
+      url = "github:0xc000022070/zen-browser-flake";
+      inputs = {
+	# IMPORTANT: To ensure compatibility with the latest Firefox version, use nixpkgs-unstable.
+	nixpkgs.follows = "nixpkgs";
+	home-manager.follows = "home-manager";
+      };
+    };
 
     nixvim = {
         url = "github:nix-community/nixvim";
         # If using a stable channel you can use `url = "github:nix-community/nixvim/nixos-<version>"`
     };
 
-    nur.url = "github:nix-community/NUR";
+    nur = {
+      url = "github:nix-community/NUR";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
 
     fzf-tab = {
       url = "github:Aloxaf/fzf-tab";

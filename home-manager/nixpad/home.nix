@@ -23,6 +23,7 @@ in {
     ./zsh.nix
     ./wofi.nix
     # ./firefox.nix
+    ./zen-browser.nix
     ./latex.nix
 
     ../../nixos/nixpad/userconfig.nix

@@ -238,9 +238,6 @@
       master = {
         new_status = "master";
       };
-      gestures = {
-        workspace_swipe = "off";
-      };
       misc = {
         force_default_wallpaper = 0; # Set to 0 to disable the anime mascot wallpapers
       };
@@ -291,7 +288,7 @@
         terminal = "kitty";
         menu = "wofi --normal-window --show drun --terminal kitty --allow-images --lines 10";
         editor = "emacsclient -c -a \"emacs\"";
-        browser = "firefox";
+        browser = "zen-beta";
         fileManager = "pcmanfm";
       in [
         "$mod, return, exec, ${terminal}"
