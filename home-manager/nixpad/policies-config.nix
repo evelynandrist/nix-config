@@ -48,6 +48,11 @@ in {
       id = "ublock-origin";
       pinned = true;
     };
+    "{d7742d87-e61d-4b78-b8a1-b469842139fa}" = "vimium-ff";
+    "{446900e4-71c2-419f-a6a7-df9c091e268b}" = mkExtensionEntry {
+      id = "bitwarden-password-manager";
+      pinned = true;
+    };
     # about:debugging#/runtime/this-firefox
     # "{0814291e-c531-4741-a8e7-9a3e8f62bf71}" = "remove-youtube-tracking";
     # "{3579f63b-d8ee-424f-bbb6-6d0ce3285e6a}" = "chameleon-ext";
@@ -91,5 +96,7 @@ in {
     "gfx.webrender.all" = true;
     "network.http.http3.enabled" = true;
     "network.socket.ip_addr_any.disabled" = true; # disallow bind to 0.0.0.0
+    "devtools.everOpened" = true; # show devtools in the menu
+    "devtools.theme" = "dark";
   };
 }

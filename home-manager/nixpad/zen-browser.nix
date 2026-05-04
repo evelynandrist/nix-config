@@ -15,6 +15,10 @@
 	"zen.welcome-screen.seen" = true;
 	"zen.view.use-single-toolbar" = false;
 	"zen.view.window.scheme" = 0; # dark mode
+	"zen.theme.gradient.show-custom-colors" = true;
+	"devtools.toolbox.host" = "right";
+	"userChrome.Linux.Transparency.VeryHigh.Enabled" = true;
+	"zen.widget.linux.transparency" = true;
       };
 
  #      extensions.packages = with pkgs.nur.repos.rycee.firefox-addons; [
@@ -24,10 +28,54 @@
  #      ];
 
       mods = [
+	"642854b5-88b4-4c40-b256-e035532109df" # Transparent Zen
       ];
 
       search = import ./search-config.nix {inherit pkgs;};
 
+      spacesForce = true; # Delete spaces not declared here
+      spaces = {
+	"Personal" = {
+	  id = "fc81ad71-c87e-4da6-ac58-91b737280ddf";
+	  position = 1000;
+	  icon = "🏠";
+	  theme = {
+	    type = "gradient";
+	    colors = [
+	      {
+		red = 5;
+		green = 4;
+		blue = 47;
+		algorithm = "floating";
+		type = "explicit-lightness";
+		lightness = 10;
+	      }
+	    ];
+	    opacity = 0.85;
+	    texture = 0.25;
+	  };
+	};
+	"Work" = {
+	  id = "c6de089c-410d-4206-961d-ab11f988d40a";
+	  position = 2000;
+	  icon = "💼";
+	  theme = {
+	    type = "gradient";
+	    colors = [
+	      {
+		red = 33;
+		green = 18;
+		blue = 30;
+		algorithm = "floating";
+		type = "explicit-lightness";
+		lightness = 10;
+	      }
+	    ];
+	    opacity = 0.9;
+	    texture = 0.25;
+	  };
+	};
+      };
     };
   };
 
