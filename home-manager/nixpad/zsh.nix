@@ -69,7 +69,7 @@ printf "\033]708;#${c0}\033\\"
     '';
   };
 
-  programs.zsh.initExtra = ''
+  programs.zsh.initContent = lib.mkAfter ''
 # needed for UbiqueInnovation terminal-magic-cli
 source ~/.terminal-magic/env
   '';

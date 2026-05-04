@@ -41,6 +41,7 @@ in {
       name = "${config.colorScheme.slug}";
       package = nix-colors-lib.gtkThemeFromScheme { scheme = config.colorScheme; };
     };
+    gtk4.theme = config.gtk.theme;
   };
 
   fonts.fontconfig.enable = true;

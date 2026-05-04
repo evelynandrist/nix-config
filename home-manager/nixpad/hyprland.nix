@@ -241,10 +241,10 @@
       misc = {
         force_default_wallpaper = 0; # Set to 0 to disable the anime mascot wallpapers
       };
-      windowrulev2 = [
-	"suppressevent maximize, class:.*" # You'll probably like this.
-	"float, title:^(Picture-in-Picture)$"
-	"pin, title:^(Picture-in-Picture)$"
+      windowrule = [
+	"suppress_event maximize, match:class .*" # You'll probably like this.
+	"float on, match:title ^(Picture-in-Picture)$"
+	"pin on, match:title ^(Picture-in-Picture)$"
       ];
       decoration = {
         rounding = 10;
@@ -253,10 +253,13 @@
           size = 3;
           passes = 2;
         };
-        # drop_shadow = "yes";
-        # shadow_range = 20;
-        # shadow_render_power = 4;
-        # "col.shadow" = "rgba(1a1a1aee)";
+	shadow = {
+	  enabled = true;
+	  range = 15;
+	  render_power = 4;
+	  color = "0xcc1a1a1a";
+	  # offset = "1, 1";
+	};
       };
       animations = {
         enabled = "yes";

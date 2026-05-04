@@ -28,6 +28,7 @@
       extraPortals = [
 	pkgs.xdg-desktop-portal-gtk
       ];
+    config.common.default = "*";
   };
 
   virtualisation = {
@@ -128,7 +129,7 @@
     variant = "";
   };
 
-  hardware.pulseaudio.enable = false;
+  services.pulseaudio.enable = false;
   security.rtkit.enable = true;
   services.pipewire = {
     enable = true;
@@ -173,7 +174,7 @@
     enable = true;
     settings = {
       default_session = {
-        command = "${pkgs.greetd.tuigreet}/bin/tuigreet --user-menu --user-menu-min-uid 1000 -c Hyprland --time --issue --asterisks";
+        command = "${pkgs.tuigreet}/bin/tuigreet --user-menu --user-menu-min-uid 1000 -c Hyprland --time --issue --asterisks";
         user = "greeter";
       };
     };

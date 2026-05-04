@@ -41,7 +41,8 @@
         "fzf"
       ];
     };
-    initExtraFirst = ''
+    initContent = let
+  zshConfigInitExtraFirst = lib.mkBefore ''
 [ $TERM = "dumb" ] && unsetopt zle && PS1='$ ' && exec sh
 
 ($HOME/.config/color-sequences.sh 2> /dev/null &)   # fail silently if file doesn't exist
@@ -64,7 +65,7 @@ zstyle ':completion:*' accept-exact '*(N)'
 zstyle ':completion:*' use-cache on
 zstyle ':completion:*' cache-path ~/.zsh-cache
     '';
-    initExtra = ''
+  zshConfigInitExtra = lib.mkOrder 1000 ''
 # Set terminal window and tab/icon title
 #
 # usage: title short_tab_title [long_window_title]
@@ -317,6 +318,8 @@ verify () {
 
 bindkey -v
     '';
+    in
+      lib.mkMerge [ zshConfigInitExtraFirst zshConfigInitExtra ];
   };
   programs.zoxide = {
     enable = true;

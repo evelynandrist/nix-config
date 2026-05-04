@@ -10,7 +10,7 @@
 }: {
   # You can import other home-manager modules here
   imports = [
-    inputs.nixvim.homeManagerModules.nixvim
+    inputs.nixvim.homeModules.nixvim
 
     ./zsh.nix
     ./nixvim.nix
@@ -54,11 +54,14 @@
   programs.home-manager.enable = true;
   programs.git = {
     enable = true;
-    userEmail = "evelyn@andrist.dev";
-    userName = "Evelyn Andrist";
+    settings.user = {
+      email = "evelyn@andrist.dev";
+      name = "Evelyn Andrist";
+    };
     signing = {
       key = "E264A88262066B52";
       signByDefault = true;
+      format = "openpgp";
     };
   };
 
@@ -74,7 +77,7 @@
     sshKeys = [
       "6CEBAD8E8B33D245E1E25D05468D0A92F6A02E3B"
     ];
-    pinentryPackage = pkgs.pinentry-tty;
+    pinentry.package = pkgs.pinentry-tty;
   };
 
   # Nicely reload system units when changing configs
