@@ -60,7 +60,7 @@ in {
   # be accessible through 'pkgs.master'
   master-packages = final: _prev: {
     master = import inputs.nixpkgs-master {
-      system = final.system;
+      system = final.stdenv.hostPlatform.system;
       config.allowUnfree = true;
     };
   };

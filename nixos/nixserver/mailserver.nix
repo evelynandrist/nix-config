@@ -11,12 +11,12 @@
     enable = true;
     fqdn = "mail.andrist.dev";
     domains = [ "andrist.dev" ];
-    mailDirectory = "/persist/data/mailserver/vmail";
-    dkimKeyDirectory = "/persist/data/mailserver/dkim";
+    storage.path = "/persist/data/mailserver/vmail";
+    dkim.keyDirectory = "/persist/data/mailserver/dkim";
     x509.useACMEHost = config.mailserver.fqdn;
     enableImap = true;
 
-    loginAccounts = {
+    accounts = {
       "evelyn@andrist.dev" = {
 	hashedPasswordFile = config.sops.secrets."mailserver/logins/evelyn".path;
 	aliases = [ "postmaster@andrist.dev" "felix@andrist.dev" ];
@@ -30,9 +30,7 @@
     # the mailserver
     hostName = config.mailserver.fqdn;
     extraConfig = ''
-      # starttls needed for authentication, so the fqdn required to match
-      # the certificate
-      $config['smtp_server'] = "tls://${config.mailserver.fqdn}";
+      $config['smtp_host'] = "ssl://${config.mailserver.fqdn}:465";
       $config['smtp_user'] = "%u";
       $config['smtp_pass'] = "%p";
     '';
