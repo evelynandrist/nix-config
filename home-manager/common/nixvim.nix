@@ -172,6 +172,7 @@
       treesitter = {
 	enable = true;
 	settings.indent.enable = true;
+	highlight.enable = true;
       };
       cmp-treesitter.enable = true;
 
@@ -314,98 +315,98 @@
 	  fat_headline_upper_string = "▃",
 	  fat_headline_lower_string = "🬂",
 	},
-	norg = {
-	  query = vim.treesitter.query.parse(
-            "norg",
-            [[
-	      [
-		(heading1_prefix)
-		(heading2_prefix)
-		(heading3_prefix)
-		(heading4_prefix)
-		(heading5_prefix)
-		(heading6_prefix)
-	      ] @headline
-
-	      (weak_paragraph_delimiter) @dash
-	      (strong_paragraph_delimiter) @doubledash
-
-	      ([(ranged_tag
-		  name: (tag_name) @_name
-		  (#eq? @_name "code")
-                )
-                (ranged_verbatim_tag
-		  name: (tag_name) @_name
-		  (#eq? @_name "code")
-	      )] @codeblock (#offset! @codeblock 0 0 1 0))
-
-	      (quote1_prefix) @quote
-            ]]
-	  ),
-	  headline_highlights = { "Headline" },
-	  bullet_highlights = {
-            "@neorg.headings.1.prefix",
-            "@neorg.headings.2.prefix",
-            "@neorg.headings.3.prefix",
-            "@neorg.headings.4.prefix",
-            "@neorg.headings.5.prefix",
-            "@neorg.headings.6.prefix",
-	  },
-	  bullets = { "◉", "○", "✸", "✿" },
-	  codeblock_highlight = "CodeBlock",
-	  dash_highlight = "Dash",
-	  dash_string = "-",
-	  doubledash_highlight = "DoubleDash",
-	  doubledash_string = "=",
-	  quote_highlight = "Quote",
-	  quote_string = "┃",
-	  fat_headlines = true,
-	  fat_headline_upper_string = "▃",
-	  fat_headline_lower_string = "🬂",
-	},
-	org = {
-	  query = vim.treesitter.query.parse(
-	    "org",
-	    [[
-	      (headline (stars) @headline)
-
-	      (
-		(expr) @dash
-		(#match? @dash "^-----+$")
-	      )
-
-	      (block
-		name: (expr) @_name
-		(#match? @_name "(SRC|src)")
-	      ) @codeblock
-
-	      (paragraph . (expr) @quote
-		(#eq? @quote ">")
-	      )
-            ]]
-	  ),
-	  headline_highlights = { "Headline" },
-	  bullet_highlights = {
-            "@org.headline.level1",
-            "@org.headline.level2",
-            "@org.headline.level3",
-            "@org.headline.level4",
-            "@org.headline.level5",
-            "@org.headline.level6",
-            "@org.headline.level7",
-            "@org.headline.level8",
-	  },
-	  bullets = { "◉", "○", "✸", "✿" },
-	  codeblock_highlight = "CodeBlock",
-	  dash_highlight = "Dash",
-	  dash_string = "-",
-	  quote_highlight = "Quote",
-	  quote_string = "┃",
-	  fat_headlines = true,
-	  fat_headline_upper_string = "▃",
-	  fat_headline_lower_string = "🬂",
-	},
       }
     '';
   };
 }
+	# norg = {
+	#   query = vim.treesitter.query.parse(
+ #            "norg",
+ #            [[
+	#       [
+	# 	(heading1_prefix)
+	# 	(heading2_prefix)
+	# 	(heading3_prefix)
+	# 	(heading4_prefix)
+	# 	(heading5_prefix)
+	# 	(heading6_prefix)
+	#       ] @headline
+	#
+	#       (weak_paragraph_delimiter) @dash
+	#       (strong_paragraph_delimiter) @doubledash
+	#
+	#       ([(ranged_tag
+	# 	  name: (tag_name) @_name
+	# 	  (#eq? @_name "code")
+ #                )
+ #                (ranged_verbatim_tag
+	# 	  name: (tag_name) @_name
+	# 	  (#eq? @_name "code")
+	#       )] @codeblock (#offset! @codeblock 0 0 1 0))
+	#
+	#       (quote1_prefix) @quote
+ #            ]]
+	#   ),
+	#   headline_highlights = { "Headline" },
+	#   bullet_highlights = {
+ #            "@neorg.headings.1.prefix",
+ #            "@neorg.headings.2.prefix",
+ #            "@neorg.headings.3.prefix",
+ #            "@neorg.headings.4.prefix",
+ #            "@neorg.headings.5.prefix",
+ #            "@neorg.headings.6.prefix",
+	#   },
+	#   bullets = { "◉", "○", "✸", "✿" },
+	#   codeblock_highlight = "CodeBlock",
+	#   dash_highlight = "Dash",
+	#   dash_string = "-",
+	#   doubledash_highlight = "DoubleDash",
+	#   doubledash_string = "=",
+	#   quote_highlight = "Quote",
+	#   quote_string = "┃",
+	#   fat_headlines = true,
+	#   fat_headline_upper_string = "▃",
+	#   fat_headline_lower_string = "🬂",
+	# },
+	# org = {
+	#   query = vim.treesitter.query.parse(
+	#     "org",
+	#     [[
+	#       (headline (stars) @headline)
+	#
+	#       (
+	# 	(expr) @dash
+	# 	(#match? @dash "^-----+$")
+	#       )
+	#
+	#       (block
+	# 	name: (expr) @_name
+	# 	(#match? @_name "(SRC|src)")
+	#       ) @codeblock
+	#
+	#       (paragraph . (expr) @quote
+	# 	(#eq? @quote ">")
+	#       )
+ #            ]]
+	#   ),
+	#   headline_highlights = { "Headline" },
+	#   bullet_highlights = {
+ #            "@org.headline.level1",
+ #            "@org.headline.level2",
+ #            "@org.headline.level3",
+ #            "@org.headline.level4",
+ #            "@org.headline.level5",
+ #            "@org.headline.level6",
+ #            "@org.headline.level7",
+ #            "@org.headline.level8",
+	#   },
+	#   bullets = { "◉", "○", "✸", "✿" },
+	#   codeblock_highlight = "CodeBlock",
+	#   dash_highlight = "Dash",
+	#   dash_string = "-",
+	#   quote_highlight = "Quote",
+	#   quote_string = "┃",
+	#   fat_headlines = true,
+	#   fat_headline_upper_string = "▃",
+	#   fat_headline_lower_string = "🬂",
+	# },
