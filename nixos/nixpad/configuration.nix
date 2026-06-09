@@ -14,9 +14,11 @@
     ./hardware-configuration.nix
 
     ./kmonad.nix
-    ./secfix-agent.nix
 
     ./userconfig.nix
+
+    ./secfix-agent.nix
+    ./clamav.nix
   ];
 
   programs.ssh.startAgent = false;
