@@ -1,6 +1,6 @@
 { config, lib, pkgs, inputs, ... }: {
   imports = [ inputs.kmonad.nixosModules.default ];
-  
+
   services.kmonad = {
     enable = true;
     keyboards = {

@@ -14,6 +14,7 @@
     ./hardware-configuration.nix
 
     ./kmonad.nix
+    ./secfix-agent.nix
 
     ./userconfig.nix
   ];
