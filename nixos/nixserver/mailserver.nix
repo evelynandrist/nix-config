@@ -1,5 +1,5 @@
 { config, lib, pkgs, inputs, ... }: {
-  imports = [ inputs.simple-nixos-mailserver.nixosModule ];
+  imports = [ inputs.simple-nixos-mailserver.nixosModules.mailserver ];
 
   sops.secrets = {
     "mailserver/logins/evelyn" = { };

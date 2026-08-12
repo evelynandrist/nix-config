@@ -156,7 +156,7 @@
 	settings.check_ts = true; # use TreeSitter
       };
 
-      nvim-colorizer.enable = true;
+      colorizer.enable = true;
 
       project-nvim = {
 	enable = true;
