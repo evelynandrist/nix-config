@@ -1,4 +1,37 @@
-{ config, lib, pkgs, ... }: {
+{ config, lib, pkgs, ... }:
+let
+  hyprctl = "${config.wayland.windowManager.hyprland.package}/bin/hyprctl";
+
+  # eDP-1 is a Samsung AMOLED (ATNA60YV04-0). It has no backlight: dimming it drives
+  # the emitters with PWM, which flickers hard enough to be visible in slow motion and
+  # to cause headaches. So the panel stays pinned at 100% and dimming happens in the
+  # GPU's colour LUT instead, which is flicker-free. On OLED this still saves power,
+  # because emission scales with pixel value.
+  # State is kept here rather than read back from hyprsunset: it reports gamma as a
+  # drifting float (60.000004, then 7.6e-06 near zero) which shell arithmetic cannot
+  # consume, and reading-then-writing races against key repeat. Always set an absolute
+  # value from our own integer instead.
+  oled-brightness = pkgs.writeShellScriptBin "oled-brightness" ''
+    state="''${XDG_RUNTIME_DIR:-/tmp}/oled-brightness"
+    step=10
+    cur="$(cat "$state" 2>/dev/null || echo 100)"
+    case "$1" in
+      up)     new=$(( cur + step )) ;;
+      down)   new=$(( cur - step )) ;;
+      set)    new="''${2:-100}" ;;
+      get)    echo "$cur"; exit 0 ;;
+      waybar) printf '{"text":"%s","percentage":%s,"tooltip":"display gamma %s%%"}\n' "$cur" "$cur" "$cur"; exit 0 ;;
+      *)      echo "usage: oled-brightness up|down|set <n>|get|waybar" >&2; exit 1 ;;
+    esac
+    # 100 is the panel's native output. hyprsunset will go all the way to 0 (a black
+    # screen) if asked, so the lower clamp is load-bearing.
+    [ "$new" -gt 100 ] && new=100
+    [ "$new" -lt 10 ] && new=10
+    printf '%s' "$new" > "$state"
+    ${hyprctl} hyprsunset gamma "$new" >/dev/null
+    ${pkgs.procps}/bin/pkill -RTMIN+9 waybar 2>/dev/null || true
+  '';
+in {
   imports = [
     ./autoname-workspaces.nix
     ./vimiv.nix
@@ -15,6 +48,7 @@
     grimblast
     gtk3
     mpvpaper
+    oled-brightness
     pcmanfm
     slurp
     wdisplays
@@ -23,6 +57,14 @@
     wofi
     wpgtk
   ];
+
+  services.hyprsunset = {
+    enable = true;
+    # Only here to dim via gamma, not to shift colour. hyprsunset defaults to 6000K,
+    # which would warm the display as a side effect, so pin it to the D65 white point.
+    # Gamma and temperature are independent, so this leaves dimming untouched.
+    extraArgs = [ "--temperature" "6500" ];
+  };
 
   programs.hyprlock = {
     enable = true;
@@ -196,7 +238,11 @@
       ];
     };
     settings = {
-      monitor = ",highres,auto,2.5";
+      monitor = [
+	  "DP-1, 2560x1440@74.97, 0x0, 1.6"
+	  "eDP-1, 3840x2400@60.00, 32x900, 2.5"
+	  ",highres,auto,2.5"
+      ];
       env = [
         "XCURSOR_SIZE,128"
         "GDK_SCALE,2"
@@ -278,11 +324,12 @@
         "systemctl --user start hyprland-autoname-workspaces.service"
         "zsh -c \"emacs --daemon\""
         "wl-paste --watch cliphist store"
+        # The panel must sit at full output for PWM to be off; dimming is gamma-side.
+        "${pkgs.brightnessctl}/bin/brightnessctl set 100%"
       ];
       exec = [
         "pkill waybar; waybar &"
         "hyprland-autoname-workspaces"
-        "~/video-paper.sh --restart"
       ];
       blurls = "waybar";
       "$mod" = "SUPER";
@@ -344,8 +391,9 @@
         ", XF86AudioMicMute, exec, wpctl set-mute @DEFAULT_AUDIO_SOURCE@ toggle"
         ", XF86AudioRaiseVolume, exec, wpctl set-volume -l 1.5 @DEFAULT_AUDIO_SINK@ 5%+"
         ", XF86AudioLowerVolume, exec, wpctl set-volume -l 1.5 @DEFAULT_AUDIO_SINK@ 5%-"
-        ", XF86MonBrightnessDown, exec, brightnessctl s 10%-"
-        ", XF86MonBrightnessUp, exec, brightnessctl s +10%"
+        # Gamma, not backlight — see the oled-brightness comment above.
+        ", XF86MonBrightnessDown, exec, oled-brightness down"
+        ", XF86MonBrightnessUp, exec, oled-brightness up"
       ];
       bindm = [
 	"$mod, mouse:272, movewindow" # move window with mouse

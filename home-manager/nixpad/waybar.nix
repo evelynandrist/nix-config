@@ -27,7 +27,7 @@
           "idle_inhibitor"
           # "custom/dnd"
           "pulseaudio"
-          "backlight"
+          "custom/brightness"
 
           # system
           # "custom/sunset"
@@ -111,11 +111,19 @@
           tooltip-format-deactivated = "power-saving enabled";
         };
 
-        backlight = {
-          format = "{icon} {percent}%";
+        # Not the "backlight" module: the panel is OLED and is deliberately pinned to
+        # 100% so it never PWM-dims, so sysfs would just read a constant. Dimming is
+        # gamma-side, so read the level from oled-brightness instead. It signals
+        # RTMIN+9 on every change, hence interval "once".
+        "custom/brightness" = {
+          exec = "oled-brightness waybar";
+          return-type = "json";
+          format = "{icon} {text}%";
           format-icons = [ "󰃞" "󰃟" "󰃠" ];
-          on-scroll-up = "hyprctl dispatch exec brightnessctl s +10%";
-          on-scroll-down = "hyprctl dispatch exec brightnessctl s 10%-";
+          interval = "once";
+          signal = 9;
+          on-scroll-up = "oled-brightness up";
+          on-scroll-down = "oled-brightness down";
         };
 
         pulseaudio = {
@@ -391,7 +399,7 @@ window#waybar {
 #pulseaudio,
 #temperature,
 #idle_inhibitor,
-#backlight,
+#custom-brightness,
 #language,
 #custom-adaptive-light,
 #custom-sunset,
