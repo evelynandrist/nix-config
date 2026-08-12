@@ -227,6 +227,7 @@ in {
 
   wayland.windowManager.hyprland = {
     enable = true;
+    configType = "hyprlang";
     package = pkgs.hyprland.override { wrapRuntimeDeps = false; };
     xwayland.enable = true;
     systemd = {

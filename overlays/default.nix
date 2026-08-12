@@ -14,7 +14,7 @@ in {
     # example = prev.example.overrideAttrs (oldAttrs: rec {
     # ...
     # });
-    pcmanfm = prev.pcmanfm.override { withGtk3 = true; };
+    # pcmanfm = prev.pcmanfm.override { withGtk3 = true; };
     waybar = addPatches prev.waybar [
       # ./waybar_markup.patch # add support for pangu markup to the hyprland/submaps module
       # ./waybar_workspaces.patch # fix a bug in the hyprland/workspaces module
