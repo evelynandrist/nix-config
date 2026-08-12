@@ -190,6 +190,56 @@
   # Fix
   services.power-profiles-daemon.enable = true;
   boot.kernelParams = [ "amd_pstate=active" ];
+
+  # The iGPU shares one power budget with the CPU. Under a CPU-heavy task the SMU
+  # clocks it down to ~900MHz of 2200 even while it sits ~80% busy, which is enough
+  # to make Hyprland miss frames at 3840x2400 and show up as stutter. Pinning the top
+  # DPM state fixes it, but it keeps the GPU clocked up while idle too, so only do it
+  # on AC. Matched on boot_vga rather than a card number, which is not stable.
+  systemd.services.amdgpu-dpm-level = {
+    description = "Pin the integrated GPU's DPM level while on AC";
+    wantedBy = [ "multi-user.target" ];
+    serviceConfig = {
+      Type = "oneshot";
+      ExecStart = pkgs.writeShellScript "amdgpu-dpm-level" ''
+        if [ "$(cat /sys/class/power_supply/AC/online 2>/dev/null)" = 1 ]; then
+          level=high
+        else
+          level=auto
+        fi
+        for dev in /sys/class/drm/card*/device; do
+          [ "$(cat "$dev/boot_vga" 2>/dev/null)" = 1 ] || continue
+          knob="$dev/power_dpm_force_performance_level"
+          [ -w "$knob" ] || continue
+          echo "$level" > "$knob" && echo "set $knob to $level"
+        done
+      '';
+    };
+  };
+
+  services.udev.extraRules = ''
+    SUBSYSTEM=="power_supply", KERNEL=="AC", RUN+="${pkgs.systemd}/bin/systemctl start --no-block amdgpu-dpm-level.service"
+  '';
+
+  # 15G of RAM with a browser open leaves the kernel reclaiming almost constantly.
+  # Reclaiming to the btrfs swapfile blocks on IO and stalls whatever is running,
+  # including the compositor. zram keeps reclaim in RAM and leaves the swapfile as
+  # overflow only (it stays at a lower priority, so zram is always preferred).
+  zramSwap = {
+    enable = true;
+    algorithm = "zstd";
+    memoryPercent = 50;
+  };
+
+  boot.kernel.sysctl = {
+    # Swapping to zram is cheap, so prefer it over dropping page cache.
+    "vm.swappiness" = 180;
+    # Readahead is pointless for RAM-backed swap.
+    "vm.page-cluster" = 0;
+    # Start reclaiming earlier and more gradually. The default (10) lets the machine
+    # run into direct reclaim, which is what blocks processes for tens of ms at a time.
+    "vm.watermark_scale_factor" = 125;
+  };
   systemd.services.battery-thresholds = {
     description = "Set ThinkPad Battery Charge Thresholds";
     wantedBy = [ "multi-user.target" ];
