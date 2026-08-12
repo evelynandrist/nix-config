@@ -36,6 +36,16 @@
 	  deny all; # block all remaining ips
 	'';
       };
+      "budget.qwt.ch" = {
+	locations."/" = {
+	  proxyPass = "http://127.0.0.1:31012";
+	};
+	extraConfig = ''
+	  ${allowCloudflareIPv4s}
+	  ${allowCloudflareIPv6s}
+	  deny all; # block all remaining ips
+	'';
+      };
       "search.qwt.ch" = {
 	locations."/" = {
 	  proxyPass = "http://127.0.0.1:8001";

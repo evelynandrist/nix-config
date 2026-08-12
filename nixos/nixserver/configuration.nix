@@ -23,6 +23,7 @@
     ./immich.nix
     # ./mediawiki-legends.nix
     ./nix-minecraft.nix
+    ./actual-budget.nix
 
     ./userconfig.nix
   ];
