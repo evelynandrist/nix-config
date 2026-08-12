@@ -279,7 +279,6 @@ in {
         sensitivity = 0; # -1.0 - 1.0, 0 means no modification.
       };
       dwindle = {
-        pseudotile = "yes"; # master switch for pseudotiling.
         preserve_split = "yes"; # you probably want this
       };
       master = {
@@ -349,7 +348,7 @@ in {
         "$mod SHIFT, space, togglefloating, "
         "$mod, D, exec, ${menu}"
         "$mod, P, pseudo, "
-        "$mod, T, togglesplit, "
+        "$mod, T, layoutmsg, togglesplit"
         "$mod, I, exec, ${editor}"
         "$mod, O, exec, ${browser}"
         "$mod SHIFT, C, exec, hyprctl reload"
