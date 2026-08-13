@@ -149,8 +149,9 @@
       isNormalUser = true;
       shell = pkgs.zsh;
       openssh.authorizedKeys.keys = [
+	"sk-ssh-ed25519@openssh.com AAAAGnNrLXNzaC1lZDI1NTE5QG9wZW5zc2guY29tAAAAIOmZZyhqDHkirDFXCoT9sw008Mj0GwlD9qv9M51MONQKAAAAC3NzaDp5dWJpa2V5 yubikey-main"
 	# "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIJXIHguo2D+mPHhGFrQKJRZFsDdAN0ETCCfTWpJYUKgi" # ssh key
-	"ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIPU9h8nXlYgAmdVbRr3uzuEipNtJDbPGcbbuNr3YRaxJ" # gpg key
+	# "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIPU9h8nXlYgAmdVbRr3uzuEipNtJDbPGcbbuNr3YRaxJ" # gpg key
       ];
     };
   };
