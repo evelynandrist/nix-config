@@ -14,7 +14,9 @@
       host = "mail.andrist.dev";
       port = 465;
     };
-    passwordCommand = "cat /run/secrets/email/logins/evelyn";
+    # /run/secrets on NixOS; on darwin sops runs as a home-manager module and
+    # materialises elsewhere, so the directory comes from userConfig.
+    passwordCommand = "cat ${config.userConfig.secretsDir}/email/logins/evelyn";
     primary = true;
     realName = "Evelyn Andrist";
     userName = "evelyn@andrist.dev";

@@ -19,8 +19,9 @@ in {
 
     ./hyprland.nix
     ./waybar.nix
-    ./kitty.nix
     ./zsh.nix
+    ./ssh.nix
+    ./deskflow.nix
     ./wofi.nix
     # ./firefox.nix
     ./zen-browser.nix
@@ -53,6 +54,7 @@ in {
     nil
     nodejs
     jq
+    ios-remote # `ios` — remote iOS build loop against the MacBook
     # steamlink
     qmk
     unzip

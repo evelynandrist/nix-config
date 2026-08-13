@@ -1,5 +1,3 @@
-# This is your home-manager configuration file
-# Use this to configure your home environment (it replaces ~/.config/nixpkgs/home.nix)
 {
   inputs,
   outputs,
@@ -15,6 +13,12 @@
     ./zsh.nix
     ./nixvim.nix
     ./email.nix
+    ./kitty.nix
+
+    ./linux.nix
+    ./darwin.nix
+
+    ../../modules/user-config/default.nix
   ];
 
   nixpkgs = {
@@ -47,7 +51,10 @@
   # TODO: Set your username
   home = {
     username = "${config.userConfig.username}";
-    homeDirectory = "/home/${config.userConfig.username}";
+    homeDirectory =
+      if pkgs.stdenv.isDarwin
+      then "/Users/${config.userConfig.username}"
+      else "/home/${config.userConfig.username}";
   };
 
   # Enable home-manager and git
@@ -73,15 +80,15 @@
   programs.gpg.enable = true;
   services.gpg-agent = {
     enable = true;
-    enableSshSupport = true;
-    sshKeys = [
-      "6CEBAD8E8B33D245E1E25D05468D0A92F6A02E3B"
-    ];
-    pinentry.package = pkgs.pinentry-tty;
+    # enableSshSupport = true;
+    # sshKeys = [
+    #   "6CEBAD8E8B33D245E1E25D05468D0A92F6A02E3B"
+    # ];
+    pinentry.package =
+      if pkgs.stdenv.isDarwin
+      then pkgs.pinentry_mac
+      else pkgs.pinentry-tty;
   };
-
-  # Nicely reload system units when changing configs
-  systemd.user.startServices = "sd-switch";
 
   # https://nixos.wiki/wiki/FAQ/When_do_I_update_stateVersion
   home.stateVersion = "23.11";

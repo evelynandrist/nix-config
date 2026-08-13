@@ -10,7 +10,7 @@
 - Global themes matching wallpapers with a fork of nix-colors
 - Hyprland & Neovim configuration
 
-## Installation
+## Installation (NixOS)
 
 > [!NOTE]
 > This is my personal config and as such is tailored exactly to my needs and hardware. You probably don't want to install my exact config. And if you do, you need to at least change the sops-nix configuration.
@@ -51,6 +51,22 @@ sudo nixos-install --flake .\#nixpad
 
 If all went well, you should now be able to reboot into your new system!
 Please feel free to [open an issue](https://github.com/kev1nbam27/nix-config/issues) if you have any questions.
+
+## Installation (macOS)
+
+1. Install macOS, set up your user, and sign into the App Store.
+2. Install nix with flakes enabled: `curl -sSfL https://artifacts.nixos.org/nix-installer | sh -s -- install --enable-flakes`
+3. Enable remote-login: `sudo systemsetup -setremotelogin on`
+4. Install Xcode (App Store or `xcodes`), then `xcode-select -s`, `xcodebuild -license accept`,
+   `xcodebuild -runFirstLaunch`.
+5. Create the build keychain and import signing certs and provisioning profiles.
+6. Clone this repo.
+7. Set up SOPS:
+    1. Set `bootstrapped = false` in `home-manager/nixbook/sops.nix`
+    2. Run `nix run nix-darwin -- switch --flake .\#nixbook` (this generates the age key)
+    3. Run `age-keygen -y ~/.config/sops/age/keys.txt`, add the recipient to `.sops.yaml`, create `secrets/nixbook.yaml`.
+    4. Add `nixbook/build_keychain_password` to the secrets file.
+    5. Set `bootstrapped = true` and re-run `darwin-rebuild switch --flake .\#nixbook`.
 
 ## Appendix
 

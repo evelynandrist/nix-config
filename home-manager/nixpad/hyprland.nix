@@ -31,11 +31,47 @@ let
     ${hyprctl} hyprsunset gamma "$new" >/dev/null
     ${pkgs.procps}/bin/pkill -RTMIN+9 waybar 2>/dev/null || true
   '';
+  # Pango markup for the submap indicator. waybar's hyprland/submap module
+  # displays whatever $submap_<name> holds, which is why modes carry a label
+  # separate from their identity — see modules/keymap/default.nix.
+  color5 = config.colorScheme.palette.base05;
+  color7 = config.colorScheme.palette.base07;
+  color10 = config.colorScheme.palette.base0A;
 in {
   imports = [
     ./autoname-workspaces.nix
     ./vimiv.nix
+
+    ../common/keymap.nix
+    ../../modules/keymap/hyprland.nix
   ];
+
+  keymap.apps = {
+    terminal = "kitty";
+    menu = "wofi --normal-window --show drun --terminal kitty --allow-images --lines 10";
+    editor = "emacsclient -c -a \"emacs\"";
+    browser = "zen-beta";
+    fileManager = "pcmanfm";
+  };
+
+  keymap.modes = {
+    resize.hyprland.label = "<span foreground='##${color10}'>󰩨</span>  <span foreground='##${color5}'><b>Resize</b></span> <span foreground='##${color10}'>(<b>↑ ↓ ← →</b>)</span>";
+
+    shutdown.hyprland = {
+      label = "<span foreground='##${color10}'></span>  <span foreground='##${color5}'>  <span foreground='##${color10}'>(<b>h</b>)</span>hibernate   <span foreground='##${color10}'>(<b>l</b>)</span>lock   <span foreground='##${color10}'>(<b>e</b>)</span>logout   <span foreground='##${color10}'>(<b>r</b>)</span>reboot   <span foreground='##${color10}'>(<b>u</b>)</span>suspend   <span foreground='##${color10}'>(<b>s</b>)</span>shutdown   </span>";
+      extraLines = [
+        "$purge_cliphist = rm -f $HOME/.cache/cliphist/db"
+        "$locking = hyprlock"
+      ];
+    };
+
+    screenshot.hyprland = {
+      label = "<span foreground='##${color10}'>󰄄</span>  <span foreground='##${color5}'><b>Area</b></span> <span foreground='##${color10}'>(<b>a</b>)</span>   <span foreground='##${color5}'><b>Screen</b></span> <span foreground='##${color10}'>(<b>s</b>)</span>   <span foreground='##${color7}'>+   <span foreground='##${color10}'><b>Shift</b></span>  for  󰆓</span>";
+      extraLines = [
+        "# $submap_screenshot = 󰄄 Area (a)   Screen (<b>s</b>)</span>   <span foreground='##${color7}'>+   <span foreground='##${color10}'><b>Shift</b></span>  for  󰆓</span>"
+      ];
+    };
+  };
 
   xdg.mimeApps.enable = true;
 
@@ -218,8 +254,8 @@ in {
 
   xdg.portal = {
       enable = true;
+      # hyprland already includes xdg-desktop-portal-hyprland
       extraPortals = [
-	# pkgs.xdg-desktop-portal-hyprland
 	pkgs.xdg-desktop-portal-gtk
       ];
       configPackages = [ config.wayland.windowManager.hyprland.package ];
@@ -332,60 +368,11 @@ in {
         "hyprland-autoname-workspaces"
       ];
       blurls = "waybar";
-      "$mod" = "SUPER";
+      "$mod" = config.keymap.mod;
       "$reset_submap" = "hyprctl dispatch submap reset";
-      bind = let
-        terminal = "kitty";
-        menu = "wofi --normal-window --show drun --terminal kitty --allow-images --lines 10";
-        editor = "emacsclient -c -a \"emacs\"";
-        browser = "zen-beta";
-        fileManager = "pcmanfm";
-      in [
-        "$mod, return, exec, ${terminal}"
-        "$mod, Q, killactive,"
-        "$mod, M, exit, "
-        "$mod, E, exec, ${fileManager}"
-        "$mod SHIFT, space, togglefloating, "
-        "$mod, D, exec, ${menu}"
-        "$mod, P, pseudo, "
-        "$mod, T, layoutmsg, togglesplit"
-        "$mod, I, exec, ${editor}"
-        "$mod, O, exec, ${browser}"
-        "$mod SHIFT, C, exec, hyprctl reload"
-        "$mod, H, movefocus, l"
-        "$mod, L, movefocus, r"
-        "$mod, K, movefocus, u"
-        "$mod, J, movefocus, d"
-        "$mod SHIFT, H, movewindow, l"
-        "$mod SHIFT, L, movewindow, r"
-        "$mod SHIFT, K, movewindow, u"
-        "$mod SHIFT, J, movewindow, d"
-        "$mod, N, workspace, empty"
-        "$mod SHIFT, N, movetoworkspace, empty"
-        "$mod, S, togglespecialworkspace, magic"
-        "$mod SHIFT, S, movetoworkspace, special:magic"
-        "$mod, A, togglespecialworkspace, magic2"
-        "$mod SHIFT, A, movetoworkspace, special:magic2"
-        "$mod, F, fullscreen, 1"
-        "$mod SHIFT, F, fullscreen, 0"
-        "$mod SHIFT, p, exec, cliphist list | wofi --show dmenu --normal-window --lines 14 | cliphist decode | wl-copy"
-      ] ++
-      (
-        # workspaces
-        # binds $mod + [shift +] {1..10} to [move to] workspace {1..10}
-        builtins.concatLists (builtins.genList (
-          x: let
-            ws = let
-              c = (x + 1) / 10;
-            in
-              builtins.toString (x + 1 - (c * 10));
-          in [
-            "$mod, ${ws}, workspace, ${toString (x + 1)}"
-            "$mod SHIFT, ${ws}, movetoworkspace, ${toString (x + 1)}"
-          ]
-        )
-          10)
-      );
+      # `bind` and the submap text block are generated from the shared keymap
+      # by modules/keymap/hyprland.nix. What stays here is what has no
+      # AeroSpace counterpart and is deliberately Hyprland-only.
       binde = [
         ", XF86AudioMute, exec, wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle"
         ", XF86AudioMicMute, exec, wpctl set-mute @DEFAULT_AUDIO_SOURCE@ toggle"
@@ -400,49 +387,5 @@ in {
 	"$mod SHIFT, mouse:272, resizewindow" # resize window with mouse
       ];
     };
-    # This is order sensitive, so it has to come here.
-    extraConfig = let
-      color1 = config.colorScheme.palette.base01;
-      color2 = config.colorScheme.palette.base02;
-      color5 = config.colorScheme.palette.base05;
-      color6 = config.colorScheme.palette.base06;
-      color7 = config.colorScheme.palette.base07;
-      color10 = config.colorScheme.palette.base0A;
-      color11 = config.colorScheme.palette.base0B;
-      color13 = config.colorScheme.palette.base0D;
-    in ''
-      $submap_resize = <span foreground='##${color10}'>󰩨</span>  <span foreground='##${color5}'><b>Resize</b></span> <span foreground='##${color10}'>(<b>↑ ↓ ← →</b>)</span>
-      bind=$mod,r,submap,$submap_resize
-      submap=$submap_resize
-      binde=,l,resizeactive,15 0
-      binde=,h,resizeactive,-15 0
-      binde=,k,resizeactive,0 -15
-      binde=,j,resizeactive,0 15
-      bind=,escape,submap,reset
-      submap=reset
-      $submap_shutdown = <span foreground='##${color10}'></span>  <span foreground='##${color5}'>  <span foreground='##${color10}'>(<b>h</b>)</span>hibernate   <span foreground='##${color10}'>(<b>l</b>)</span>lock   <span foreground='##${color10}'>(<b>e</b>)</span>logout   <span foreground='##${color10}'>(<b>r</b>)</span>reboot   <span foreground='##${color10}'>(<b>u</b>)</span>suspend   <span foreground='##${color10}'>(<b>s</b>)</span>shutdown   </span>
-      $purge_cliphist = rm -f $HOME/.cache/cliphist/db
-      $locking = hyprlock
-      bind=$mod SHIFT,e,submap,$submap_shutdown
-      submap=$submap_shutdown
-      bind=,l,exec,$reset_submap && $locking # lock
-      bind=,e,exec,$reset_submap && $purge_cliphist; loginctl terminate-user $USER # logout
-      bind=,u,exec,$reset_submap && systemctl suspend # suspend
-      bind=,h,exec,$reset_submap && systemctl hibernate # hibernate
-      bind=,s,exec,$reset_submap && $purge_cliphist; systemctl poweroff # shutdown
-      bind=,r,exec,$reset_submap && $purge_cliphist; systemctl reboot # reboot
-      bind=,escape,submap,reset
-      submap=reset
-      $submap_screenshot = <span foreground='##${color10}'>󰄄</span>  <span foreground='##${color5}'><b>Area</b></span> <span foreground='##${color10}'>(<b>a</b>)</span>   <span foreground='##${color5}'><b>Screen</b></span> <span foreground='##${color10}'>(<b>s</b>)</span>   <span foreground='##${color7}'>+   <span foreground='##${color10}'><b>Shift</b></span>  for  󰆓</span>
-      # $submap_screenshot = 󰄄 Area (a)   Screen (<b>s</b>)</span>   <span foreground='##${color7}'>+   <span foreground='##${color10}'><b>Shift</b></span>  for  󰆓</span>
-      bind=,print,submap,$submap_screenshot
-      submap=$submap_screenshot
-      bind=,a,exec,$reset_submap && grimblast copy area
-      bind=,s,exec,$reset_submap && grimblast copy screen
-      bind=SHIFT,a,exec,$reset_submap && grimblast save area
-      bind=SHIFT,s,exec,$reset_submap && grimblast save screen
-      bind=,escape,submap,reset
-      submap=reset
-    '';
   };
 }

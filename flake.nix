@@ -15,6 +15,21 @@
     home-manager.url = "github:nix-community/home-manager";
     home-manager.inputs.nixpkgs.follows = "nixpkgs";
 
+    nix-darwin = {
+      url = "github:nix-darwin/nix-darwin/master";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
+    nix-homebrew.url = "github:zhaofengli/nix-homebrew";
+    homebrew-core = {
+      url = "github:homebrew/homebrew-core";
+      flake = false;
+    };
+    homebrew-cask = {
+      url = "github:homebrew/homebrew-cask";
+      flake = false;
+    };
+
     # for secfix
     kolide-launcher = {
       # url = "github:/kolide/nix-agent/main";
@@ -25,8 +40,6 @@
     # TODO: Add any other flake you might need
     # hardware.url = "github:nixos/nixos-hardware";
 
-    # Shameless plug: looking for a way to nixify your themes and make
-    # everything match nicely? Try nix-colors!
     nix-colors.url = "github:evelynandrist/nix-colors";
 
     nixos-hardware.url = "github:NixOS/nixos-hardware/master";
@@ -126,6 +139,17 @@
         modules = [
           # > Our main nixos configuration file <
           ./nixos/packardserver/configuration.nix
+        ];
+      };
+    };
+
+    # nix-darwin configuration entrypoint
+    # Available through 'darwin-rebuild switch --flake .#your-hostname'
+    darwinConfigurations = {
+      nixbook = inputs.nix-darwin.lib.darwinSystem {
+        specialArgs = {inherit inputs outputs;};
+        modules = [
+          ./darwin/nixbook/configuration.nix
         ];
       };
     };

@@ -204,6 +204,24 @@
     ];
 
     extraConfigLua = ''
+    -- Remote iOS builds. The iOS project is edited here and built on the Mac;
+    -- `:make` runs the build over ssh and drops the errors into the quickfix
+    -- list. `--raw` is load-bearing: the plain `ios build` pipes xcodebuild
+    -- through xcbeautify, which rewrites diagnostics into a decorated format
+    -- the default errorformat cannot parse, producing an empty quickfix list.
+      vim.api.nvim_create_autocmd("FileType", {
+        pattern = { "swift", "objc", "objcpp" },
+        callback = function()
+          vim.opt_local.makeprg = "ios build --raw"
+          vim.opt_local.errorformat =
+            "%f:%l:%c: %trror: %m," ..
+            "%f:%l:%c: %tarning: %m," ..
+            "%f:%l:%c: %tote: %m," ..
+            "%f:%l: %trror: %m," ..
+            "%f:%l: %tarning: %m"
+        end,
+      })
+
     -- Linting function
       local lint = require("lint")
       local lint_augroup = vim.api.nvim_create_augroup("lint", { clear = true })

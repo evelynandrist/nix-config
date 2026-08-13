@@ -32,6 +32,10 @@
 	pkgs.xdg-desktop-portal-gtk
       ];
     config.common.default = "*";
+    # "*" should already resolve InputCapture to hyprland, which is the only
+    # implementer, but Deskflow's whole Wayland path hangs off this portal —
+    # so pin it rather than leave the resolution to chance.
+    config.common."org.freedesktop.impl.portal.InputCapture" = [ "hyprland" ];
   };
 
   virtualisation = {
@@ -304,8 +308,19 @@
  #    ];
  #  };
 
+  # macOS advertises itself over Bonjour, but nixpad had no mDNS resolver, so
+  # `nixbook.local` would not resolve. nssmdns4 is what puts it in nsswitch.
+  services.avahi = {
+    enable = true;
+    nssmdns4 = true;
+    openFirewall = true;
+  };
+
   networking.firewall = {
-    allowedTCPPorts = [ 22 ]; # ssh
+    allowedTCPPorts = [
+      22 # ssh
+      24800 # deskflow
+    ];
     # wireguard trips rpfilter up
     checkReversePath = false;
    #  # if packets are still dropped, they will show up in dmesg

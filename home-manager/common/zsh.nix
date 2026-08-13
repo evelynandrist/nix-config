@@ -271,14 +271,11 @@ function mzc_termsupport_cwd {
 # will be called the output may be swallowed by the script or function.
 add-zsh-hook precmd mzc_termsupport_cwd
 
-# File and Dir colors for ls and other outputs
-export LS_OPTIONS='--color=auto'
-eval "$(dircolors -b)"
-alias ls='ls $LS_OPTIONS'
+# ls colours are platform-specific (GNU dircolors vs BSD CLICOLOR) and live in
+# ./linux.nix and ./darwin.nix respectively, as does the `backup` alias.
 
 export EDITOR="nvim"
 
-alias backup="sudo systemctl start restic-backups-pcloud.service"
 alias ns="nix-shell --run 'zsh; exit' -p"
 
 export KEYID=0xE264A88262066B52

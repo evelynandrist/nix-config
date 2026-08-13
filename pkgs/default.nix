@@ -5,4 +5,5 @@ pkgs: {
   terminal-magic = pkgs.pkgs.callPackage ./terminal-magic { };
   steamlink = pkgs.pkgs.callPackage ./steamlink { };
   extended-openai-conversation = pkgs.pkgs.callPackage ./extended-openai-conversation { };
+  ios-remote = pkgs.pkgs.callPackage ./ios-remote { };
 }
