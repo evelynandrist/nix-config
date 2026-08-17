@@ -19,6 +19,8 @@
     ./defaults.nix
   ];
 
+  networking.hostName = "nixbook";
+
   nixpkgs = {
     hostPlatform = "aarch64-darwin";
     overlays = [

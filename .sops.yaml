@@ -8,7 +8,7 @@ keys:
   # run on the Mac after its first darwin-rebuild switch, then uncomment the
   # matching creation_rule below and flip `bootstrapped` in
   # home-manager/nixbook/sops.nix.
-  # - &nixbook age1...
+  - &nixbook age15kvzwd5muxku36mgtuzglu6ns9d08lzk504u9rceyyx58rnywv8qpduvh9
 creation_rules:
   - path_regex: secrets/secrets.yaml$
     key_groups:
@@ -17,9 +17,9 @@ creation_rules:
           - *nixpad
           - *nixserver
           - *packardserver
-  # - path_regex: secrets/nixbook.yaml$
-  #   key_groups:
-  #     - pgp:
-  #         - *primary
-  #       age:
-  #         - *nixbook
+  - path_regex: secrets/nixbook.yaml$
+    key_groups:
+      - pgp:
+          - *primary
+        age:
+          - *nixbook

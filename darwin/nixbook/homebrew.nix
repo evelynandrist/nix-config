@@ -12,6 +12,7 @@
     taps = {
       "homebrew/homebrew-core" = inputs.homebrew-core;
       "homebrew/homebrew-cask" = inputs.homebrew-cask;
+      "deskflow/homebrew-tap" = inputs.homebrew-deskflow;
     };
     # Take over an existing imperative install rather than refusing to start.
     autoMigrate = true;
@@ -30,7 +31,7 @@
     };
 
     casks = [
-      "deskflow"
+      "deskflow/tap/deskflow"
     ];
 
     masApps = {

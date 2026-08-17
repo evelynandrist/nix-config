@@ -48,5 +48,5 @@
     display = 30;
   };
 
-  power.restartAfterPowerFailure = true;
+  #power.restartAfterPowerFailure = true;
 }

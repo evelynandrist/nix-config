@@ -80,6 +80,11 @@
     simple-nixos-mailserver.url = "gitlab:simple-nixos-mailserver/nixos-mailserver/main";
 
     nix-minecraft.url = "github:Infinidoge/nix-minecraft";
+
+    homebrew-deskflow = {
+        url = "github:deskflow/homebrew-tap";
+        flake = false;
+    };
   };
 
   outputs = {

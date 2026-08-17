@@ -253,6 +253,22 @@
         "type": "github"
       }
     },
+    "homebrew-deskflow": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1786408762,
+        "narHash": "sha256-NLaihtvOlQy+XyjZFB/GRe9RwGD+9h3YNEJk3KI+NF0=",
+        "owner": "deskflow",
+        "repo": "homebrew-tap",
+        "rev": "8cfd688847ccdcc9daffd821c24891d748eae467",
+        "type": "github"
+      },
+      "original": {
+        "owner": "deskflow",
+        "repo": "homebrew-tap",
+        "type": "github"
+      }
+    },
     "impermanence": {
       "inputs": {
         "home-manager": "home-manager_2",
@@ -616,6 +632,7 @@
         "home-manager": "home-manager",
         "homebrew-cask": "homebrew-cask",
         "homebrew-core": "homebrew-core",
+        "homebrew-deskflow": "homebrew-deskflow",
         "impermanence": "impermanence",
         "kmonad": "kmonad",
         "kolide-launcher": "kolide-launcher",
