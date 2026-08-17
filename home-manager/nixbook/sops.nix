@@ -11,7 +11,7 @@ let
   #
   # On a machine with a broken display, walking into that loop is expensive,
   # hence the explicit flag rather than a comment.
-  bootstrapped = false;
+  bootstrapped = true;
 in
 {
   sops = {
