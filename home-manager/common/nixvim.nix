@@ -58,6 +58,14 @@
 	};
       }
       {
+	action = "<cmd>Telescope lsp_document_symbols<CR>";
+	key = "<leader>o";
+      }
+      {
+	action = "<cmd>AerialToggle! right<CR>";
+	key = "<leader>a";
+      }
+      {
 	action = ":if &modifiable && !&readonly && &modified <CR> :write<CR> :endif<CR>:bprevious<CR>";
 	key = "<s-tab>";
 	options = {
@@ -87,6 +95,22 @@
     '';
 
     plugins = {
+      aerial = {
+	enable = true;
+	settings = {
+	  backends = [ "lsp" "treesitter" ];
+	  filter_kind = [
+	    "Class"
+	    "Constructor"
+	    "Enum"
+	    "Function"
+	    "Interface"
+	    "Method"
+	    "Struct"
+	  ];
+	};
+      };
+
       bufferline.enable = true;
 
       comment.enable = true;
@@ -183,6 +207,7 @@
 	settings.indent.enable = true;
 	highlight.enable = true;
       };
+      treesitter-context.enable = true;
       cmp-treesitter.enable = true;
 
       web-devicons.enable = true;
