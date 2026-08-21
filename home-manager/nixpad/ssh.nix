@@ -36,6 +36,11 @@
         # the session alive across brief network blips mid-build.
         ServerAliveInterval = 30;
         ServerAliveCountMax = 6;
+
+	# To authenticate with gitlab with the yubikey
+	ForwardAgent = true;
+	AddKeysToAgent = "yes";
+	IdentityFile = "/home/evelyn/.ssh/id_ed25519_sk";
       };
 
       "140.238.214.181" = {

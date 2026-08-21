@@ -21,7 +21,7 @@
     ./clamav.nix
   ];
 
-  programs.ssh.startAgent = false;
+  programs.ssh.startAgent = true;
 
   hardware.keyboard.qmk.enable = true;
 

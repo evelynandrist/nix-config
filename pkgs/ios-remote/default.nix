@@ -31,7 +31,7 @@ writeShellApplication {
     # Overridable per project by a .ios-remote file in the project root, which
     # is sourced as shell. Recognised variables: IOS_SCHEME, IOS_PROJECT_FILE,
     # IOS_SIM_DESTINATION, IOS_REMOTE_HOST, IOS_REMOTE_DIR, IOS_BUNDLE_ID.
-    IOS_REMOTE_HOST="''${IOS_REMOTE_HOST:-macbook}"
+    IOS_REMOTE_HOST="''${IOS_REMOTE_HOST:-nixbook}"
 
     find_root() {
       local dir="$PWD"
@@ -89,7 +89,10 @@ writeShellApplication {
         esac
       fi
       [ -n "''${IOS_SCHEME:-}" ] && args+=(-scheme "$IOS_SCHEME")
-      printf '%q ' "''${args[@]}"
+
+      if [ "''${#args[@]}" -gt 0 ]; then
+        printf '%q ' "''${args[@]}"
+      fi
     }
 
     # --- sync --------------------------------------------------------------
