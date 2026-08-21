@@ -26,6 +26,9 @@
       relativenumber = true;
 
       shiftwidth = 2;
+
+      # load .nvim.lua from project root for build commands
+      exrc = true;
     };
 
     globals.mapleader = " ";
@@ -124,6 +127,12 @@
 
           pylsp.enable = true;
 
+          # only on darwin, needs a buildServer.json in project root (generate with xcode-build-server)
+          sourcekit = {
+            enable = pkgs.stdenv.isDarwin;
+            cmd = [ "xcrun" "sourcekit-lsp" ];
+          };
+
         };
       };
 
@@ -204,11 +213,17 @@
     ];
 
     extraConfigLua = ''
-    -- Remote iOS builds. The iOS project is edited here and built on the Mac;
-    -- `:make` runs the build over ssh and drops the errors into the quickfix
-    -- list. `--raw` is load-bearing: the plain `ios build` pipes xcodebuild
-    -- through xcbeautify, which rewrites diagnostics into a decorated format
-    -- the default errorformat cannot parse, producing an empty quickfix list.
+    ${lib.optionalString (!pkgs.stdenv.isDarwin) ''
+    -- Remote iOS builds from nixpad. The iOS project is edited here and built
+    -- on the Mac; `:make` runs the build over ssh and drops the errors into the
+    -- quickfix list. `--raw` is load-bearing: the plain `ios build` pipes
+    -- xcodebuild through xcbeautify, which rewrites diagnostics into a
+    -- decorated format the default errorformat cannot parse, producing an
+    -- empty quickfix list.
+    --
+    -- Not applied on darwin: there, nvim runs on the Mac itself and the project
+    -- sets its own makeprg through .nvim.lua (exrc). This autocmd fires on
+    -- FileType, i.e. after exrc has run, so it would override the project.
       vim.api.nvim_create_autocmd("FileType", {
         pattern = { "swift", "objc", "objcpp" },
         callback = function()
@@ -221,6 +236,7 @@
             "%f:%l: %tarning: %m"
         end,
       })
+    ''}
 
     -- Linting function
       local lint = require("lint")

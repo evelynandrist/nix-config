@@ -6,4 +6,5 @@ pkgs: {
   steamlink = pkgs.pkgs.callPackage ./steamlink { };
   extended-openai-conversation = pkgs.pkgs.callPackage ./extended-openai-conversation { };
   ios-remote = pkgs.pkgs.callPackage ./ios-remote { };
+  xcode-build-server = pkgs.pkgs.callPackage ./xcode-build-server { };
 }
