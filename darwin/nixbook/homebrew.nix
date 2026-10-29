@@ -30,7 +30,13 @@
       cleanup = "uninstall";
     };
 
+    # Without this, a cask upgrade leaves the new binary quarantined; on a
+    # headless boot the Gatekeeper approval dialog can never be clicked and
+    # syspolicyd blocks the app from launching at all.
+    caskArgs.no_quarantine = true;
+
     casks = [
+      "betterdisplay"
       "deskflow/tap/deskflow"
     ];
 

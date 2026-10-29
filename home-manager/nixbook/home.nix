@@ -17,6 +17,7 @@
     ./ios.nix
     ./sops.nix
     ./ssh.nix
+    ./sunshine.nix
   ];
 
   # don't put fonts here, they're installed through nix-darwin's fonts.packages

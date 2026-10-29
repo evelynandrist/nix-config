@@ -44,8 +44,9 @@
   power.sleep = {
     computer = "never";
     harddisk = "never";
-    # display may sleep
-    display = 30;
+    # display must not sleep either: WindowServer stops composing frames for
+    # ALL displays (including the virtual screen), hanging sunshine's capture
+    display = "never";
   };
 
   #power.restartAfterPowerFailure = true;

@@ -17,6 +17,7 @@
     ./userconfig.nix
     ./homebrew.nix
     ./defaults.nix
+    ./ollama.nix
   ];
 
   networking.hostName = "nixbook";
