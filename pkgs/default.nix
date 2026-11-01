@@ -7,4 +7,6 @@ pkgs: {
   extended-openai-conversation = pkgs.pkgs.callPackage ./extended-openai-conversation { };
   ios-remote = pkgs.pkgs.callPackage ./ios-remote { };
   xcode-build-server = pkgs.pkgs.callPackage ./xcode-build-server { };
+  obsidian-headless = pkgs.pkgs.callPackage ./obsidian-headless { };
+  briefing = pkgs.pkgs.callPackage ./briefing { };
 }

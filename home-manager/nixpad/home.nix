@@ -61,6 +61,11 @@ in {
     xdg-utils
   ];
 
+  programs.direnv = {
+    enable = true;
+    nix-direnv.enable = true;
+  };
+
   # home.pointerCursor = {
   #   name = "Catppuccin-Mocha-Dark-Cursors";
   #   package = pkgs.catppuccin-cursors.mochaDark;

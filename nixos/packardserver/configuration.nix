@@ -50,6 +50,9 @@
 
   users.users.${config.userConfig.username}.extraGroups = [ "network" "rfkill" "power" "wheel" "docker" ];
 
+  # allow deploying from other machines (nh os switch --target-host), wheel can sudo anyway
+  nix.settings.trusted-users = [ "root" "@wheel" ];
+
   virtualisation.docker.enable = true;
   virtualisation.docker.storageDriver = "btrfs";
   virtualisation.oci-containers.backend = "docker";

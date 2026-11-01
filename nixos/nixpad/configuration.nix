@@ -38,6 +38,29 @@
     config.common."org.freedesktop.impl.portal.InputCapture" = [ "hyprland" ];
   };
 
+  fileSystems."/mnt/rimonssd" = {
+    device = "/dev/disk/by-uuid/CA47-0649";
+    fsType = "exfat";
+    options = [
+      "noauto"
+      "x-systemd.automount"
+      "x-systemd.mount-timeout=3s"   # bounds the mount command itself
+      "x-systemd.device-timeout=1s"  # bounds waiting for the device to appear (default 90s)
+      "noatime"
+      "uid=1000"
+      "gid=100"
+    ];
+  };
+
+  # Accessing the path repeatedly while the SSD is out would otherwise trip
+  # systemd's start rate limit (5 in 10s) and block mounting once it's back.
+  systemd.units."mnt-rimonssd.mount" = {
+    overrideStrategy = "asDropin";
+    text = ''
+      [Unit]
+      StartLimitIntervalSec=0
+    '';
+  };
   virtualisation = {
     libvirtd = {
       enable = true;

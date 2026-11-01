@@ -23,7 +23,7 @@
       nixbook = {
         # macOS advertises itself over Bonjour; nixpad resolves that through
         # avahi + nssmdns4, enabled in nixos/nixpad/configuration.nix.
-        HostName = "nixbook.local";
+        HostName = "192.168.1.131";
         User = config.userConfig.username;
 
         # SSH uses the yubikey, so *every* connection costs a physical touch.
