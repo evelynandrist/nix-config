@@ -77,16 +77,6 @@
 	  client_max_body_size 500M;
 	'';
       };
-      "analytics.qwt.ch" = {
-	locations."/" = {
-	  proxyPass = "http://127.0.0.1:8003";
-	};
-	extraConfig = ''
-	  ${allowCloudflareIPv4s}
-	  ${allowCloudflareIPv6s}
-	  deny all; # block all remaining ips
-	'';
-      };
       "books.qwt.ch" = {
 	enableACME = true;
 	forceSSL = true;

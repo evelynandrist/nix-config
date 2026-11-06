@@ -16,7 +16,6 @@
     ./nginx.nix
     ./searx.nix
     ./vaultwarden.nix
-    ./umami.nix
     ./calibre-web.nix
     # ./archisteamfarm.nix
     ./mailserver.nix
@@ -86,7 +85,5 @@
   networking.firewall = {
     allowedTCPPorts = [ 22 80 81 443 7777 ];
     allowedUDPPorts = [ 2757 2759 7777 19132 43001 ];
-    # to allow umami to access the umami-db container
-    interfaces."docker0".allowedTCPPorts = [ 5000 ];
   };
 }
