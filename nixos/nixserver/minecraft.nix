@@ -3,7 +3,8 @@
 # play together. Bedrock consoles join through the friends tab of the
 # ObstgartenGang Xbox account (MCXboxBroadcast).
 #
-# Console:  sudo tmux -S /run/minecraft/obstgarten.sock attach   (detach: Ctrl-b d)
+# Console:  tmux -S /run/minecraft/obstgarten.sock attach   (detach: Ctrl-b d)
+#           (the socket is mode 660 minecraft:minecraft; the main user is in that group)
 # Map:      https://mc.qwt.ch
 let
   name = "obstgarten";
@@ -167,6 +168,9 @@ let
   };
   sendCommand = cmd: "${lib.getExe serverCommand} ${lib.escapeShellArg cmd}";
 in {
+  # For attaching to the console (see the top of this file)
+  environment.systemPackages = [ pkgs.tmux ];
+
   services.minecraft-servers.servers.${name} = {
     enable = true;
     package = paper;

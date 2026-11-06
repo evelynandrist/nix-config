@@ -77,7 +77,7 @@
     };
   };
 
-  users.users.${config.userConfig.username}.extraGroups = [ "network" "rfkill" "power" "wheel" "docker" ];
+  users.users.${config.userConfig.username}.extraGroups = [ "network" "rfkill" "power" "wheel" "docker" "minecraft" ];
 
   virtualisation.docker.enable = true;
   virtualisation.docker.storageDriver = "btrfs";

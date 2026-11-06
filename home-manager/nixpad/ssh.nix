@@ -43,6 +43,24 @@
 	IdentityFile = "/home/evelyn/.ssh/id_ed25519_sk";
       };
 
+      nixserver = {
+        HostName = "nixserver.qwt.ch";
+        User = "entity"; # nixserver's userConfig.username differs from nixpad's
+        # Offer only the yubikey; trying every agent key first runs into the
+        # server's MaxAuthTries.
+        IdentityFile = "/home/evelyn/.ssh/id_ed25519_sk";
+        IdentitiesOnly = true;
+
+        # One yubikey touch opens a master connection that later ssh calls
+        # (including Claude's) reuse, so a debugging session needs one touch.
+        # Close it early with `ssh -O exit nixserver`.
+        ControlMaster = "auto";
+        ControlPath = "~/.ssh/cm-%r@%h:%p";
+        ControlPersist = "4h";
+        ServerAliveInterval = 30;
+        ServerAliveCountMax = 6;
+      };
+
       "140.238.214.181" = {
 	 IdentityFile = "/home/evelyn/nixpad_backup/ssh-key-2023-01-27.key";
       };
