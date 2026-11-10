@@ -1,0 +1,7 @@
+name: ObstgartenSidebar
+version: 1.2.0
+main: ch.qwt.obstgarten.ObstgartenSidebar
+api-version: "1.20"
+description: Sidebar for TAB (nether goal; name, hearts, diamonds, voice chat per member) as PlaceholderAPI placeholders, and nicknames on name tags
+depend: [PlaceholderAPI]
+softdepend: [voicechat, Essentials, packetevents]

@@ -6,6 +6,9 @@
 # Console:  tmux -S /run/minecraft/obstgarten.sock attach   (detach: Ctrl-b d)
 #           (the socket is mode 660 minecraft:minecraft; the main user is in that group)
 # Map:      https://mc.qwt.ch
+# Voice:    Simple Voice Chat (Java mod, UDP 24454) + https://voice.mc.qwt.ch
+#           for everyone else (SimpleVoice-Geyser, login = one-time code / QR
+#           map from /svg pair or the Bedrock emote menu; name + /svg pswd also works)
 let
   name = "obstgarten";
   dataDir = "${config.services.minecraft-servers.dataDir}/${name}";
@@ -17,6 +20,31 @@ let
   # releases for the new version on Modrinth.
   paper = pkgs.paperServers.paper-26_2;
   mcVersion = lib.head (lib.splitString "-build" paper.version);
+
+  # SimpleVoice-Geyser: Bedrock players and Java players without the mod join
+  # Simple Voice Chat through a web page. Small project (one maintainer), so
+  # built from a pinned commit instead of "newest", plus our password-less
+  # login (one-time code + QR map), see ./simplevoice-geyser.
+  # (source read for 0.1.4: only network access is the Modrinth update check,
+  # which is switched off below).
+  svgJar = pkgs.callPackage ./simplevoice-geyser { };
+
+  # Our own: the sidebar for TAB (nether goal, one line per member), the
+  # Bedrock pack Geyser pushes to Bedrock players (hides the sidebar numbers,
+  # icons) and the server resource pack for Java players (icons).
+  sidebarJar = pkgs.callPackage ./obstgarten-sidebar { };
+  sidebarIcons = pkgs.callPackage ./sidebar-icons { };
+  bedrockPack = pkgs.callPackage ./bedrock-pack { icons = sidebarIcons; };
+  javaPack = pkgs.callPackage ./java-pack { icons = sidebarIcons; };
+  # store hash in the URL: a new pack is a new URL (see ./java-pack). Only
+  # the name (an attribute name can't refer to a store path); nginx's
+  # `alias` below keeps the pack itself in the system.
+  javaPackPath = "/pack/${builtins.unsafeDiscardStringContext (baseNameOf javaPack)}";
+  # Geyser extension + optional UI looks (bedrock-themes/themes/*.mcpack),
+  # each Bedrock player picks one with /theme <name>; nobody gets one by default
+  bedrockThemes = pkgs.callPackage ./bedrock-themes { };
+  svgPort = 8110; # web page, only on localhost behind nginx (BlueMap has 8100)
+  svcPort = 24454; # Simple Voice Chat's own UDP port, for players with the mod
 
   # Bedrock clients update themselves, and Geyser only speaks the newest
   # protocols. So everything on the Bedrock side (Geyser, Floodgate, the Geyser
@@ -70,7 +98,9 @@ let
       fetch plugins/ViaVersion.jar      "$(modrinth viaversion)"
       fetch "$ext/MCXboxBroadcastExtension.jar" \
         "https://github.com/MCXboxBroadcast/Broadcaster/releases/latest/download/MCXboxBroadcastExtension.jar"
-      fetch "$ext/EmoteOffhand.jar"     "$geyser/emoteoffhand/versions/latest/builds/latest/downloads/emoteoffhand"
+      # Emotes open the voice chat menu (SimpleVoice-Geyser) instead of swapping
+      # hands. Bedrock gets its own offhand key with 26.70.
+      rm -f "$ext/EmoteOffhand.jar"
 
       # Bound to the Minecraft version
       fetch plugins/LuckPerms.jar   "$(modrinth luckperms "$mcVersion")"
@@ -79,6 +109,30 @@ let
       fetch plugins/Chunky.jar      "$(modrinth chunky "$mcVersion")"
       # items go into a grave at the death spot (keepInventory stays off)
       fetch plugins/GravesX.jar     "$(modrinth gravesx "$mcVersion")"
+      # sidebar with the online players (see tabScoreboards)
+      fetch plugins/TAB.jar         "$(modrinth tab-was-taken "$mcVersion")"
+      fetch plugins/PlaceholderAPI.jar "$(modrinth placeholderapi "$mcVersion")"
+      # lets ./obstgarten-sidebar put the nicknames on the name tags
+      fetch plugins/packetevents.jar "$(modrinth packetevents "$mcVersion")"
+      # proximity voice: Simple Voice Chat (server side of the Java mod) and
+      # the web bridge for everyone without the mod (pinned, see svgJar)
+      fetch plugins/voicechat.jar   "$(modrinth simple-voice-chat "$mcVersion")"
+      install -m 644 ${svgJar} plugins/SimpleVoice-Geyser.jar
+      # sidebar lines (see tabScoreboards); replaces the PlayerList and
+      # Player expansions from PlaceholderAPI's store
+      install -m 644 ${sidebarJar} plugins/ObstgartenSidebar.jar
+      rm -f plugins/PlaceholderAPI/expansions/Expansion-playerlist.jar \
+        plugins/PlaceholderAPI/expansions/Expansion-player.jar
+      # Bedrock pack, sent by Geyser on join (force-resource-packs is on)
+      mkdir -p plugins/Geyser-Spigot/packs
+      install -m 644 ${bedrockPack} plugins/Geyser-Spigot/packs/obstgarten.mcpack
+      # Optional looks per Bedrock player (/theme pink, /theme normal); the
+      # choices stay in extensions/obstgartenthemes/choices.properties
+      themesDir=plugins/Geyser-Spigot/extensions/obstgartenthemes/themes
+      mkdir -p "$themesDir"
+      install -m 644 ${bedrockThemes}/ObstgartenThemes.jar plugins/Geyser-Spigot/extensions/
+      rm -f "$themesDir"/*.mcpack
+      install -m 644 ${bedrockThemes}/themes/*.mcpack "$themesDir"/
 
       # EssentialsX: the dev builds support new Minecraft versions months
       # before a stable release does
@@ -92,11 +146,32 @@ let
     '';
   };
 
+  maxPlayers = 10;
+
+  # Sidebar (lines from ./obstgarten-sidebar). The nether stays closed until
+  # everyone has a diamond chestplate (gamerule, see serverProperties), so the title and
+  # first line say "Nether öffnet, wenn / alle [chestplate] haben". Then one
+  # line per member (whitelist + ops; online first, offline grey): Essentials
+  # nickname, hearts, diamonds collected x/8 or the chestplate, a speaker when in
+  # voice chat. Once the gamerule is on, the title says "Nether ist offen!"
+  # and goal and diamonds disappear.
+  # A line that is only a placeholder and comes out empty is hidden by TAB,
+  # so one board with maxPlayers lines fits any player count. Each player can
+  # hide it with /sb (TAB remembers the choice).
+  # Bedrock shows red numbers next to the lines; ./bedrock-pack hides them.
+  tabScoreboards = pkgs.writeText "tab-scoreboards.json" (builtins.toJSON {
+    players = {
+      title = "%obstgarten_title%";
+      lines = [ "%obstgarten_goal%" ]
+        ++ map (i: "%obstgarten_line_${toString i}%") (lib.range 0 (maxPlayers - 1));
+    };
+  });
+
   # Single settings in config files the plugins generate themselves on their
   # first start. Takes effect from the second start on.
   patchConfigs = pkgs.writeShellApplication {
     name = "minecraft-${name}-patch-configs";
-    runtimeInputs = with pkgs; [ gnused ];
+    runtimeInputs = with pkgs; [ gnused yq-go ];
     text = ''
       # set_key <file> <key> <value>, for `key: value` lines at any indentation,
       # so the key has to be unique within the file
@@ -121,6 +196,14 @@ let
       set_key "$essentials" enderman-pickup true
       # no starter kit (stone tools) on the first join, plain survival start
       set_key "$essentials" kit "'''"
+      # Respawn at the bed (or charged anchor), else at the first /sethome
+      # home, else at spawn. EssentialsXSpawn handles respawning, and with
+      # respawn-at-home off it sent everyone to spawn and ignored the bed.
+      set_key "$essentials" respawn-at-home true
+      set_key "$essentials" respawn-at-home-bed true
+      set_key "$essentials" respawn-at-anchor true
+      # nicknames (set with /nick, the sidebar shows them too) without "~"
+      set_key "$essentials" nickname-prefix "'''"
 
       # keep pregenerating after the nightly restart
       set_key plugins/Chunky/config.yml continue-on-restart true
@@ -130,6 +213,54 @@ let
       for map in plugins/BlueMap/maps/*.conf; do
         set_key "$map" min-inhabited-time 20
       done
+
+      # TAB: only the sidebar; everything else (tab list names, name tags,
+      # header/footer, bossbar) stays vanilla. No ping column: Geyser
+      # answers the server's pings itself (forward-player-ping off, it can
+      # cause timeouts), so Bedrock players always showed 0 ms.
+      tab=plugins/TAB/config.yml
+      if [ -f "$tab" ]; then
+        yq -i '
+          .header-footer.enabled = false |
+          .tablist-name-formatting.enabled = false |
+          .scoreboard-teams.enabled = false |
+          .playerlist-objective.enabled = false |
+          .belowname-objective.enabled = false |
+          .bossbar.enabled = false |
+          .layout.enabled = false |
+          .proxy-support.enabled = false |
+          .scoreboard.enabled = true |
+          .scoreboard.remember-toggle-choice = true |
+          .scoreboard.scoreboards = load("${tabScoreboards}")
+        ' "$tab"
+      fi
+
+      # SimpleVoice-Geyser: web page only on localhost (nginx in front, see
+      # voice.mc.qwt.ch), no update check (pinned), and no default group with
+      # its publicly known default password; groups are made in the menu.
+      # Login by pairing: the code / QR map works once for 2 minutes, then
+      # that browser stays logged in (devices.json, hashed). Passwords still
+      # work for whoever set one.
+      svg=plugins/SimpleVoice-Geyser/config.yml
+      if [ -f "$svg" ]; then
+        yq -i '
+          .server.bind-address = "127.0.0.1" |
+          .server.port = ${toString svgPort} |
+          .server.group.default.enabled = false |
+          .server.pairing.enabled = true |
+          .server.pairing.public-url = "https://voice.mc.qwt.ch" |
+          .updatechecker.enable = false |
+          .client.join-message.text = [
+            "Voice chat in the browser (phone, tablet, PC):",
+            "Bedrock: emote -> Connect browser. Java: /svg pair",
+            "Then scan the map in your hand, or enter the code on https://voice.mc.qwt.ch"
+          ]
+        ' "$svg"
+      fi
+
+      # Simple Voice Chat: players with the mod can't record conversations
+      sed -i -E 's/^allow_recording=.*/allow_recording=false/' \
+        plugins/voicechat/voicechat-server.properties 2>/dev/null || true
     '';
   };
 
@@ -168,6 +299,10 @@ let
   };
   sendCommand = cmd: "${lib.getExe serverCommand} ${lib.escapeShellArg cmd}";
 in {
+  # Prefer dropping page cache over swapping out the (pretouched) Java heap.
+  # A swapped-out heap freezes the server for seconds whenever GC walks it.
+  boot.kernel.sysctl."vm.swappiness" = 10;
+
   # For attaching to the console (see the top of this file)
   environment.systemPackages = [ pkgs.tmux ];
 
@@ -196,7 +331,7 @@ in {
       motd = "Obstgarten";
       difficulty = "easy";
       gamemode = "survival";
-      max-players = 10;
+      max-players = maxPlayers;
       # chunks sent to clients (Bedrock clients cap this with their own setting)
       view-distance = 28;
       # chunks where mobs, crops and redstone actually run
@@ -208,12 +343,43 @@ in {
       # nix-minecraft leaves whitelist.json alone as long as `whitelist` is empty
       white-list = true;
       enforce-whitelist = true;
+      # Bedrock players (Floodgate) have no Mojang chat-signing key, so with
+      # this on their chat is disabled ("missing profile public key")
+      enforce-secure-profile = false;
+      # The vanilla anti-fly check ("kicked for floating too long") misfires
+      # for Bedrock players, whose movement Geyser translates (scaffolding,
+      # ladders, bubble columns, lag). Geyser recommends turning it off; this
+      # doesn't let anyone fly without a cheat client.
+      allow-flight = true;
+      # The nether is closed until everyone has a diamond chestplate (the
+      # sidebar shows the progress), so the newer players aren't left far
+      # behind. Not allow-nether here, this version ignores it: the world
+      # gamerule decides, right away, no restart. In the console:
+      #   gamerule allow_entering_nether_using_portals false|true
+      # Icons for the sidebar (./java-pack); Bedrock gets them from ./bedrock-pack
+      resource-pack = "https://mc.qwt.ch${javaPackPath}";
+      require-resource-pack = true;
     };
 
-    operators.eeeeeeeevelyn = {
-      uuid = "ac788709-ece6-43f0-b8ff-403c942453c5";
-      level = 4;
-    };
+    # No operators: everyone plays plain survival, admin happens in the
+    # console. With this empty nix-minecraft leaves ops.json alone, so ops
+    # are managed in-game (`op` / `deop`) like the whitelist.
+
+    # Player permissions live in LuckPerms (plugins/LuckPerms), not here. The
+    # `default` group has, each set on its own (one node per command, extra
+    # words would be read as contexts):
+    #   lp group default permission set <node> true
+    #   essentials.sethome  essentials.sethome.multiple (3 homes)  essentials.delhome
+    #   essentials.tpa  essentials.tpahere  essentials.tpaccept  essentials.tpdeny
+    #   essentials.tpacancel  essentials.warp  essentials.warp.list
+    #   essentials.msg  essentials.list  tab.scoreboard.toggle (/sb)
+    #   voicechat.speak  voicechat.listen  voicechat.groups (Simple Voice
+    #   Chat gives these to nobody by default, also needed for the web page)
+    #   svg.vc.group.join (SimpleVoice-Geyser 0.1.4 checks it but never declares
+    #   it, so only ops could join groups; declared in our pairing.patch now)
+    # Left out on purpose: essentials.home, .back, .spawn (no teleporting out
+    # of caves; homes only count as the respawn point when the bed is gone).
+    # GravesX's player commands (graves.gui, graves.teleport) are on by default.
 
     # Geyser's NetherNet (the current Bedrock connection method) extracts a
     # prebuilt WebRTC library (libdatachannel) that expects OpenSSL 3 and
@@ -242,7 +408,7 @@ in {
 
   # Geyser (Bedrock): RakNet and the NetherNet WebRTC connection over UDP,
   # Geyser's built-in NetherNet signaling over TCP
-  networking.firewall.allowedUDPPorts = [ 19132 ];
+  networking.firewall.allowedUDPPorts = [ 19132 svcPort ];
   networking.firewall.allowedTCPPorts = [ 19132 ];
 
   # Pick up new Geyser/Floodgate builds every night
@@ -282,6 +448,32 @@ in {
         satisfy any;
         include ${homeIpDir}/*.conf;
         deny all;
+      '';
+    };
+    # The Java resource pack: the game downloads it without a login
+    locations."= ${javaPackPath}" = {
+      alias = javaPack;
+      extraConfig = "auth_basic off;";
+    };
+  };
+
+  # Voice chat web page (SimpleVoice-Geyser). No basic auth: players log in
+  # with a one-time code / QR link from the game (or name + voice password).
+  # The plugin reads X-Real-IP (recommendedProxySettings) to rate-limit codes.
+  # Cloudflare: voice.mc CNAME mc.qwt.ch, "DNS only" (audio goes straight here).
+  services.nginx.virtualHosts."voice.mc.qwt.ch" = {
+    enableACME = true;
+    forceSSL = true;
+    locations."/" = {
+      proxyPass = "http://127.0.0.1:${toString svgPort}";
+      proxyWebsockets = true; # the audio runs over a websocket
+      recommendedProxySettings = true;
+      # The server only sends while someone talks. With nginx's default 60s
+      # it cut the websocket after a minute of silence (code 1006, the page
+      # reconnected every minute).
+      extraConfig = ''
+        proxy_read_timeout 1h;
+        proxy_send_timeout 1h;
       '';
     };
   };
@@ -334,6 +526,7 @@ in {
       "${dataDir}/logs"
       "${dataDir}/plugins/*.jar" # downloaded again on start
       "${dataDir}/plugins/Geyser-Spigot/extensions/*.jar"
+      "${dataDir}/plugins/PlaceholderAPI/expansions/*.jar"
     ];
     timerConfig = {
       OnCalendar = "hourly";
@@ -363,5 +556,30 @@ in {
       #!${pkgs.runtimeShell}
       ${sendCommand "save-on"} || true
     '';
+  };
+
+  # Raw material for a 3D timelapse later: one snapshot of the world per day,
+  # kept for good (thinned out with age). Rendered afterwards with BlueMap from
+  # whatever camera angle fits the builds by then. Only world/, so the plugin
+  # databases don't take space. Its own repository, because `forget` in the
+  # hourly one would apply the hourly retention to these snapshots too.
+  # A day of play adds ~200 MB, a quiet day a few MB (measured 2026-11).
+  services.restic.backups.minecraft-timelapse = {
+    repository = "${backupDir}/minecraft-timelapse";
+    passwordFile = backupPasswordFile;
+    initialize = true;
+    paths = [ "${dataDir}/world" ];
+    # between two hourly backups and before the 04:30 restart
+    timerConfig = {
+      OnCalendar = "*-*-* 03:30:00 Europe/Zurich";
+      Persistent = true;
+    };
+    pruneOpts = [
+      "--keep-daily 90"
+      "--keep-weekly 104"
+      "--keep-monthly unlimited"
+    ];
+    inherit (config.services.restic.backups.minecraft)
+      backupPrepareCommand backupCleanupCommand;
   };
 }

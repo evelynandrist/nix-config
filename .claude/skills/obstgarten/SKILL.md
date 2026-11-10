@@ -71,13 +71,14 @@ ssh nixserver '
 Some files get overwritten on every start, so editing them on the server
 directly gets lost:
 
-- **Nix-managed (change in the repo):** `server.properties`, `ops.json`,
+- **Nix-managed (change in the repo):** `server.properties`,
   `plugins/BlueMap/core.conf` (nix-minecraft `files`), and the keys that
   `patchConfigs` sets in Geyser, Essentials, Chunky and the BlueMap map configs.
   Plugin jars are downloaded again on every start by `updatePlugins`, so add or
   remove plugins in that script.
 - **Managed in-game or on the server:** the whitelist (`whitelist add <java
-  name>`, `fwhitelist add <gamertag>`), LuckPerms data, and any plugin config
+  name>`, `fwhitelist add <gamertag>`), ops (`op` / `deop`; nobody is op on
+  purpose, the Java account is played by a family member), LuckPerms data, and any plugin config
   key that `patchConfigs` doesn't touch. You may edit such config files over
   SSH (the group has write access), but say exactly what you changed and why.
   If the change should survive a reinstall, move it into `patchConfigs`

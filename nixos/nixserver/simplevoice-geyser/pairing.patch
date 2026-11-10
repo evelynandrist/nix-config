@@ -1,0 +1,3894 @@
+diff --git a/build.gradle b/build.gradle
+index b097de5..bbd9c83 100644
+--- a/build.gradle
++++ b/build.gradle
+@@ -108,6 +108,7 @@ ext.applySvgRelocations = { task ->
+     task.relocate("org.json", "io.github.theodoremeyer.simplevoicegeyser.shadow.json")
+     task.relocate("org.mindrot", "io.github.theodoremeyer.simplevoicegeyser.shadow.mindrot")
+     task.relocate("org.slf4j", "io.github.theodoremeyer.simplevoicegeyser.shadow.slf4j")
++    task.relocate("io.nayuki.qrcodegen", "io.github.theodoremeyer.simplevoicegeyser.shadow.qrcodegen")
+     logger.info("Loaded relocations for", task)
+ 
+ }
+diff --git a/core/src/main/java/io/github/theodoremeyer/simplevoicegeyser/core/SvgCore.java b/core/src/main/java/io/github/theodoremeyer/simplevoicegeyser/core/SvgCore.java
+index 99f4a58..12bb6ce 100644
+--- a/core/src/main/java/io/github/theodoremeyer/simplevoicegeyser/core/SvgCore.java
++++ b/core/src/main/java/io/github/theodoremeyer/simplevoicegeyser/core/SvgCore.java
+@@ -7,14 +7,17 @@ import io.github.theodoremeyer.simplevoicegeyser.core.api.data.SvgConfig;
+ import io.github.theodoremeyer.simplevoicegeyser.core.audio.AudioByteCompiler;
+ import io.github.theodoremeyer.simplevoicegeyser.core.audio.AudioThread;
+ import io.github.theodoremeyer.simplevoicegeyser.core.commands.Command;
++import io.github.theodoremeyer.simplevoicegeyser.core.data.DeviceStore;
+ import io.github.theodoremeyer.simplevoicegeyser.core.data.PlayerVcPswd;
+ import io.github.theodoremeyer.simplevoicegeyser.core.geyser.GeyserEventHook;
+ import io.github.theodoremeyer.simplevoicegeyser.core.geyser.GeyserHook;
+ import io.github.theodoremeyer.simplevoicegeyser.core.managers.GroupManager;
++import io.github.theodoremeyer.simplevoicegeyser.core.managers.InviteManager;
+ import io.github.theodoremeyer.simplevoicegeyser.core.managers.JoinMessageHandler;
+ import io.github.theodoremeyer.simplevoicegeyser.core.managers.PlayerManager;
+ import io.github.theodoremeyer.simplevoicegeyser.core.server.JettyServer;
+ import io.github.theodoremeyer.simplevoicegeyser.core.server.connection.ConnectionManager;
++import io.github.theodoremeyer.simplevoicegeyser.core.server.connection.auth.PairingManager;
+ import io.github.theodoremeyer.simplevoicegeyser.core.svc.VoiceChatBridge;
+ import io.github.theodoremeyer.simplevoicegeyser.core.update.UpdateChecker;
+ 
+@@ -51,7 +54,9 @@ public final class SvgCore {
+     private JettyServer jettyServer;
+     private final PlayerManager playerManager;
+     private GroupManager groupManager;
++    private InviteManager inviteManager;
+     private PlayerVcPswd playerVcPswd;
++    private PairingManager pairingManager;
+     private final JoinMessageHandler joinMessageHandler;
+     private Command command;
+     private final AudioByteCompiler audioByteCompiler;
+@@ -103,6 +108,8 @@ public final class SvgCore {
+             getLogger().info("client.vctimeout is currently documented but inactive in this dev build.");
+ 
+             this.playerVcPswd = new PlayerVcPswd(this);
++            this.pairingManager = new PairingManager(
++                    new DeviceStore(platform.getDataFolder(), getLogger()));
+ 
+             int port = getConfig().PORT.get();
+             String host = getConfig().BIND_ADDRESS.get();
+@@ -127,6 +134,7 @@ public final class SvgCore {
+             }
+ 
+             this.groupManager = new GroupManager(vcBridge);
++            this.inviteManager = new InviteManager(groupManager);
+             GeyserHook.createFormHandler();
+             this.command = new Command(groupManager, this);
+ 
+@@ -231,6 +239,14 @@ public final class SvgCore {
+         return getInstance().playerVcPswd;
+     }
+ 
++    /**
++     * Get the password-less pairing system
++     * @return pairing manager
++     */
++    public static PairingManager getPairingManager() {
++        return getInstance().pairingManager;
++    }
++
+     /**
+      * Get class managing player connections
+      * @return player manager
+@@ -263,6 +279,14 @@ public final class SvgCore {
+         return getInstance().groupManager;
+     }
+ 
++    /**
++     * Get class managing group invites
++     * @return invite manager
++     */
++    public static InviteManager getInviteManager() {
++        return getInstance().inviteManager;
++    }
++
+     /**
+      * Get the interface to SVC
+      * @return voice chat bridge
+diff --git a/core/src/main/java/io/github/theodoremeyer/simplevoicegeyser/core/api/Platform.java b/core/src/main/java/io/github/theodoremeyer/simplevoicegeyser/core/api/Platform.java
+index 72823f5..535c38c 100644
+--- a/core/src/main/java/io/github/theodoremeyer/simplevoicegeyser/core/api/Platform.java
++++ b/core/src/main/java/io/github/theodoremeyer/simplevoicegeyser/core/api/Platform.java
+@@ -1,11 +1,17 @@
+ package io.github.theodoremeyer.simplevoicegeyser.core.api;
+ 
++import io.github.theodoremeyer.simplevoicegeyser.core.SvgCore;
++import io.github.theodoremeyer.simplevoicegeyser.core.api.chat.SvgColor;
+ import io.github.theodoremeyer.simplevoicegeyser.core.api.chat.SvgLogger;
+ import io.github.theodoremeyer.simplevoicegeyser.core.api.data.DataType;
+ import io.github.theodoremeyer.simplevoicegeyser.core.api.data.SvgFile;
++import io.github.theodoremeyer.simplevoicegeyser.core.managers.InviteManager;
+ import io.github.theodoremeyer.simplevoicegeyser.core.svc.VoiceChatBridge;
+ 
++import io.github.theodoremeyer.simplevoicegeyser.core.api.sender.SvgPlayer;
++
+ import java.io.File;
++import java.util.UUID;
+ 
+ /**
+  * Represents the bridge between a platform like spigot and SVG core
+@@ -67,5 +73,36 @@ public interface Platform {
+      */
+     boolean isDependencyEnabled(String name);
+ 
++    /**
++     * Show a pairing QR code to a player in-game (e.g. on a map item).
++     * May be called from any thread. The default shows nothing.
++     * @param player the player
++     * @param link the link to encode in the QR code
++     * @param expiresAtMillis when the pairing expires (epoch millis)
++     * @return whether a QR code is shown
++     */
++    default boolean showPairing(SvgPlayer player, String link, long expiresAtMillis) {
++        return false;
++    }
++
++    /**
++     * Remove a QR code shown with {@link #showPairing}. May be called from
++     * any thread, also when nothing is shown.
++     * @param uuid the player's uuid
++     */
++    default void hidePairing(UUID uuid) {}
+ 
++    /**
++     * Tell a player about a group invite without interrupting them: a chat
++     * line, and whatever else the platform can do (action bar, sound, a
++     * clickable accept for Java clients). May be called from any thread.
++     * The default sends a chat line.
++     * @param to the invited player
++     * @param invite the invite
++     */
++    default void showInvite(SvgPlayer to, InviteManager.Invite invite) {
++        to.sendMessage(SvgCore.getPrefix() + SvgColor.YELLOW + invite.fromName() + SvgColor.RESET
++                + " invites you to the voice group \"" + invite.groupName() + "\". "
++                + SvgColor.GRAY + "Type /svg accept to join.");
++    }
+ }
+diff --git a/core/src/main/java/io/github/theodoremeyer/simplevoicegeyser/core/api/data/SvgConfig.java b/core/src/main/java/io/github/theodoremeyer/simplevoicegeyser/core/api/data/SvgConfig.java
+index 9ac8007..8a640ab 100644
+--- a/core/src/main/java/io/github/theodoremeyer/simplevoicegeyser/core/api/data/SvgConfig.java
++++ b/core/src/main/java/io/github/theodoremeyer/simplevoicegeyser/core/api/data/SvgConfig.java
+@@ -84,6 +84,21 @@ public final class SvgConfig {
+     public final ConfigKey<String> CONTEXT_PATH =
+             new ConfigKey <>(this, "server.context-path", "/");
+ 
++    public final ConfigKey<Boolean> PASSWORD_LOGIN_ENABLED =
++            new ConfigKey <>(this, "server.security.password-login", true);
++
++    public final ConfigKey<Boolean> PAIRING_ENABLED =
++            new ConfigKey <>(this, "server.pairing.enabled", true);
++
++    public final ConfigKey<String> PAIRING_PUBLIC_URL =
++            new ConfigKey <>(this, "server.pairing.public-url", "");
++
++    public final ConfigKey<Integer> PAIRING_TTL_SECONDS =
++            new ConfigKey <>(this, "server.pairing.ttl-seconds", 120);
++
++    public final ConfigKey<Integer> PAIRING_DEVICE_DAYS =
++            new ConfigKey <>(this, "server.pairing.device-days", 180);
++
+     public final ConfigKey<Integer> MAX_AUTH_FAILURES =
+             new ConfigKey <>(this, "server.security.max-auth-failures", 5);
+ 
+@@ -126,6 +141,11 @@ public final class SvgConfig {
+             AUTH_FAILURE_DURATION,
+             AUTH_LOCK_DURATION,
+             MAX_AUTH_FAILURES,
++            PASSWORD_LOGIN_ENABLED,
++            PAIRING_ENABLED,
++            PAIRING_PUBLIC_URL,
++            PAIRING_TTL_SECONDS,
++            PAIRING_DEVICE_DAYS,
+             AUDIO_TRANSPORT_MODE,
+             AUDIO_ALLOW_LEGACY_FALLBACK,
+             DEBUG,
+diff --git a/core/src/main/java/io/github/theodoremeyer/simplevoicegeyser/core/api/sender/SvgPlayer.java b/core/src/main/java/io/github/theodoremeyer/simplevoicegeyser/core/api/sender/SvgPlayer.java
+index 25979c8..34c571a 100644
+--- a/core/src/main/java/io/github/theodoremeyer/simplevoicegeyser/core/api/sender/SvgPlayer.java
++++ b/core/src/main/java/io/github/theodoremeyer/simplevoicegeyser/core/api/sender/SvgPlayer.java
+@@ -44,4 +44,13 @@ public abstract class SvgPlayer extends Sender {
+      * @return the Player
+      */
+     public abstract Object getPlayer();
++
++    /**
++     * The name to show other players: a nickname where the platform has
++     * one, else the account name. Plain text, no colour codes.
++     * @return the display name
++     */
++    public String getDisplayName() {
++        return getName();
++    }
+ }
+diff --git a/core/src/main/java/io/github/theodoremeyer/simplevoicegeyser/core/audio/SvgAudioSender.java b/core/src/main/java/io/github/theodoremeyer/simplevoicegeyser/core/audio/SvgAudioSender.java
+index afe7076..249be0a 100644
+--- a/core/src/main/java/io/github/theodoremeyer/simplevoicegeyser/core/audio/SvgAudioSender.java
++++ b/core/src/main/java/io/github/theodoremeyer/simplevoicegeyser/core/audio/SvgAudioSender.java
+@@ -108,5 +108,12 @@ public final class SvgAudioSender {
+         }
+         delegate.reset();
+         serverApi.unregisterAudioSender(delegate); //end sender
++
++        // the browser is gone: don't keep showing the player as connected
++        // (unless they also have the mod, which manages its own state)
++        VoicechatConnection connection = serverApi.getConnectionOf(playerUuid);
++        if (connection != null && !connection.isInstalled()) {
++            connection.setConnected(false);
++        }
+     }
+ }
+\ No newline at end of file
+diff --git a/core/src/main/java/io/github/theodoremeyer/simplevoicegeyser/core/commands/Command.java b/core/src/main/java/io/github/theodoremeyer/simplevoicegeyser/core/commands/Command.java
+index 0e735c4..72ea520 100644
+--- a/core/src/main/java/io/github/theodoremeyer/simplevoicegeyser/core/commands/Command.java
++++ b/core/src/main/java/io/github/theodoremeyer/simplevoicegeyser/core/commands/Command.java
+@@ -36,9 +36,13 @@ public final class Command {
+         this.formHandler = GeyserHook.getFormHandler();
+ 
+         register(new PswdCommand());
++        register(new PairCommand());
+         register(new CreateGroupCommand(groupManager));
+         register(new JoinGroupCommand(groupManager));
+         register(new LeaveGroupCommand(groupManager));
++        register(new InviteCommand(SvgCore.getInviteManager()));
++        register(new AcceptCommand(SvgCore.getInviteManager()));
++        register(new DeclineCommand(SvgCore.getInviteManager()));
+         register(new CheckUpdateCommand(core));
+         register(new HelpCommand());
+         register(new ReloadCommand());
+diff --git a/core/src/main/java/io/github/theodoremeyer/simplevoicegeyser/core/commands/svg/AcceptCommand.java b/core/src/main/java/io/github/theodoremeyer/simplevoicegeyser/core/commands/svg/AcceptCommand.java
+new file mode 100644
+index 0000000..817f5ab
+--- /dev/null
++++ b/core/src/main/java/io/github/theodoremeyer/simplevoicegeyser/core/commands/svg/AcceptCommand.java
+@@ -0,0 +1,42 @@
++package io.github.theodoremeyer.simplevoicegeyser.core.commands.svg;
++
++import io.github.theodoremeyer.simplevoicegeyser.core.SvgCore;
++import io.github.theodoremeyer.simplevoicegeyser.core.api.chat.SvgColor;
++import io.github.theodoremeyer.simplevoicegeyser.core.api.sender.Sender;
++import io.github.theodoremeyer.simplevoicegeyser.core.api.sender.SvgPlayer;
++import io.github.theodoremeyer.simplevoicegeyser.core.commands.CommandArgs;
++import io.github.theodoremeyer.simplevoicegeyser.core.commands.SubCommand;
++import io.github.theodoremeyer.simplevoicegeyser.core.managers.InviteManager;
++
++/**
++ * Represents /svg accept: join the group you were invited to
++ */
++public final class AcceptCommand implements SubCommand {
++
++    private final InviteManager inviteManager;
++
++    /**
++     * Create an instance of the command
++     * @param inviteManager the invite manager
++     */
++    public AcceptCommand(InviteManager inviteManager) {
++        this.inviteManager = inviteManager;
++    }
++
++    @Override
++    public String name() {
++        return "accept";
++    }
++
++    @Override
++    public boolean execute(CommandArgs args) {
++        Sender sender = args.getSender();
++        if (!(sender instanceof SvgPlayer player)) {
++            sender.sendMessage(SvgCore.getPrefix() + SvgColor.RED + "Only players can accept invites.");
++            return true;
++        }
++
++        inviteManager.accept(player);
++        return true;
++    }
++}
+diff --git a/core/src/main/java/io/github/theodoremeyer/simplevoicegeyser/core/commands/svg/DeclineCommand.java b/core/src/main/java/io/github/theodoremeyer/simplevoicegeyser/core/commands/svg/DeclineCommand.java
+new file mode 100644
+index 0000000..db391e0
+--- /dev/null
++++ b/core/src/main/java/io/github/theodoremeyer/simplevoicegeyser/core/commands/svg/DeclineCommand.java
+@@ -0,0 +1,42 @@
++package io.github.theodoremeyer.simplevoicegeyser.core.commands.svg;
++
++import io.github.theodoremeyer.simplevoicegeyser.core.SvgCore;
++import io.github.theodoremeyer.simplevoicegeyser.core.api.chat.SvgColor;
++import io.github.theodoremeyer.simplevoicegeyser.core.api.sender.Sender;
++import io.github.theodoremeyer.simplevoicegeyser.core.api.sender.SvgPlayer;
++import io.github.theodoremeyer.simplevoicegeyser.core.commands.CommandArgs;
++import io.github.theodoremeyer.simplevoicegeyser.core.commands.SubCommand;
++import io.github.theodoremeyer.simplevoicegeyser.core.managers.InviteManager;
++
++/**
++ * Represents /svg decline: turn down the pending group invite
++ */
++public final class DeclineCommand implements SubCommand {
++
++    private final InviteManager inviteManager;
++
++    /**
++     * Create an instance of the command
++     * @param inviteManager the invite manager
++     */
++    public DeclineCommand(InviteManager inviteManager) {
++        this.inviteManager = inviteManager;
++    }
++
++    @Override
++    public String name() {
++        return "decline";
++    }
++
++    @Override
++    public boolean execute(CommandArgs args) {
++        Sender sender = args.getSender();
++        if (!(sender instanceof SvgPlayer player)) {
++            sender.sendMessage(SvgCore.getPrefix() + SvgColor.RED + "Only players can decline invites.");
++            return true;
++        }
++
++        inviteManager.decline(player);
++        return true;
++    }
++}
+diff --git a/core/src/main/java/io/github/theodoremeyer/simplevoicegeyser/core/commands/svg/HelpCommand.java b/core/src/main/java/io/github/theodoremeyer/simplevoicegeyser/core/commands/svg/HelpCommand.java
+index 7e69f7d..820028d 100644
+--- a/core/src/main/java/io/github/theodoremeyer/simplevoicegeyser/core/commands/svg/HelpCommand.java
++++ b/core/src/main/java/io/github/theodoremeyer/simplevoicegeyser/core/commands/svg/HelpCommand.java
+@@ -36,6 +36,9 @@ public final class HelpCommand implements SubCommand {
+         sender.sendMessage(SvgCore.getPrefix() + SvgColor.AQUA + " " + SvgColor.BOLD + "Commands");
+         sender.sendMessage(SvgColor.GRAY + "----------------------------------");
+ 
++        sender.sendMessage(SvgColor.YELLOW + "/svg pair [signout] "
++                + SvgColor.GRAY + "- Connect a browser with a code / QR map (signout: forget all browsers)");
++
+         sender.sendMessage(SvgColor.YELLOW + "/svg pswd <password> "
+                 + SvgColor.GRAY + "- Set your voice chat password");
+ 
+@@ -48,6 +51,12 @@ public final class HelpCommand implements SubCommand {
+         sender.sendMessage(SvgColor.YELLOW + "/svg lgroup "
+                 + SvgColor.GRAY + "- Leave your current svg");
+ 
++        sender.sendMessage(SvgColor.YELLOW + "/svg invite <player> "
++                + SvgColor.GRAY + "- Invite a player into your group (no password needed)");
++
++        sender.sendMessage(SvgColor.YELLOW + "/svg accept | decline "
++                + SvgColor.GRAY + "- Answer a group invite");
++
+         sender.sendMessage(SvgColor.YELLOW + "/svg help "
+                 + SvgColor.GRAY + "- Show this help menu");
+ 
+diff --git a/core/src/main/java/io/github/theodoremeyer/simplevoicegeyser/core/commands/svg/InviteCommand.java b/core/src/main/java/io/github/theodoremeyer/simplevoicegeyser/core/commands/svg/InviteCommand.java
+new file mode 100644
+index 0000000..93a604d
+--- /dev/null
++++ b/core/src/main/java/io/github/theodoremeyer/simplevoicegeyser/core/commands/svg/InviteCommand.java
+@@ -0,0 +1,70 @@
++package io.github.theodoremeyer.simplevoicegeyser.core.commands.svg;
++
++import io.github.theodoremeyer.simplevoicegeyser.core.SvgCore;
++import io.github.theodoremeyer.simplevoicegeyser.core.api.chat.SvgColor;
++import io.github.theodoremeyer.simplevoicegeyser.core.api.sender.Sender;
++import io.github.theodoremeyer.simplevoicegeyser.core.api.sender.SvgPlayer;
++import io.github.theodoremeyer.simplevoicegeyser.core.commands.CommandArgs;
++import io.github.theodoremeyer.simplevoicegeyser.core.commands.SubCommand;
++import io.github.theodoremeyer.simplevoicegeyser.core.managers.InviteManager;
++
++/**
++ * Represents /svg invite <player>: invite someone into your group
++ */
++public final class InviteCommand implements SubCommand {
++
++    private final InviteManager inviteManager;
++
++    /**
++     * Create an instance of the command
++     * @param inviteManager the invite manager
++     */
++    public InviteCommand(InviteManager inviteManager) {
++        this.inviteManager = inviteManager;
++    }
++
++    @Override
++    public String name() {
++        return "invite";
++    }
++
++    @Override
++    public boolean execute(CommandArgs args) {
++        Sender sender = args.getSender();
++        if (!(sender instanceof SvgPlayer player)) {
++            sender.sendMessage(SvgCore.getPrefix() + SvgColor.RED + "Only players can invite.");
++            return true;
++        }
++
++        String name = args.get("player");
++        if (name == null || name.isBlank()) {
++            sender.sendMessage(SvgCore.getPrefix() + SvgColor.RED + "Usage: /svg invite <player>");
++            return true;
++        }
++
++        SvgPlayer target = findPlayer(name);
++        if (target == null) {
++            sender.sendMessage(SvgCore.getPrefix() + SvgColor.RED + "Player " + name + " is not online.");
++            return true;
++        }
++
++        inviteManager.invite(player, target);
++        return true;
++    }
++
++    /**
++     * By account name first, then by nickname (case-insensitive)
++     */
++    private static SvgPlayer findPlayer(String name) {
++        SvgPlayer byAccount = SvgCore.getPlayerManager().getPlayer(name);
++        if (byAccount != null) {
++            return byAccount;
++        }
++        for (SvgPlayer online : SvgCore.getPlayerManager().getAllPlayers()) {
++            if (online.getDisplayName().equalsIgnoreCase(name) || online.getName().equalsIgnoreCase(name)) {
++                return online;
++            }
++        }
++        return null;
++    }
++}
+diff --git a/core/src/main/java/io/github/theodoremeyer/simplevoicegeyser/core/commands/svg/PairCommand.java b/core/src/main/java/io/github/theodoremeyer/simplevoicegeyser/core/commands/svg/PairCommand.java
+new file mode 100644
+index 0000000..6e18b88
+--- /dev/null
++++ b/core/src/main/java/io/github/theodoremeyer/simplevoicegeyser/core/commands/svg/PairCommand.java
+@@ -0,0 +1,111 @@
++package io.github.theodoremeyer.simplevoicegeyser.core.commands.svg;
++
++import io.github.theodoremeyer.simplevoicegeyser.core.SvgCore;
++import io.github.theodoremeyer.simplevoicegeyser.core.api.chat.SvgColor;
++import io.github.theodoremeyer.simplevoicegeyser.core.api.sender.Sender;
++import io.github.theodoremeyer.simplevoicegeyser.core.api.sender.SvgPlayer;
++import io.github.theodoremeyer.simplevoicegeyser.core.commands.CommandArgs;
++import io.github.theodoremeyer.simplevoicegeyser.core.commands.SubCommand;
++import io.github.theodoremeyer.simplevoicegeyser.core.geyser.FormHandler;
++import io.github.theodoremeyer.simplevoicegeyser.core.geyser.GeyserHook;
++import io.github.theodoremeyer.simplevoicegeyser.core.server.connection.auth.PairingManager;
++
++/**
++ * represents /svg pair: connect a browser without a password.
++ * <ul>
++ *     <li>/svg pair - one-time code + QR map, valid for a short time</li>
++ *     <li>/svg pair signout - forget all browsers paired with you</li>
++ * </ul>
++ */
++public final class PairCommand implements SubCommand {
++
++    /**
++     * Create the pair command
++     */
++    public PairCommand() {}
++
++    @Override
++    public String name() {
++        return "pair";
++    }
++
++    @Override
++    public boolean execute(CommandArgs args) {
++        Sender sender = args.getSender();
++
++        if (!(sender instanceof SvgPlayer player)) {
++            sender.sendMessage(SvgCore.getPrefix() + SvgColor.RED +
++                    "Only players can pair a browser.");
++            return true;
++        }
++
++        String action = args.get("action");
++        if (action != null && (action.equalsIgnoreCase("signout") || action.equalsIgnoreCase("logout"))) {
++            signOut(player);
++            return true;
++        }
++
++        start(player);
++        return true;
++    }
++
++    /**
++     * Start a pairing: chat message with the code, QR map if the platform
++     * can show one, and a form for Bedrock players.
++     * @param player player
++     * @return the pairing, or null if pairing is not allowed
++     */
++    public static PairingManager.Pairing start(SvgPlayer player) {
++        if (!SvgCore.getConfig().PAIRING_ENABLED.get()) {
++            player.sendMessage(SvgCore.getPrefix() + SvgColor.RED +
++                    "Pairing is turned off on this server.");
++            return null;
++        }
++
++        if (!player.hasPermission("svg.vc.join")) {
++            player.sendMessage(SvgCore.getPrefix() + SvgColor.RED +
++                    "You are not allowed to use voice chat.");
++            return null;
++        }
++
++        PairingManager.Pairing pairing = SvgCore.getPairingManager().create(player);
++
++        String baseUrl = SvgCore.getConfig().PAIRING_PUBLIC_URL.get();
++        String link = pairing.link(baseUrl);
++        boolean qrShown = link != null
++                && SvgCore.getPlatform().showPairing(player, link, pairing.expiresAt());
++
++        String site = baseUrl == null || baseUrl.isBlank() ? "the voice chat page" : baseUrl.trim();
++        long minutes = Math.max(1, Math.round(pairing.secondsLeft() / 60.0));
++
++        player.sendMessage(SvgCore.getPrefix() + "Open " + SvgColor.AQUA + site
++                + SvgColor.RESET + " and enter the code " + SvgColor.YELLOW + SvgColor.BOLD
++                + pairing.displayCode() + SvgColor.RESET
++                + " (valid " + minutes + " min, once).");
++
++        if (qrShown) {
++            player.sendMessage(SvgCore.getPrefix()
++                    + "Or scan the map in your hand with your phone's camera.");
++        }
++
++        FormHandler forms = GeyserHook.getFormHandler();
++        if (forms != null && GeyserHook.isEnabled()
++                && Boolean.TRUE.equals(GeyserHook.isBedrock(player.getUniqueId()))) {
++            forms.showPairing(player, pairing, site, qrShown);
++        }
++
++        return pairing;
++    }
++
++    /**
++     * Forget all browsers paired with a player.
++     * @param player player
++     */
++    public static void signOut(SvgPlayer player) {
++        SvgCore.getPairingManager().cancel(player.getUniqueId());
++        int removed = SvgCore.getPairingManager().getDevices().revokeAll(player.getUniqueId());
++        player.sendMessage(SvgCore.getPrefix() + "Signed out " + removed
++                + (removed == 1 ? " browser." : " browsers.")
++                + " Browsers that are connected right now stay connected until they leave.");
++    }
++}
+diff --git a/core/src/main/java/io/github/theodoremeyer/simplevoicegeyser/core/data/DeviceStore.java b/core/src/main/java/io/github/theodoremeyer/simplevoicegeyser/core/data/DeviceStore.java
+new file mode 100644
+index 0000000..0b05caa
+--- /dev/null
++++ b/core/src/main/java/io/github/theodoremeyer/simplevoicegeyser/core/data/DeviceStore.java
+@@ -0,0 +1,216 @@
++package io.github.theodoremeyer.simplevoicegeyser.core.data;
++
++import io.github.theodoremeyer.simplevoicegeyser.core.api.chat.SvgLogger;
++import org.checkerframework.checker.nullness.qual.Nullable;
++import org.json.JSONObject;
++
++import java.io.File;
++import java.io.IOException;
++import java.nio.charset.StandardCharsets;
++import java.nio.file.Files;
++import java.nio.file.StandardCopyOption;
++import java.security.MessageDigest;
++import java.security.NoSuchAlgorithmException;
++import java.security.SecureRandom;
++import java.util.ArrayList;
++import java.util.Base64;
++import java.util.Comparator;
++import java.util.HashMap;
++import java.util.List;
++import java.util.Map;
++import java.util.UUID;
++
++/**
++ * Remembers browsers that were paired with a player ("device tokens"),
++ * so they can log in again without a password.
++ * <p>
++ * Only a SHA-256 hash of each token is stored (devices.json). The tokens
++ * are 256 random bits, so a plain hash is enough; no salt or bcrypt needed.
++ */
++public final class DeviceStore {
++
++    /** Most devices kept per player; the least recently used one is dropped. */
++    private static final int MAX_DEVICES_PER_PLAYER = 10;
++
++    private static final SecureRandom RANDOM = new SecureRandom();
++
++    private final File file;
++    private final File tempFile;
++    private final SvgLogger logger;
++
++    /** token hash -> device */
++    private final Map<String, Device> devices = new HashMap<>();
++
++    /**
++     * Load the device file from the plugin data folder.
++     * @param dataFolder plugin data folder
++     * @param logger logger
++     */
++    public DeviceStore(File dataFolder, SvgLogger logger) {
++        this.file = new File(dataFolder, "devices.json");
++        this.tempFile = new File(dataFolder, "devices.json.tmp");
++        this.logger = logger;
++        load();
++    }
++
++    /**
++     * Create and remember a new device token for a player.
++     * @param uuid player uuid
++     * @param username player name (for display only)
++     * @return the token; give it to the browser, it is not stored in clear
++     */
++    public synchronized String issue(UUID uuid, String username) {
++        byte[] bytes = new byte[32];
++        RANDOM.nextBytes(bytes);
++        String token = Base64.getUrlEncoder().withoutPadding().encodeToString(bytes);
++
++        long now = System.currentTimeMillis();
++        Device device = new Device();
++        device.uuid = uuid.toString();
++        device.username = username;
++        device.created = now;
++        device.lastUsed = now;
++        devices.put(hash(token), device);
++
++        // keep the newest MAX_DEVICES_PER_PLAYER of this player
++        List<Map.Entry<String, Device>> own = new ArrayList<>();
++        for (Map.Entry<String, Device> e : devices.entrySet()) {
++            if (e.getValue().uuid.equals(device.uuid)) {
++                own.add(e);
++            }
++        }
++        if (own.size() > MAX_DEVICES_PER_PLAYER) {
++            own.sort(Comparator.comparingLong(e -> e.getValue().lastUsed));
++            for (int i = 0; i < own.size() - MAX_DEVICES_PER_PLAYER; i++) {
++                devices.remove(own.get(i).getKey());
++            }
++        }
++
++        save();
++        return token;
++    }
++
++    /**
++     * Look up the player a device token belongs to.
++     * @param token token from the browser
++     * @param maxIdleDays forget devices unused for this many days (0 = never)
++     * @return the player's uuid, or null if the token is unknown or expired
++     */
++    @Nullable
++    public synchronized UUID validate(String token, int maxIdleDays) {
++        if (token == null || token.isBlank() || token.length() > 128) {
++            return null;
++        }
++
++        String key = hash(token);
++        Device device = devices.get(key);
++        if (device == null) {
++            return null;
++        }
++
++        long now = System.currentTimeMillis();
++        if (maxIdleDays > 0 && now - device.lastUsed > maxIdleDays * 86_400_000L) {
++            devices.remove(key);
++            save();
++            return null;
++        }
++
++        // only write the file at most once an hour per device
++        if (now - device.lastUsed > 3_600_000L) {
++            device.lastUsed = now;
++            save();
++        }
++
++        try {
++            return UUID.fromString(device.uuid);
++        } catch (IllegalArgumentException e) {
++            return null;
++        }
++    }
++
++    /**
++     * Sign out all browsers of a player.
++     * @param uuid player uuid
++     * @return number of devices removed
++     */
++    public synchronized int revokeAll(UUID uuid) {
++        String id = uuid.toString();
++        int before = devices.size();
++        devices.values().removeIf(d -> id.equals(d.uuid));
++        int removed = before - devices.size();
++        if (removed > 0) {
++            save();
++        }
++        return removed;
++    }
++
++    /**
++     * Count the browsers paired with a player.
++     * @param uuid player uuid
++     * @return count
++     */
++    public synchronized int count(UUID uuid) {
++        String id = uuid.toString();
++        return (int) devices.values().stream().filter(d -> id.equals(d.uuid)).count();
++    }
++
++    private void load() {
++        if (!file.exists()) {
++            return;
++        }
++        try {
++            JSONObject json = new JSONObject(Files.readString(file.toPath(), StandardCharsets.UTF_8));
++            for (String key : json.keySet()) {
++                JSONObject entry = json.optJSONObject(key);
++                if (entry == null || entry.optString("uuid", "").isEmpty()) {
++                    continue;
++                }
++                Device device = new Device();
++                device.uuid = entry.getString("uuid");
++                device.username = entry.optString("username", "");
++                device.created = entry.optLong("created", 0);
++                device.lastUsed = entry.optLong("lastUsed", 0);
++                devices.put(key, device);
++            }
++        } catch (Exception e) {
++            logger.error("Failed to load devices file", e);
++        }
++    }
++
++    private void save() {
++        JSONObject json = new JSONObject();
++        for (Map.Entry<String, Device> e : devices.entrySet()) {
++            Device d = e.getValue();
++            json.put(e.getKey(), new JSONObject()
++                    .put("uuid", d.uuid)
++                    .put("username", d.username)
++                    .put("created", d.created)
++                    .put("lastUsed", d.lastUsed));
++        }
++        try {
++            Files.writeString(tempFile.toPath(), json.toString(2), StandardCharsets.UTF_8);
++            Files.move(tempFile.toPath(), file.toPath(),
++                    StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
++        } catch (IOException e) {
++            logger.error("Failed to write devices file", e);
++        }
++    }
++
++    private static String hash(String token) {
++        try {
++            MessageDigest digest = MessageDigest.getInstance("SHA-256");
++            byte[] out = digest.digest(token.getBytes(StandardCharsets.UTF_8));
++            return Base64.getUrlEncoder().withoutPadding().encodeToString(out);
++        } catch (NoSuchAlgorithmException e) {
++            throw new IllegalStateException("SHA-256 unavailable", e);
++        }
++    }
++
++    /** One remembered browser. */
++    private static final class Device {
++        String uuid;
++        String username;
++        long created;
++        long lastUsed;
++    }
++}
+diff --git a/core/src/main/java/io/github/theodoremeyer/simplevoicegeyser/core/geyser/FormHandler.java b/core/src/main/java/io/github/theodoremeyer/simplevoicegeyser/core/geyser/FormHandler.java
+index 7f57d80..58ceaff 100644
+--- a/core/src/main/java/io/github/theodoremeyer/simplevoicegeyser/core/geyser/FormHandler.java
++++ b/core/src/main/java/io/github/theodoremeyer/simplevoicegeyser/core/geyser/FormHandler.java
+@@ -4,13 +4,18 @@ import de.maxhenkel.voicechat.api.Group;
+ import io.github.theodoremeyer.simplevoicegeyser.core.SvgCore;
+ import io.github.theodoremeyer.simplevoicegeyser.core.api.sender.SvgPlayer;
+ import io.github.theodoremeyer.simplevoicegeyser.core.commands.CommandArgs;
++import io.github.theodoremeyer.simplevoicegeyser.core.commands.svg.PairCommand;
++import io.github.theodoremeyer.simplevoicegeyser.core.server.connection.auth.PairingManager;
+ import io.github.theodoremeyer.simplevoicegeyser.core.managers.GroupManager;
++import io.github.theodoremeyer.simplevoicegeyser.core.managers.InviteManager;
+ import org.checkerframework.checker.nullness.qual.NonNull;
+ import org.geysermc.cumulus.component.DropdownComponent;
+ import org.geysermc.cumulus.form.CustomForm;
+ import org.geysermc.cumulus.form.Form;
++import org.geysermc.cumulus.form.ModalForm;
+ import org.geysermc.cumulus.form.SimpleForm;
+ 
++import java.util.ArrayList;
+ import java.util.List;
+ 
+ /**
+@@ -38,18 +43,27 @@ public final class FormHandler {
+      */
+     public boolean openCommand(SvgPlayer player) {
+         boolean isAdmin = player.hasPermission("svg.admin");
++        boolean pairing = SvgCore.getConfig().PAIRING_ENABLED.get();
++        boolean passwords = SvgCore.getConfig().PASSWORD_LOGIN_ENABLED.get();
++        // a pending invite waits here until the player has time for it
++        InviteManager.Invite invite = SvgCore.getInviteManager().getPending(player.getUniqueId());
++        // optionalButton keeps the button ids stable when a button is left out
+         Form form = SimpleForm.builder()
+                 .title("Simple Voice Chat (SVG)")
++                .optionalButton(invite == null ? "" : "Invite from " + invite.fromName(), invite != null)
++                .optionalButton("Connect browser", pairing)
+                 .button("Groups")
+-                .button("Set Password")
++                .optionalButton("Set Password", passwords)
+                 .button("Options")
+                 .optionalButton("Admin Menu", isAdmin)
+                 .validResultHandler(response -> {
+                     switch (response.clickedButtonId()) {
+-                        case 0 -> groups(player);
+-                        case 1 -> setPassword(player);
+-                        case 2 -> options(player);
+-                        case 3 -> adminMenu(player);
++                        case 0 -> showInvite(player);
++                        case 1 -> PairCommand.start(player);
++                        case 2 -> groups(player);
++                        case 3 -> setPassword(player);
++                        case 4 -> options(player);
++                        case 5 -> adminMenu(player);
+                     }
+                 })
+                 .build();
+@@ -57,43 +71,141 @@ public final class FormHandler {
+         return true;
+     }
+ 
++    /**
++     * The pending invite, with Join / Not now. Only opened from a menu the
++     * player chose to open, never pushed.
++     * @param player the invited player
++     */
++    private void showInvite(SvgPlayer player) {
++        InviteManager inviteManager = SvgCore.getInviteManager();
++        InviteManager.Invite invite = inviteManager.getPending(player.getUniqueId());
++        if (invite == null) {
++            player.sendMessage(SvgCore.getPrefix() + "That invite has expired.");
++            return;
++        }
++
++        Form form = ModalForm.builder()
++                .title("Group invite")
++                .content(invite.fromName() + " invites you to the voice group \""
++                        + invite.groupName() + "\".\n\nJoin it? You leave your current group, if any.")
++                .button1("Join")
++                .button2("Not now")
++                .validResultHandler(response -> {
++                    if (response.clickedFirst()) {
++                        inviteManager.accept(player);
++                    }
++                    // "Not now" keeps the invite until it expires
++                })
++                .build();
++        GeyserHook.sendForm(player.getUniqueId(), form);
++    }
++
++    /**
++     * Pick an online player to invite into the current group.
++     * @param player the inviting player
++     */
++    private void invitePlayer(SvgPlayer player) {
++        List<SvgPlayer> others = new ArrayList<>();
++        for (SvgPlayer other : SvgCore.getPlayerManager().getAllPlayers()) {
++            if (!other.getUniqueId().equals(player.getUniqueId()) && other.isOnline()) {
++                others.add(other);
++            }
++        }
++        others.sort((a, b) -> a.getDisplayName().compareToIgnoreCase(b.getDisplayName()));
++
++        if (others.isEmpty()) {
++            player.sendMessage(SvgCore.getPrefix() + "Nobody else is online right now.");
++            return;
++        }
++
++        DropdownComponent.@NonNull Builder dropdown = DropdownComponent.builder("Player");
++        for (SvgPlayer other : others) {
++            dropdown.option(other.getDisplayName()); // nicknames, like the scoreboard
++        }
++
++        Form form = CustomForm.builder()
++                .title("Invite to group")
++                .dropdown(dropdown)
++                .validResultHandler(response -> {
++                    int index = response.next();
++                    if (index >= 0 && index < others.size()) {
++                        SvgCore.getInviteManager().invite(player, others.get(index));
++                    }
++                })
++                .build();
++        GeyserHook.sendForm(player.getUniqueId(), form);
++    }
++
++    /**
++     * Show a fresh pairing code to a Bedrock player.
++     * @param player the player
++     * @param pairing the pairing
++     * @param site where to enter the code
++     * @param qrShown whether a QR map was put in the player's hand
++     */
++    public void showPairing(SvgPlayer player, PairingManager.Pairing pairing, String site, boolean qrShown) {
++        long minutes = Math.max(1, Math.round(pairing.secondsLeft() / 60.0));
++        StringBuilder content = new StringBuilder();
++        if (qrShown) {
++            content.append("Close this window and scan the map in your hand with your phone's camera.\n\n")
++                    .append("Or open ");
++        } else {
++            content.append("Open ");
++        }
++        content.append(site).append(" and enter this code:\n\n")
++                .append("    ").append(pairing.displayCode()).append("\n\n")
++                .append("It works once, for ").append(minutes).append(" min. ")
++                .append("After that the browser logs in by itself.");
++
++        Form form = SimpleForm.builder()
++                .title("Connect browser")
++                .content(content.toString())
++                .button("OK")
++                .button("Sign out all browsers")
++                .validResultHandler(response -> {
++                    if (response.clickedButtonId() == 1) {
++                        PairCommand.signOut(player);
++                    }
++                })
++                .build();
++        GeyserHook.sendForm(player.getUniqueId(), form);
++    }
++
+     /**
+      * Creates a window for the player to easily join and create groups with desired parms
+      * @param player the player to open for.
+      */
+     private void groups(SvgPlayer player) {
+         String title = "Groups";
++        InviteManager.Invite invite = SvgCore.getInviteManager().getPending(player.getUniqueId());
++        String inviteLabel = invite == null ? "" : "Invite from " + invite.fromName();
+         Form form;
+         if (groupManager.isInGroup(player)) {
+             form = SimpleForm.builder()
+                     .title(title)
+                     .content("Group Name: " + groupManager.getJoinedGroupName(player).orElse("Player Not in Group"))
++                    .optionalButton(inviteLabel, invite != null)
+                     .button("Invite")
+                     .button("Leave")
+                     .validResultHandler(response -> {
+                         switch (response.clickedButtonId()) {
+-                            case 0 -> {
+-                                // TODO needs to be in a new function
+-                                // Temporary
+-                                Form tempform = SimpleForm.builder()
+-                                        .title("Invite")
+-                                        .content("Work in progress")
+-                                        .build();
+-                                GeyserHook.sendForm(player.getUniqueId(), tempform);
+-                            }
+-                            case 1 -> groupManager.leaveGroup(player);
++                            case 0 -> showInvite(player);
++                            case 1 -> invitePlayer(player);
++                            case 2 -> groupManager.leaveGroup(player);
+                         }
+                     })
+                     .build();
+         } else {
+             form = SimpleForm.builder()
+                     .title(title)
++                    .optionalButton(inviteLabel, invite != null)
+                     .button("Join")
+                     .button("Create")
+                     .validResultHandler(response -> {
+                         switch (response.clickedButtonId()) {
+-                            case 0 -> joinGroup(player);
+-                            case 1 -> createGroup(player);
++                            case 0 -> showInvite(player);
++                            case 1 -> joinGroup(player);
++                            case 2 -> createGroup(player);
+                         }
+                     })
+                     .build();
+diff --git a/core/src/main/java/io/github/theodoremeyer/simplevoicegeyser/core/managers/GroupManager.java b/core/src/main/java/io/github/theodoremeyer/simplevoicegeyser/core/managers/GroupManager.java
+index 0d43ecd..e825924 100644
+--- a/core/src/main/java/io/github/theodoremeyer/simplevoicegeyser/core/managers/GroupManager.java
++++ b/core/src/main/java/io/github/theodoremeyer/simplevoicegeyser/core/managers/GroupManager.java
+@@ -294,6 +294,29 @@ public final class GroupManager {
+                 || svgPlayer.hasPermission("svg.vc.group.setpersistent");
+     }
+ 
++    /**
++     * Put a player into a group they were invited to, without a password
++     * (like Simple Voice Chat's own invites). Permissions are the caller's
++     * business.
++     * @param player the invited player
++     * @param groupName the group
++     * @return false if the group or the player's voice connection is gone
++     */
++    public boolean joinInvited(SvgPlayer player, String groupName) {
++        VoicechatServerApi api = getApi();
++        if (api == null || groupName == null) return false;
++
++        Group group = groups.get(groupName);
++        if (group == null) return false;
++
++        VoicechatConnection connection = api.getConnectionOf(player.getUniqueId());
++        if (connection == null) return false;
++
++        connection.setGroup(group);
++        SvgCore.getLogger().debug("[SVG] " + player.getName() + " joined group '" + groupName + "' by invite");
++        return true;
++    }
++
+     /**
+      * Add a known Group
+      * @param group the group to add
+diff --git a/core/src/main/java/io/github/theodoremeyer/simplevoicegeyser/core/managers/InviteManager.java b/core/src/main/java/io/github/theodoremeyer/simplevoicegeyser/core/managers/InviteManager.java
+new file mode 100644
+index 0000000..d2dd8c0
+--- /dev/null
++++ b/core/src/main/java/io/github/theodoremeyer/simplevoicegeyser/core/managers/InviteManager.java
+@@ -0,0 +1,185 @@
++package io.github.theodoremeyer.simplevoicegeyser.core.managers;
++
++import io.github.theodoremeyer.simplevoicegeyser.core.SvgCore;
++import io.github.theodoremeyer.simplevoicegeyser.core.api.chat.SvgColor;
++import io.github.theodoremeyer.simplevoicegeyser.core.api.sender.SvgPlayer;
++
++import java.util.Map;
++import java.util.Optional;
++import java.util.UUID;
++import java.util.concurrent.ConcurrentHashMap;
++
++/**
++ * Group invites. An invite is a pending state, not a pop-up: the invitee is
++ * told about it (chat, action bar, sound) and accepts whenever it suits
++ * them, from the Bedrock menu or with /svg accept. Nothing interrupts play.
++ * <p>
++ * Accepting skips the group password, like Simple Voice Chat's own
++ * /voicechat invite. A player has at most one pending invite; a newer one
++ * replaces it. Invites expire after {@link #TTL_MILLIS}.
++ */
++public final class InviteManager {
++
++    /**
++     * How long an invite can be accepted
++     */
++    public static final long TTL_MILLIS = 2 * 60 * 1000;
++
++    /**
++     * A pending invite
++     * @param from the inviting player
++     * @param fromName the inviting player's name
++     * @param groupName the group to join
++     * @param expiresAt epoch millis
++     */
++    public record Invite(UUID from, String fromName, String groupName, long expiresAt) {
++
++        /**
++         * Whether the invite can no longer be accepted
++         * @return whether it expired
++         */
++        public boolean expired() {
++            return System.currentTimeMillis() > expiresAt;
++        }
++    }
++
++    private final Map<UUID, Invite> pending = new ConcurrentHashMap<>();
++    private final GroupManager groupManager;
++
++    /**
++     * Create the manager
++     * @param groupManager the group manager to join groups with
++     */
++    public InviteManager(GroupManager groupManager) {
++        this.groupManager = groupManager;
++    }
++
++    /**
++     * Invite a player into the inviter's current group
++     * @param from the inviting player
++     * @param to the invited player
++     * @return whether the invite was sent
++     */
++    public boolean invite(SvgPlayer from, SvgPlayer to) {
++        String prefix = SvgCore.getPrefix();
++
++        if (to == null || !to.isOnline()) {
++            from.sendMessage(prefix + SvgColor.RED + "That player is not online.");
++            return false;
++        }
++
++        if (to.getUniqueId().equals(from.getUniqueId())) {
++            from.sendMessage(prefix + SvgColor.RED + "You can't invite yourself.");
++            return false;
++        }
++
++        Optional<String> groupName = groupManager.getJoinedGroupName(from);
++        if (groupName.isEmpty()) {
++            from.sendMessage(prefix + SvgColor.RED + "Join or create a group first.");
++            return false;
++        }
++
++        if (!to.hasPermission("svg.vc.group.join")) {
++            from.sendMessage(prefix + SvgColor.RED + to.getDisplayName() + " is not allowed to join groups.");
++            return false;
++        }
++
++        if (groupName.equals(groupManager.getJoinedGroupName(to))) {
++            from.sendMessage(prefix + SvgColor.RED + to.getDisplayName() + " is already in your group.");
++            return false;
++        }
++
++        // names shown to players are nicknames (forms don't go through the
++        // server's chat, so they can't be swapped later)
++        Invite invite = new Invite(from.getUniqueId(), from.getDisplayName(), groupName.get(),
++                System.currentTimeMillis() + TTL_MILLIS);
++        pending.put(to.getUniqueId(), invite);
++
++        SvgCore.getPlatform().showInvite(to, invite);
++
++        from.sendMessage(prefix + SvgColor.GREEN + "Invited " + to.getDisplayName() + " to \""
++                + groupName.get() + "\"." + SvgColor.GRAY + " They have " + (TTL_MILLIS / 60000)
++                + " minutes to accept.");
++        return true;
++    }
++
++    /**
++     * The invite waiting for a player, if any
++     * @param uuid the invited player
++     * @return the invite, or null
++     */
++    public Invite getPending(UUID uuid) {
++        Invite invite = pending.get(uuid);
++        if (invite != null && invite.expired()) {
++            pending.remove(uuid, invite);
++            return null;
++        }
++        return invite;
++    }
++
++    /**
++     * Accept the pending invite: join the group without a password
++     * @param player the invited player
++     * @return whether they joined
++     */
++    public boolean accept(SvgPlayer player) {
++        String prefix = SvgCore.getPrefix();
++        Invite invite = pending.remove(player.getUniqueId());
++
++        if (invite == null || invite.expired()) {
++            player.sendMessage(prefix + SvgColor.RED + "There is no invite waiting for you.");
++            return false;
++        }
++
++        if (!player.hasPermission("svg.vc.group.join")) {
++            player.sendMessage(prefix + SvgColor.RED + "You are not allowed to join groups.");
++            return false;
++        }
++
++        if (!groupManager.joinInvited(player, invite.groupName())) {
++            player.sendMessage(prefix + SvgColor.RED + "The group \"" + invite.groupName()
++                    + "\" doesn't exist anymore.");
++            return false;
++        }
++
++        player.sendMessage(prefix + SvgColor.GREEN + "Joined " + invite.fromName()
++                + "'s group \"" + invite.groupName() + "\".");
++
++        SvgPlayer from = SvgCore.getPlayerManager().getPlayer(invite.from());
++        if (from != null && from.isOnline()) {
++            from.sendMessage(prefix + SvgColor.GREEN + player.getDisplayName() + " joined your group.");
++        }
++        return true;
++    }
++
++    /**
++     * Turn down the pending invite
++     * @param player the invited player
++     */
++    public void decline(SvgPlayer player) {
++        String prefix = SvgCore.getPrefix();
++        Invite invite = pending.remove(player.getUniqueId());
++
++        if (invite == null || invite.expired()) {
++            player.sendMessage(prefix + SvgColor.RED + "There is no invite waiting for you.");
++            return;
++        }
++
++        player.sendMessage(prefix + "Declined " + invite.fromName() + "'s invite.");
++
++        SvgPlayer from = SvgCore.getPlayerManager().getPlayer(invite.from());
++        if (from != null && from.isOnline()) {
++            from.sendMessage(prefix + SvgColor.GRAY + player.getDisplayName() + " declined your invite.");
++        }
++    }
++
++    /**
++     * Forget everything about a player who left: their own invite and the
++     * ones they sent.
++     * @param uuid the player
++     */
++    public void clear(UUID uuid) {
++        pending.remove(uuid);
++        pending.values().removeIf(invite -> invite.from().equals(uuid));
++    }
++}
+diff --git a/core/src/main/java/io/github/theodoremeyer/simplevoicegeyser/core/managers/PlayerManager.java b/core/src/main/java/io/github/theodoremeyer/simplevoicegeyser/core/managers/PlayerManager.java
+index 0d00c03..fba43cc 100644
+--- a/core/src/main/java/io/github/theodoremeyer/simplevoicegeyser/core/managers/PlayerManager.java
++++ b/core/src/main/java/io/github/theodoremeyer/simplevoicegeyser/core/managers/PlayerManager.java
+@@ -84,6 +84,10 @@ public final class PlayerManager {
+         );
+         //SvgCore.getWsManager().playerLeave(player);
+ 
++        if (SvgCore.getInviteManager() != null) {
++            SvgCore.getInviteManager().clear(player.getUniqueId());
++        }
++
+         players.remove(player.getUniqueId());
+         playersByName.remove(player.getName());
+     }
+diff --git a/core/src/main/java/io/github/theodoremeyer/simplevoicegeyser/core/server/connection/auth/AuthResponse.java b/core/src/main/java/io/github/theodoremeyer/simplevoicegeyser/core/server/connection/auth/AuthResponse.java
+index a432d73..0d4eec6 100644
+--- a/core/src/main/java/io/github/theodoremeyer/simplevoicegeyser/core/server/connection/auth/AuthResponse.java
++++ b/core/src/main/java/io/github/theodoremeyer/simplevoicegeyser/core/server/connection/auth/AuthResponse.java
+@@ -10,11 +10,17 @@ import java.util.UUID;
+  * @param message failure message if !success
+  * @param uuid player uuid if success
+  * @param player player if success
++ * @param reason machine-readable failure reason for the web client, may be null
+  */
+ public record AuthResponse(boolean success, String message,
+-                           UUID uuid, SvgPlayer player
++                           UUID uuid, SvgPlayer player, String reason
+ ) {
+ 
++    /**
++     * Failure reason: the browser's device token is unknown or expired.
++     */
++    public static final String REASON_DEVICE_INVALID = "device_invalid";
++
+     /**
+      * Successful auth result.
+      *
+@@ -25,7 +31,7 @@ public record AuthResponse(boolean success, String message,
+     public static AuthResponse success(UUID uuid, SvgPlayer player) {
+         return new AuthResponse(
+                 true, null,
+-                uuid, player
++                uuid, player, null
+         );
+     }
+ 
+@@ -36,10 +42,21 @@ public record AuthResponse(boolean success, String message,
+      * @return auth response
+      */
+     public static AuthResponse failure(String message) {
++        return failure(message, null);
++    }
++
++    /**
++     * Failed auth result with a reason for the client.
++     *
++     * @param message failure message
++     * @param reason machine-readable reason
++     * @return auth response
++     */
++    public static AuthResponse failure(String message, String reason) {
+ 
+         return new AuthResponse(
+                 false, message,
+-                null, null
++                null, null, reason
+         );
+     }
+ 
+@@ -54,7 +71,7 @@ public record AuthResponse(boolean success, String message,
+ 
+         return new AuthResponse(
+                 true, null,
+-                null, null
++                null, null, null
+         );
+     }
+ }
+diff --git a/core/src/main/java/io/github/theodoremeyer/simplevoicegeyser/core/server/connection/auth/ConnectionAuthenticator.java b/core/src/main/java/io/github/theodoremeyer/simplevoicegeyser/core/server/connection/auth/ConnectionAuthenticator.java
+index 45f1c01..bd15b60 100644
+--- a/core/src/main/java/io/github/theodoremeyer/simplevoicegeyser/core/server/connection/auth/ConnectionAuthenticator.java
++++ b/core/src/main/java/io/github/theodoremeyer/simplevoicegeyser/core/server/connection/auth/ConnectionAuthenticator.java
+@@ -59,6 +59,13 @@ public final class ConnectionAuthenticator {
+ 
+         try {
+ 
++            if (!SvgCore.getConfig().PASSWORD_LOGIN_ENABLED.get()) {
++                return AuthResponse.failure(
++                        "Access Denied: Password login is turned off. " +
++                                "Get a login code in-game with /svg pair."
++                );
++            }
++
+             username = normalizeUsername(username);
+ 
+             if (username.isEmpty()) {
+@@ -96,48 +103,102 @@ public final class ConnectionAuthenticator {
+                 );
+             }
+ 
+-            AuthResponse bedrockResult =
+-                    validateBedrock(uuid, authKey);
++            AuthResponse result = authorize(uuid, authKey);
+ 
+-            if (!bedrockResult.success()) {
+-                return bedrockResult;
++            if (result.success()) {
++                authRateLimiter.reset(authKey);
+             }
+ 
+-            SvgPlayer player =
+-                    SvgCore.getPlayerManager()
+-                            .getPlayer(uuid);
++            return result;
++
++        } catch (Exception e) {
+ 
+-            if (player == null) {
++            SvgCore.getLogger().error("Authenticator: Unexpected authentication failure", e);
+ 
+-                return AuthResponse.failure(
+-                        "Timeout: You didn’t join the server in time."
+-                );
+-            }
++            return AuthResponse.failure(
++                    "Internal server error."
++            );
++        }
++    }
++
++    /**
++     * Authenticates a browser with a one-time pairing, either the long token
++     * from a QR link or a typed code. The pairing is used up either way.
++     *
++     * @param token token from the QR link, or null
++     * @param code typed code, or null
++     * @param clientKey client address, for rate limiting typed codes
++     * @return auth response
++     */
++    public AuthResponse authenticatePairing(
++            String token,
++            String code,
++            String clientKey
++    ) {
+ 
+-            AuthResponse permissionResult =
+-                    validatePermissions(player);
++        try {
+ 
+-            if (!permissionResult.success()) {
+-                return permissionResult;
++            if (!SvgCore.getConfig().PAIRING_ENABLED.get()) {
++                return AuthResponse.failure("Access Denied: Pairing is turned off.");
+             }
+ 
+-            AuthResponse voiceChatResult =
+-                    validateVoiceChat(uuid);
++            PairingManager pairing = SvgCore.getPairingManager();
+ 
+-            if (!voiceChatResult.success()) {
+-                return voiceChatResult;
++            PairingManager.Redeemed redeemed = token != null && !token.isBlank()
++                    ? pairing.redeemToken(token)
++                    : pairing.redeemCode(code, clientKey);
++
++            if (redeemed.uuid() == null) {
++                return AuthResponse.failure("Access Denied: " + redeemed.message());
+             }
+ 
+-            authRateLimiter.reset(authKey);
++            return authorize(redeemed.uuid(), null);
++
++        } catch (Exception e) {
++
++            SvgCore.getLogger().error("Authenticator: Unexpected pairing failure", e);
+ 
+-            return AuthResponse.success(
+-                    uuid,
+-                    player
++            return AuthResponse.failure(
++                    "Internal server error."
+             );
++        }
++    }
++
++    /**
++     * Authenticates a browser that was paired before, by its device token.
++     *
++     * @param deviceToken device token stored in the browser
++     * @return auth response
++     */
++    public AuthResponse authenticateDevice(String deviceToken) {
++
++        try {
++
++            if (!SvgCore.getConfig().PAIRING_ENABLED.get()) {
++                return AuthResponse.failure(
++                        "Access Denied: Pairing is turned off.",
++                        AuthResponse.REASON_DEVICE_INVALID
++                );
++            }
++
++            UUID uuid = SvgCore.getPairingManager().getDevices().validate(
++                    deviceToken,
++                    SvgCore.getConfig().PAIRING_DEVICE_DAYS.get()
++            );
++
++            if (uuid == null) {
++                return AuthResponse.failure(
++                        "Access Denied: This browser is not signed in anymore. " +
++                                "Get a new login code in-game.",
++                        AuthResponse.REASON_DEVICE_INVALID
++                );
++            }
++
++            return authorize(uuid, null);
+ 
+         } catch (Exception e) {
+ 
+-            SvgCore.getLogger().error("Authenticator: Unexpected authentication failure", e);
++            SvgCore.getLogger().error("Authenticator: Unexpected device login failure", e);
+ 
+             return AuthResponse.failure(
+                     "Internal server error."
+@@ -145,6 +206,54 @@ public final class ConnectionAuthenticator {
+         }
+     }
+ 
++    /**
++     * Checks that apply once we know who the player is, however they logged in.
++     *
++     * @param uuid player uuid
++     * @param authKey rate limit key for failures, or null
++     * @return auth response
++     */
++    private AuthResponse authorize(UUID uuid, String authKey) {
++
++        AuthResponse bedrockResult =
++                validateBedrock(uuid, authKey);
++
++        if (!bedrockResult.success()) {
++            return bedrockResult;
++        }
++
++        SvgPlayer player =
++                SvgCore.getPlayerManager()
++                        .getPlayer(uuid);
++
++        if (player == null) {
++
++            return AuthResponse.failure(
++                    "Access Denied: You are not online in Minecraft. " +
++                            "Join the server first, then connect here."
++            );
++        }
++
++        AuthResponse permissionResult =
++                validatePermissions(player);
++
++        if (!permissionResult.success()) {
++            return permissionResult;
++        }
++
++        AuthResponse voiceChatResult =
++                validateVoiceChat(uuid);
++
++        if (!voiceChatResult.success()) {
++            return voiceChatResult;
++        }
++
++        return AuthResponse.success(
++                uuid,
++                player
++        );
++    }
++
+     /**
+      * Validates geyser/bedrock restrictions.
+      *
+@@ -179,7 +288,9 @@ public final class ConnectionAuthenticator {
+ 
+         if (!bedrock && requireBedrock) {
+ 
+-            authRateLimiter.recordFailure(authKey);
++            if (authKey != null) {
++                authRateLimiter.recordFailure(authKey);
++            }
+ 
+             return AuthResponse.failure(
+                     "Access Denied: " + "You must be a Bedrock player to join!"
+diff --git a/core/src/main/java/io/github/theodoremeyer/simplevoicegeyser/core/server/connection/auth/PairingManager.java b/core/src/main/java/io/github/theodoremeyer/simplevoicegeyser/core/server/connection/auth/PairingManager.java
+new file mode 100644
+index 0000000..327af64
+--- /dev/null
++++ b/core/src/main/java/io/github/theodoremeyer/simplevoicegeyser/core/server/connection/auth/PairingManager.java
+@@ -0,0 +1,244 @@
++package io.github.theodoremeyer.simplevoicegeyser.core.server.connection.auth;
++
++import io.github.theodoremeyer.simplevoicegeyser.core.SvgCore;
++import io.github.theodoremeyer.simplevoicegeyser.core.api.sender.SvgPlayer;
++import io.github.theodoremeyer.simplevoicegeyser.core.data.DeviceStore;
++import org.checkerframework.checker.nullness.qual.Nullable;
++
++import java.security.SecureRandom;
++import java.time.Duration;
++import java.util.Base64;
++import java.util.HashMap;
++import java.util.Locale;
++import java.util.Map;
++import java.util.UUID;
++
++/**
++ * Password-less login: an in-game player asks for a one-time pairing, which
++ * has two forms that both work once and expire after a short time:
++ * <ul>
++ *     <li>a long random token, put into a link and shown as a QR code
++ *         (https://voice.example.com/#pair=TOKEN), and</li>
++ *     <li>a short code to type in, like {@code K7F3-QX9M}.</li>
++ * </ul>
++ * The browser that redeems it gets a device token ({@link DeviceStore}) and
++ * logs in with that from then on.
++ */
++public final class PairingManager {
++
++    /** Code alphabet: no 0/O, 1/I/L. 31 symbols, 8 of them ~ 39.6 bits. */
++    private static final char[] CODE_ALPHABET = "23456789ABCDEFGHJKMNPQRSTUVWXYZ".toCharArray();
++    private static final int CODE_LENGTH = 8;
++
++    private static final SecureRandom RANDOM = new SecureRandom();
++
++    private final DeviceStore devices;
++
++    /** Wrong codes per client address. */
++    private final AuthRateLimiter perClientLimiter =
++            new AuthRateLimiter(10, Duration.ofMinutes(5), Duration.ofMinutes(15));
++
++    /** Wrong codes from everyone together, a backstop for many addresses. */
++    private final AuthRateLimiter globalLimiter =
++            new AuthRateLimiter(60, Duration.ofMinutes(5), Duration.ofMinutes(5));
++
++    private final Map<String, Pairing> byToken = new HashMap<>();
++    private final Map<String, Pairing> byCode = new HashMap<>();
++    private final Map<UUID, Pairing> byPlayer = new HashMap<>();
++
++    /**
++     * A pending pairing.
++     * @param uuid player
++     * @param name player name
++     * @param token long token for the QR link
++     * @param code short code, without the dash
++     * @param expiresAt epoch millis
++     */
++    public record Pairing(UUID uuid, String name, String token, String code, long expiresAt) {
++
++        /**
++         * @return the code as shown to players, e.g. K7F3-QX9M
++         */
++        public String displayCode() {
++            return code.substring(0, 4) + "-" + code.substring(4);
++        }
++
++        /**
++         * @param baseUrl public URL of the web page
++         * @return link that pairs the browser that opens it, or null without a base URL
++         */
++        @Nullable
++        public String link(String baseUrl) {
++            if (baseUrl == null || baseUrl.isBlank()) {
++                return null;
++            }
++            String base = baseUrl.trim();
++            if (!base.endsWith("/")) {
++                base += "/";
++            }
++            // a fragment never reaches the server (or proxy logs)
++            return base + "#pair=" + token;
++        }
++
++        /**
++         * @return seconds until it expires
++         */
++        public long secondsLeft() {
++            return Math.max(0, (expiresAt - System.currentTimeMillis()) / 1000);
++        }
++    }
++
++    /**
++     * Result of redeeming a pairing.
++     * @param uuid player, null on failure
++     * @param message failure message
++     */
++    public record Redeemed(@Nullable UUID uuid, @Nullable String message) {
++        static Redeemed ok(UUID uuid) {
++            return new Redeemed(uuid, null);
++        }
++
++        static Redeemed fail(String message) {
++            return new Redeemed(null, message);
++        }
++    }
++
++    /**
++     * @param devices device token store
++     */
++    public PairingManager(DeviceStore devices) {
++        this.devices = devices;
++    }
++
++    /**
++     * @return device token store
++     */
++    public DeviceStore getDevices() {
++        return devices;
++    }
++
++    /**
++     * Start a pairing for a player. An older pending pairing of that player is
++     * replaced.
++     * @param player player
++     * @return the pairing
++     */
++    public synchronized Pairing create(SvgPlayer player) {
++        purgeExpired();
++        remove(byPlayer.get(player.getUniqueId()));
++
++        int ttl = Math.max(30, SvgCore.getConfig().PAIRING_TTL_SECONDS.get());
++
++        String token;
++        do {
++            byte[] bytes = new byte[16];
++            RANDOM.nextBytes(bytes);
++            token = Base64.getUrlEncoder().withoutPadding().encodeToString(bytes);
++        } while (byToken.containsKey(token));
++
++        String code;
++        do {
++            char[] chars = new char[CODE_LENGTH];
++            for (int i = 0; i < CODE_LENGTH; i++) {
++                chars[i] = CODE_ALPHABET[RANDOM.nextInt(CODE_ALPHABET.length)];
++            }
++            code = new String(chars);
++        } while (byCode.containsKey(code));
++
++        Pairing pairing = new Pairing(
++                player.getUniqueId(), player.getName(), token, code,
++                System.currentTimeMillis() + ttl * 1000L
++        );
++        byToken.put(token, pairing);
++        byCode.put(code, pairing);
++        byPlayer.put(pairing.uuid(), pairing);
++        return pairing;
++    }
++
++    /**
++     * Cancel a player's pending pairing (e.g. when they leave).
++     * @param uuid player
++     */
++    public synchronized void cancel(UUID uuid) {
++        remove(byPlayer.get(uuid));
++    }
++
++    /**
++     * Redeem the long token from a QR link.
++     * @param token token
++     * @return result
++     */
++    public synchronized Redeemed redeemToken(String token) {
++        purgeExpired();
++        Pairing pairing = token == null ? null : byToken.get(token.trim());
++        if (pairing == null) {
++            return Redeemed.fail("This pairing link has expired or was already used. "
++                    + "Make a new one in-game.");
++        }
++        remove(pairing);
++        return Redeemed.ok(pairing.uuid());
++    }
++
++    /**
++     * Redeem a typed code. Wrong codes are rate-limited per client and globally.
++     * @param rawCode code as typed (case, spaces and dashes don't matter)
++     * @param clientKey client address
++     * @return result
++     */
++    public synchronized Redeemed redeemCode(String rawCode, String clientKey) {
++        purgeExpired();
++
++        String clientLimitKey = "pair:" + clientKey;
++        if (!perClientLimiter.allow(clientLimitKey) || !globalLimiter.allow("pair:*")) {
++            return Redeemed.fail("Too many wrong codes. Wait a few minutes and try again.");
++        }
++
++        String code = normalizeCode(rawCode);
++        Pairing pairing = code.isEmpty() ? null : byCode.get(code);
++        if (pairing == null) {
++            perClientLimiter.recordFailure(clientLimitKey);
++            globalLimiter.recordFailure("pair:*");
++            return Redeemed.fail("Wrong or expired code. Make a new one in-game.");
++        }
++
++        remove(pairing);
++        return Redeemed.ok(pairing.uuid());
++    }
++
++    /**
++     * Upper case, without spaces and dashes.
++     * @param raw typed code
++     * @return normalized code
++     */
++    static String normalizeCode(String raw) {
++        if (raw == null) {
++            return "";
++        }
++        StringBuilder out = new StringBuilder();
++        for (char c : raw.toUpperCase(Locale.ROOT).toCharArray()) {
++            if (Character.isLetterOrDigit(c)) {
++                out.append(c);
++            }
++        }
++        return out.length() == CODE_LENGTH ? out.toString() : "";
++    }
++
++    private void remove(@Nullable Pairing pairing) {
++        if (pairing == null) {
++            return;
++        }
++        byToken.remove(pairing.token());
++        byCode.remove(pairing.code());
++        byPlayer.remove(pairing.uuid(), pairing);
++        SvgCore.getPlatform().hidePairing(pairing.uuid());
++    }
++
++    private void purgeExpired() {
++        long now = System.currentTimeMillis();
++        for (Pairing pairing : byPlayer.values().toArray(new Pairing[0])) {
++            if (pairing.expiresAt() <= now) {
++                remove(pairing);
++            }
++        }
++    }
++}
+diff --git a/core/src/main/java/io/github/theodoremeyer/simplevoicegeyser/core/server/packets/CapabilitiesPacket.java b/core/src/main/java/io/github/theodoremeyer/simplevoicegeyser/core/server/packets/CapabilitiesPacket.java
+index e049ab1..ca68dd6 100644
+--- a/core/src/main/java/io/github/theodoremeyer/simplevoicegeyser/core/server/packets/CapabilitiesPacket.java
++++ b/core/src/main/java/io/github/theodoremeyer/simplevoicegeyser/core/server/packets/CapabilitiesPacket.java
+@@ -111,6 +111,20 @@ public final class CapabilitiesPacket implements Packet {
+             );
+         }
+ 
++        // one line per connection, to tell browser-specific audio problems apart
++        JSONObject runtime = audio.optJSONObject("runtime");
++        SvgCore.getLogger().info(
++                "[WebSocket] Audio for "
++                        + (socket.getConnection() == null ? "?" : socket.getConnection().getPlayer().getName())
++                        + ": transport=" + selected.name().toLowerCase(Locale.ROOT)
++                        + " opusWasm=" + wasm
++                        + (decoder != null && !decoder.optString("wasmError", "").isEmpty()
++                        ? " wasmError=\"" + decoder.optString("wasmError") + "\"" : "")
++                        + (runtime == null ? "" : " sampleRate=" + runtime.opt("sampleRate")
++                        + " baseLatency=" + runtime.opt("baseLatency")
++                        + " ua=\"" + runtime.optString("userAgent", "?") + "\"")
++        );
++
+         SvgCore.getLogger().debug(
+                 "WebSocket: Capabilities #" + count
+                         + " uuid="
+diff --git a/core/src/main/java/io/github/theodoremeyer/simplevoicegeyser/core/server/packets/JoinPacket.java b/core/src/main/java/io/github/theodoremeyer/simplevoicegeyser/core/server/packets/JoinPacket.java
+index e05ccee..1ac2b18 100644
+--- a/core/src/main/java/io/github/theodoremeyer/simplevoicegeyser/core/server/packets/JoinPacket.java
++++ b/core/src/main/java/io/github/theodoremeyer/simplevoicegeyser/core/server/packets/JoinPacket.java
+@@ -15,6 +15,10 @@ import io.github.theodoremeyer.simplevoicegeyser.core.server.servlets.JettyWebSo
+ import org.eclipse.jetty.websocket.api.Session;
+ import org.json.JSONObject;
+ 
++import java.net.InetAddress;
++import java.net.InetSocketAddress;
++import java.net.SocketAddress;
++
+ /**
+  * Handles the Join Packet from the Client
+  */
+@@ -65,21 +69,52 @@ public final class JoinPacket implements Packet {
+             return;
+         }
+ 
+-        String username = json.optString("username", "").trim();
+-        String password = json.optString("password", "");
+-
+-        AuthResponse response =
+-                JettyWebSocket.AUTHENTICATOR.authenticate(username, password);
++        // Login methods: one-time pairing (QR link token or typed code),
++        // a device token from an earlier pairing, or name + password.
++        String pairToken = json.optString("pairToken", "").trim();
++        String pairCode = json.optString("pairCode", "").trim();
++        String deviceToken = json.optString("deviceToken", "").trim();
++        boolean pairing = !pairToken.isEmpty() || !pairCode.isEmpty();
++
++        AuthResponse response;
++        if (pairing) {
++            response = JettyWebSocket.AUTHENTICATOR.authenticatePairing(
++                    pairToken, pairCode, clientAddress(socket.getSession()));
++        } else if (!deviceToken.isEmpty()) {
++            response = JettyWebSocket.AUTHENTICATOR.authenticateDevice(deviceToken);
++        } else {
++            String username = json.optString("username", "").trim();
++            String password = json.optString("password", "");
++            response = JettyWebSocket.AUTHENTICATOR.authenticate(username, password);
++        }
+ 
+         if (!response.success()) {
+-            socket.sendRaw(
+-                    ConnectionStates.MessageType.ERROR,
+-                    "Authentication failed: " + response.message(),
+-                    false
+-            );
++            JSONObject error = new JSONObject();
++            error.put("type", ConnectionStates.MessageType.ERROR.getJsonString());
++            error.put("message", "Authentication failed: " + response.message());
++            error.put("fatal", false);
++            if (response.reason() != null) {
++                error.put("reason", response.reason());
++            }
++            socket.sendJson(error);
+             return;
+         }
+ 
++        if (pairing) {
++            // remember this browser, so it logs in by itself next time
++            String token = SvgCore.getPairingManager().getDevices().issue(
++                    response.uuid(), response.player().getName());
++
++            JSONObject session = new JSONObject();
++            session.put("type", "session");
++            session.put("deviceToken", token);
++            session.put("username", response.player().getName());
++            socket.sendJson(session);
++
++            response.player().sendMessage(SvgCore.getPrefix()
++                    + "Browser paired. It logs in by itself from now on.");
++        }
++
+         SvgConnection connection = SvgCore.getConnectionManager().connect(
+                 socket.getSession(),
+                 response.player(),
+@@ -149,6 +184,33 @@ public final class JoinPacket implements Packet {
+         );
+     }
+ 
++    /**
++     * The client's address, for rate limiting. Behind a reverse proxy on the
++     * same host, the proxy's X-Real-IP / X-Forwarded-For header is used.
++     */
++    static String clientAddress(Session session) {
++        if (session == null) {
++            return "unknown";
++        }
++
++        SocketAddress remote = session.getRemoteAddress();
++        InetAddress address = remote instanceof InetSocketAddress inet ? inet.getAddress() : null;
++
++        if (address != null && address.isLoopbackAddress() && session.getUpgradeRequest() != null) {
++            String realIp = session.getUpgradeRequest().getHeader("X-Real-IP");
++            if (realIp != null && !realIp.isBlank()) {
++                return realIp.trim();
++            }
++            String forwarded = session.getUpgradeRequest().getHeader("X-Forwarded-For");
++            if (forwarded != null && !forwarded.isBlank()) {
++                String[] hops = forwarded.split(",");
++                return hops[hops.length - 1].trim();
++            }
++        }
++
++        return address != null ? address.getHostAddress() : String.valueOf(remote);
++    }
++
+     private void closeCompatibilityFailure(JettyWebSocket socket, ClientCompatibilityResult compatibility) {
+ 
+         Session session = socket.getSession();
+diff --git a/core/src/main/java/io/github/theodoremeyer/simplevoicegeyser/core/server/packets/PacketHandler.java b/core/src/main/java/io/github/theodoremeyer/simplevoicegeyser/core/server/packets/PacketHandler.java
+index b5ceea4..29c9370 100644
+--- a/core/src/main/java/io/github/theodoremeyer/simplevoicegeyser/core/server/packets/PacketHandler.java
++++ b/core/src/main/java/io/github/theodoremeyer/simplevoicegeyser/core/server/packets/PacketHandler.java
+@@ -21,6 +21,7 @@ public final class PacketHandler {
+         register(new ChatPacket());
+         register(new JoinPacket());
+         register(new CapabilitiesPacket());
++        register(new PingPacket());
+     }
+ 
+     /**
+diff --git a/core/src/main/java/io/github/theodoremeyer/simplevoicegeyser/core/server/packets/PingPacket.java b/core/src/main/java/io/github/theodoremeyer/simplevoicegeyser/core/server/packets/PingPacket.java
+new file mode 100644
+index 0000000..8e25dc7
+--- /dev/null
++++ b/core/src/main/java/io/github/theodoremeyer/simplevoicegeyser/core/server/packets/PingPacket.java
+@@ -0,0 +1,30 @@
++package io.github.theodoremeyer.simplevoicegeyser.core.server.packets;
++
++import io.github.theodoremeyer.simplevoicegeyser.core.server.servlets.JettyWebSocket;
++import org.json.JSONObject;
++
++/**
++ * Liveness check from the browser. A phone coming back from the background
++ * often holds a socket that looks open but is dead; the page sends a ping
++ * and replaces the socket when no pong arrives.
++ */
++public final class PingPacket implements Packet {
++
++    /**
++     * A no arg Constructor
++     */
++    public PingPacket() {}
++
++    @Override
++    public String getType() {
++        return "ping";
++    }
++
++    @Override
++    public void handle(JettyWebSocket socket, JSONObject json) {
++        if (socket.getConnection() == null) {
++            return;
++        }
++        socket.getConnection().sendJson(new JSONObject().put("type", "pong"));
++    }
++}
+diff --git a/core/src/main/java/io/github/theodoremeyer/simplevoicegeyser/core/server/servlets/JettyWebSocket.java b/core/src/main/java/io/github/theodoremeyer/simplevoicegeyser/core/server/servlets/JettyWebSocket.java
+index a374bd5..8eb2222 100644
+--- a/core/src/main/java/io/github/theodoremeyer/simplevoicegeyser/core/server/servlets/JettyWebSocket.java
++++ b/core/src/main/java/io/github/theodoremeyer/simplevoicegeyser/core/server/servlets/JettyWebSocket.java
+@@ -12,8 +12,13 @@ import org.eclipse.jetty.websocket.api.annotations.*;
+ import org.json.JSONObject;
+ 
+ import java.io.IOException;
++import java.nio.ByteBuffer;
+ import java.time.Duration;
+ import java.util.Arrays;
++import java.util.concurrent.Executors;
++import java.util.concurrent.ScheduledExecutorService;
++import java.util.concurrent.ScheduledFuture;
++import java.util.concurrent.TimeUnit;
+ 
+ /**
+  * Class that handles talking to the Client
+@@ -29,6 +34,23 @@ public final class JettyWebSocket {
+ 
+     private static final PacketHandler packetHandler = new PacketHandler();
+ 
++    /**
++     * Websocket pings keep quiet connections alive: reverse proxies (nginx:
++     * 60s by default), mobile networks and the idle timeout above all close
++     * a websocket that carries no data, which happens whenever nobody talks.
++     * Browsers answer pings by themselves.
++     */
++    private static final Duration PING_INTERVAL = Duration.ofSeconds(25);
++
++    private static final ScheduledExecutorService PINGER =
++            Executors.newSingleThreadScheduledExecutor(runnable -> {
++                Thread thread = new Thread(runnable, "SVG-WebSocket-Ping");
++                thread.setDaemon(true);
++                return thread;
++            });
++
++    private ScheduledFuture<?> pingTask;
++
+     private Session session;
+     private SvgConnection connection;
+     private long binaryFrameCount = 0;
+@@ -55,6 +77,10 @@ public final class JettyWebSocket {
+         boolean allowLegacyFallback = Boolean.TRUE.equals(SvgCore.getConfig().AUDIO_ALLOW_LEGACY_FALLBACK.get());
+ 
+         this.audioNegotiation = new AudioSessionNegotiation(preference, allowLegacyFallback);
++
++        long interval = PING_INTERVAL.toMillis();
++        this.pingTask = PINGER.scheduleAtFixedRate(this::ping, interval, interval, TimeUnit.MILLISECONDS);
++
+         SvgCore.getLogger().info("[Websocket] WebSocket connected: " + session.getRemoteAddress());
+         SvgCore.getLogger().debug("WebSocket: Session opened remote=" + session.getRemoteAddress());
+     }
+@@ -129,6 +155,8 @@ public final class JettyWebSocket {
+      */
+     @OnWebSocketClose
+     public void onClose(int statusCode, String reason) {
++        stopPing();
++
+         SvgCore.getLogger().debug(
+                 "WebSocket: Session close status=" + statusCode
+                         + " reason=" + reason
+@@ -180,6 +208,27 @@ public final class JettyWebSocket {
+         SvgCore.getLogger().info("[WebSocket] Error: " + type + ": " + message);
+     }
+ 
++    private void ping() {
++        Session current = session;
++        if (current == null || !current.isOpen()) {
++            stopPing();
++            return;
++        }
++        try {
++            current.getRemote().sendPing(ByteBuffer.allocate(0));
++        } catch (Exception e) {
++            SvgCore.getLogger().debug("WebSocket: ping failed", e);
++        }
++    }
++
++    private void stopPing() {
++        ScheduledFuture<?> task = pingTask;
++        pingTask = null;
++        if (task != null) {
++            task.cancel(false);
++        }
++    }
++
+     /**
+      * Send a Raw message to client
+      * @param type message type
+diff --git a/core/src/test/java/io/github/theodoremeyer/simplevoicegeyser/core/data/DeviceStoreTest.java b/core/src/test/java/io/github/theodoremeyer/simplevoicegeyser/core/data/DeviceStoreTest.java
+new file mode 100644
+index 0000000..2547014
+--- /dev/null
++++ b/core/src/test/java/io/github/theodoremeyer/simplevoicegeyser/core/data/DeviceStoreTest.java
+@@ -0,0 +1,69 @@
++package io.github.theodoremeyer.simplevoicegeyser.core.data;
++
++import io.github.theodoremeyer.simplevoicegeyser.core.api.chat.SvgLogger;
++import org.junit.jupiter.api.Test;
++import org.junit.jupiter.api.io.TempDir;
++
++import java.io.File;
++import java.nio.file.Files;
++import java.nio.file.Path;
++import java.util.UUID;
++
++import static org.junit.jupiter.api.Assertions.*;
++
++class DeviceStoreTest {
++
++    private static final SvgLogger LOGGER = new SvgLogger() {
++        public void info(String msg) {}
++        public void warning(String msg) {}
++        public void error(String msg) { fail(msg); }
++        public void severe(String msg) { fail(msg); }
++        public void error(String msg, Throwable t) { fail(msg, t); }
++    };
++
++    @TempDir
++    Path dir;
++
++    @Test
++    void issuedTokenValidatesAndSurvivesReload() throws Exception {
++        UUID uuid = UUID.randomUUID();
++        DeviceStore store = new DeviceStore(dir.toFile(), LOGGER);
++        String token = store.issue(uuid, "Steve");
++
++        assertEquals(uuid, store.validate(token, 180));
++        assertNull(store.validate(token + "x", 180));
++        assertNull(store.validate("", 180));
++
++        // stored hashed, never in clear
++        String json = Files.readString(new File(dir.toFile(), "devices.json").toPath());
++        assertFalse(json.contains(token));
++
++        DeviceStore reloaded = new DeviceStore(dir.toFile(), LOGGER);
++        assertEquals(uuid, reloaded.validate(token, 180));
++    }
++
++    @Test
++    void revokeAllRemovesOnlyThatPlayer() {
++        UUID a = UUID.randomUUID();
++        UUID b = UUID.randomUUID();
++        DeviceStore store = new DeviceStore(dir.toFile(), LOGGER);
++        String a1 = store.issue(a, "A");
++        String a2 = store.issue(a, "A");
++        String b1 = store.issue(b, "B");
++
++        assertEquals(2, store.revokeAll(a));
++        assertNull(store.validate(a1, 0));
++        assertNull(store.validate(a2, 0));
++        assertEquals(b, store.validate(b1, 0));
++    }
++
++    @Test
++    void keepsAtMostTenDevicesPerPlayer() {
++        UUID a = UUID.randomUUID();
++        DeviceStore store = new DeviceStore(dir.toFile(), LOGGER);
++        for (int i = 0; i < 15; i++) {
++            store.issue(a, "A");
++        }
++        assertEquals(10, store.count(a));
++    }
++}
+diff --git a/core/src/test/java/io/github/theodoremeyer/simplevoicegeyser/core/server/connection/auth/PairingCodeTest.java b/core/src/test/java/io/github/theodoremeyer/simplevoicegeyser/core/server/connection/auth/PairingCodeTest.java
+new file mode 100644
+index 0000000..8304537
+--- /dev/null
++++ b/core/src/test/java/io/github/theodoremeyer/simplevoicegeyser/core/server/connection/auth/PairingCodeTest.java
+@@ -0,0 +1,16 @@
++package io.github.theodoremeyer.simplevoicegeyser.core.server.connection.auth;
++
++import org.junit.jupiter.api.Test;
++
++import static org.junit.jupiter.api.Assertions.assertEquals;
++
++class PairingCodeTest {
++
++    @Test
++    void normalizesTypedCodes() {
++        assertEquals("K7F3QX9M", PairingManager.normalizeCode("K7F3-QX9M"));
++        assertEquals("K7F3QX9M", PairingManager.normalizeCode(" k7f3 qx9m "));
++        assertEquals("", PairingManager.normalizeCode("K7F3-QX9"));
++        assertEquals("", PairingManager.normalizeCode(null));
++    }
++}
+diff --git a/core/web/css/v2.css b/core/web/css/v2.css
+index 447b5dd..dddf752 100644
+--- a/core/web/css/v2.css
++++ b/core/web/css/v2.css
+@@ -416,4 +416,30 @@ body.fullscreen-ptt-active {
+ }
+ .pttFullscreenBtn .mcButtonStyleInner {
+     font-size: clamp(24px, 5vw, 42px) !important;
+-}
+\ No newline at end of file
++}
++/* Password-less login (pairing) */
++.joinForm [hidden] {
++    display: none !important;
++}
++
++.joinForm [data-login="code-input"] {
++    text-transform: uppercase;
++    letter-spacing: 0.15em;
++}
++
++.joinForm [data-login="code-hint"] {
++    display: flex;
++    flex-flow: column;
++    gap: 0.3em;
++    opacity: 0.85;
++}
++
++.joinForm .linkButton {
++    background: none;
++    border: none;
++    padding: 0;
++    color: inherit;
++    text-decoration: underline;
++    cursor: pointer;
++    align-self: flex-start;
++}
+diff --git a/core/web/index.html b/core/web/index.html
+index f58ad35..f6071eb 100644
+--- a/core/web/index.html
++++ b/core/web/index.html
+@@ -34,20 +34,40 @@
+                 <div class="flexSpacer hiddenWhenConnected"></div>
+ <!--                Join Form-->
+                 <form class="joinForm flexContainer" data-svg="form">
+-                    <div class="usernameContainer flexRowContainer fullWidth flexColumnWhenMobile hiddenWhenConnected">
++<!--                    Paired browser: logs in by itself (device token in localStorage)-->
++                    <div class="sessionContainer flexRowContainer fullWidth flexColumnWhenMobile hiddenWhenConnected" data-login="session" hidden>
++                        <span class="joinFormLabel mcTextStyle1" data-login="session-text"></span>
++                        <div class="flexSpacer"></div>
++                        <div class="mcButtonStyle">
++                            <button class="mcButtonStyleInner mcTextStyle2" type="button" data-login="signout" svg-lang="signOutBtnText">Sign out</button>
++                        </div>
++                    </div>
++
++<!--                    One-time code from the game (/svg pair, Bedrock: SVG menu -> Connect browser)-->
++                    <div class="codeContainer flexRowContainer fullWidth flexColumnWhenMobile hiddenWhenConnected" data-login="code">
++                        <label class="joinFormLabel mcTextStyle1" for="pairCode" svg-lang="pairCodeInput">Code from the game</label>
++                        <div class="flexSpacer"></div>
++                        <input class="mcTextboxStyle" type="text" id="pairCode" name="pairCode" data-login="code-input" autocomplete="one-time-code" autocapitalize="characters" spellcheck="false" placeholder="ABCD-EFGH">
++                    </div>
++                    <div class="fullWidth hiddenWhenConnected" data-login="code-hint">
++                        <small class="mcTextStyle1" svg-lang="pairCodeHint">Get a code in Minecraft: Bedrock: emote, then "Connect browser". Java: /svg pair</small>
++                        <button class="mcTextStyle1 linkButton" type="button" data-login="show-password" svg-lang="usePasswordBtnText">Log in with a password instead</button>
++                    </div>
++
++                    <div class="usernameContainer flexRowContainer fullWidth flexColumnWhenMobile hiddenWhenConnected" data-login="password" hidden>
+ <!--                        Username Label-->
+                         <label class="joinFormLabel usernameLabel mcTextStyle1" for="username" svg-lang="usernameInput"></label>
+                         <div class="flexSpacer"></div>
+ <!--                        Username Input-->
+-                        <input class="usernameInput mcTextboxStyle" data-svg="form.username" type="text" id="username" name="username" required autocomplete="username">
++                        <input class="usernameInput mcTextboxStyle" data-svg="form.username" type="text" id="username" name="username" autocomplete="username">
+                     </div>
+ 
+-                    <div class="passwordContainer flexRowContainer fullWidth flexColumnWhenMobile hiddenWhenConnected">
++                    <div class="passwordContainer flexRowContainer fullWidth flexColumnWhenMobile hiddenWhenConnected" data-login="password" hidden>
+ <!--                        Password Label-->
+                         <label class="joinFormLabel passwordLabel mcTextStyle1" for="password" svg-lang="passwordInput"></label>
+                         <div class="flexSpacer"></div>
+ <!--                        Password Input-->
+-                        <input class="passwordInput mcTextboxStyle" data-svg="form.password" type="password" id="password" name="password" required autocomplete="svg-password">
++                        <input class="passwordInput mcTextboxStyle" data-svg="form.password" type="password" id="password" name="password" autocomplete="svg-password">
+                     </div>
+ 
+                     <div class="micContainer flexRowContainer fullWidth flexColumnWhenMobile hiddenWhenConnected">
+diff --git a/core/web/js/audio/audio.js b/core/web/js/audio/audio.js
+index 40ba8e7..48728a1 100644
+--- a/core/web/js/audio/audio.js
++++ b/core/web/js/audio/audio.js
+@@ -23,6 +23,7 @@ export class SvgAudio {
+         this.readIndex = 0;
+         this.available = 0;
+         this.micIndicator = null;
++        this.micLostHandler = null;
+         this.isPttActive = () => true;
+         this.getTransmitMode = () => "voice";
+ 
+@@ -63,7 +64,8 @@ export class SvgAudio {
+         this.audioContext = new AudioContextCtor({ sampleRate: 48000 });
+ 
+         if (this.audioContext.sampleRate !== 48000) {
+-            console.warn("WRONG SAMPLE RATE:", this.audioContext.sampleRate);
++            // the worklets convert between this rate and the 48 kHz on the wire
++            Logger.log(`[Audio] Browser runs audio at ${this.audioContext.sampleRate} Hz instead of 48000; converting.`);
+         }
+ 
+         this.audioRuntime.workletSupported = !!(this.audioContext.audioWorklet && typeof AudioWorkletNode !== "undefined");
+@@ -123,7 +125,12 @@ export class SvgAudio {
+             throw new Error("Microphone capture is not supported in this browser/context.");
+         }
+ 
+-        await this.audioContext.resume();
++        // A reconnect calls this again. Without stopping the old capture
++        // first, two worklets feed the same ring buffer and everyone hears
++        // the voice interleaved with itself (garbled, half speed).
++        this.stopMic();
++
++        await this.resume();
+ 
+         const audioConstraints = {
+             noiseSuppression: true,
+@@ -145,6 +152,54 @@ export class SvgAudio {
+ 
+         this.micSource.connect(this.micNode);
+         this.micNode.port.onmessage = (event) => this.#handleMicMessage(event);
++
++        // phones end the track when another app takes the microphone or the
++        // page was in the background for a while
++        const stream = this.microphoneStream;
++        for (const track of stream.getAudioTracks()) {
++            track.addEventListener("ended", () => {
++                if (this.microphoneStream === stream) {
++                    Logger.log("[Audio] Microphone track ended.");
++                    this.stopMic();
++                    this.micLostHandler?.();
++                }
++            });
++        }
++    }
++
++    /**
++     * Called after the microphone track ended by itself (not by stopMic).
++     * @param {Function} handler
++     */
++    onMicLost(handler) {
++        this.micLostHandler = handler;
++    }
++
++    /**
++     * Whether a microphone capture is running and its track is still live.
++     * @returns {boolean}
++     */
++    isMicLive() {
++        return !!this.micNode
++            && !!this.microphoneStream
++            && this.microphoneStream.getAudioTracks().some(track => track.readyState === "live");
++    }
++
++    /**
++     * Resume the audio context. Browsers suspend it in the background, and
++     * iOS leaves it "interrupted" after a call or the lock screen; nothing
++     * is heard or sent until it runs again.
++     */
++    async resume() {
++        if (!this.audioContext || this.audioContext.state === "running") {
++            return;
++        }
++        try {
++            await this.audioContext.resume();
++            Logger.log(`[Audio] Audio context ${this.audioContext.state}.`);
++        } catch (err) {
++            Logger.log(`[Audio] Could not resume audio: ${err?.message || err}`);
++        }
+     }
+ 
+     #handleMicMessage(event) {
+diff --git a/core/web/js/audio/microphone.js b/core/web/js/audio/microphone.js
+index 434370f..3f36a41 100644
+--- a/core/web/js/audio/microphone.js
++++ b/core/web/js/audio/microphone.js
+@@ -1,9 +1,46 @@
++// The server expects 48 kHz. `sampleRate` (AudioWorkletGlobalScope) is the
++// rate this context really runs at; browsers don't always honour the
++// requested 48 kHz (e.g. Firefox on some systems runs at 44.1 kHz). Without
++// converting, the voice arrives too high or too deep.
++const TARGET_RATE = 48000;
++
+ class Microphone extends AudioWorkletProcessor {
+     constructor() {
+         super();
+ 
+         // Hangover counter (measured in render quanta)
+         this._hangover = 0;
++
++        // linear resampler state: source samples per output sample, position
++        // of the next output sample relative to the current block (may be in
++        // [-1, 0), meaning between the previous block's last sample and this
++        // block's first)
++        this._ratio = sampleRate / TARGET_RATE;
++        this._pos = 0;
++        this._last = 0;
++    }
++
++    resample(input) {
++        if (this._ratio === 1) {
++            return new Float32Array(input); // COPY
++        }
++
++        const n = input.length;
++        const out = [];
++        let pos = this._pos;
++
++        while (pos < n - 1) {
++            const i = Math.floor(pos);
++            const t = pos - i;
++            const a = i < 0 ? this._last : input[i];
++            const b = input[i + 1];
++            out.push(a + (b - a) * t);
++            pos += this._ratio;
++        }
++
++        this._pos = pos - n;
++        this._last = input[n - 1];
++        return Float32Array.from(out);
+     }
+ 
+     process(inputs) {
+@@ -37,7 +74,7 @@ class Microphone extends AudioWorkletProcessor {
+ 
+         // ---- 4) Send data to main thread ----
+         this.port.postMessage({
+-            samples: new Float32Array(input), // COPY
++            samples: this.resample(input), // 48 kHz, always a copy
+             speech: isSpeech
+         });
+ 
+diff --git a/core/web/js/audio/speaker.js b/core/web/js/audio/speaker.js
+index 594403a..5cba4bd 100644
+--- a/core/web/js/audio/speaker.js
++++ b/core/web/js/audio/speaker.js
+@@ -1,7 +1,19 @@
++// Incoming voice is 48 kHz. `sampleRate` (AudioWorkletGlobalScope) is the
++// rate this context really runs at; browsers don't always honour the
++// requested 48 kHz (e.g. Firefox on some systems runs at 44.1 kHz). Playing
++// 48 kHz samples at another rate shifts the pitch and makes the buffer run
++// dry or overflow (ringing), so they are resampled here.
++const SOURCE_RATE = 48000;
++
+ class SpeakerProcessor extends AudioWorkletProcessor {
+     constructor() {
+         super();
+ 
++        // source samples consumed per output sample, and the fractional
++        // position between readIndex and the next source sample
++        this.step = SOURCE_RATE / sampleRate;
++        this.frac = 0;
++
+         // Ring buffer stores frame-aligned stereo samples.
+         this.leftBuffer = new Float32Array(48000); // 1 second at 48kHz
+         this.rightBuffer = new Float32Array(48000);
+@@ -10,11 +22,11 @@ class SpeakerProcessor extends AudioWorkletProcessor {
+         this.available = 0;
+ 
+         this.started = false;
+-
+-        //for testing/diagnostics
+-        this.underruns = 0;
+-        this._lastStatsTime = 0;
+-
++
++        //for testing/diagnostics
++        this.underruns = 0;
++        this._lastStatsTime = 0;
++
+         this.MAX_BUFFER = this.leftBuffer.length;
+         this.TARGET_BUFFER = 960 * 7; // start playback when >= this
+         this.MIN_BUFFER = 960  * 3; // diagnostic threshold only
+@@ -23,11 +35,11 @@ class SpeakerProcessor extends AudioWorkletProcessor {
+         this.lastSampleRight = 0;
+ 
+         this.droppedFrames = 0; //Dropped amount of frames
+-
+-        //For resetting state
+-        this.silenceFrames = 0;
+-        this.SILENCE_RESET_FRAMES = 128 * 15;
+-
++
++        //For resetting state
++        this.silenceFrames = 0;
++        this.SILENCE_RESET_FRAMES = 128 * 15;
++
+         this.port.onmessage = (event) => {
+             if (event.data.type === 'pcm') {
+                 const packet = event.data.buffer;
+@@ -53,6 +65,7 @@ class SpeakerProcessor extends AudioWorkletProcessor {
+                     this.enqueueMono(input);
+                 }
+             } else if (event.data.type === 'reset') {
++                this.frac = 0;
+                 this.writeIndex = 0;
+                 this.readIndex = 0;
+                 this.available = 0;
+@@ -123,8 +136,8 @@ class SpeakerProcessor extends AudioWorkletProcessor {
+             // audio resumed, clear silence counter
+             this.silenceFrames = 0;
+         }
+-
+-        // --- don't start until target buffer is filled ---
++
++        // --- don't start until target buffer is filled ---
+         if (!this.started) {
+             if (this.available < this.TARGET_BUFFER) {
+                 outputLeft.fill(0);
+@@ -136,13 +149,22 @@ class SpeakerProcessor extends AudioWorkletProcessor {
+             this.started = true;
+         }
+ 
+-        let i = 0;
+-
++        let i = 0;
++
+         // --- play available buffered audio ---
++        const resampling = this.step !== 1;
+         for (; i < framesNeeded; i++) {
+-            if (this.available > 0) {
+-                const left = this.leftBuffer[this.readIndex];
+-                const right = this.rightBuffer[this.readIndex];
++            if (resampling ? this.available > 1 : this.available > 0) {
++                let left = this.leftBuffer[this.readIndex];
++                let right = this.rightBuffer[this.readIndex];
++
++                if (resampling) {
++                    // linear interpolation towards the next source sample
++                    const next = (this.readIndex + 1) % this.MAX_BUFFER;
++                    left += (this.leftBuffer[next] - left) * this.frac;
++                    right += (this.rightBuffer[next] - right) * this.frac;
++                }
++
+                 outputLeft[i] = left;
+                 if (outputRight) {
+                     outputRight[i] = right;
+@@ -150,8 +172,17 @@ class SpeakerProcessor extends AudioWorkletProcessor {
+                 this.lastSampleLeft = left;
+                 this.lastSampleRight = right;
+ 
+-                this.readIndex = (this.readIndex + 1) % this.MAX_BUFFER;
+-                this.available--;
++                if (resampling) {
++                    this.frac += this.step;
++                    while (this.frac >= 1 && this.available > 1) {
++                        this.frac -= 1;
++                        this.readIndex = (this.readIndex + 1) % this.MAX_BUFFER;
++                        this.available--;
++                    }
++                } else {
++                    this.readIndex = (this.readIndex + 1) % this.MAX_BUFFER;
++                    this.available--;
++                }
+             } else {
+                 // True underrun only: apply lightweight PLC once buffer is empty.
+                 this.lastSampleLeft *= 0.995;
+@@ -164,20 +195,20 @@ class SpeakerProcessor extends AudioWorkletProcessor {
+                 this.underruns++;
+             }
+         }
+-
+-        // --- diagnostics logging every 500ms ---
+-        const now = this.currentTime;
+-        if (now - this._lastStatsTime > 0.5) {
+-            this.port.postMessage({
+-                type: 'stats',
+-                buffered: this.available,
+-                underruns: this.underruns
+-            });
+-            this._lastStatsTime = now;
+-        }
+-
+-        return true;
+-    }
+-}
+-
+-registerProcessor('pcm-player', SpeakerProcessor);
++
++        // --- diagnostics logging every 500ms ---
++        const now = this.currentTime;
++        if (now - this._lastStatsTime > 0.5) {
++            this.port.postMessage({
++                type: 'stats',
++                buffered: this.available,
++                underruns: this.underruns
++            });
++            this._lastStatsTime = now;
++        }
++
++        return true;
++    }
++}
++
++registerProcessor('pcm-player', SpeakerProcessor);
+diff --git a/core/web/js/ui.js b/core/web/js/ui.js
+index e179544..fb1b5b4 100644
+--- a/core/web/js/ui.js
++++ b/core/web/js/ui.js
+@@ -1,6 +1,7 @@
+ import {Logger} from "./utils/logger.js";
+ import {SvgLang} from "./utils/lang.js";
+ import {PttController} from "./ptt.js";
++import {SvgWebSocket} from "./websocket.js";
+ 
+ /**
+  * @import {SvgUIOptions} from "./utils/internal-types.js"
+@@ -138,6 +139,197 @@ export class SvgUI {
+         }
+     }
+ 
++    /**
++     * Pairing token from a QR link (#pair=...), used once.
++     * @type {string|null}
++     */
++    #pairToken = null;
++
++    /**
++     * Optional login elements (pairing). Pages without them (legacy.html)
++     * keep the plain name + password login.
++     */
++    #login = {};
++
++    /** @type {WakeLockSentinel|null} */
++    #wakeLock = null;
++    #wantWakeLock = false;
++
++    /**
++     * Keep the screen on while connected: phones otherwise lock, and a
++     * locked phone (iOS especially) stops the microphone. Browsers drop the
++     * lock when the tab is hidden, so it is taken again when it comes back.
++     */
++    #initWakeLock() {
++        if (!("wakeLock" in navigator)) {
++            Logger.log("[WakeLock] Not supported in this browser; the screen may turn off.");
++            return;
++        }
++
++        const acquire = async () => {
++            if (!this.#wantWakeLock || this.#wakeLock || document.visibilityState !== "visible") {
++                return;
++            }
++            try {
++                this.#wakeLock = await navigator.wakeLock.request("screen");
++                this.#wakeLock.addEventListener("release", () => {
++                    this.#wakeLock = null;
++                });
++            } catch (err) {
++                Logger.log(`[WakeLock] Could not keep the screen on: ${err?.message || err}`);
++            }
++        };
++
++        const release = async () => {
++            const lock = this.#wakeLock;
++            this.#wakeLock = null;
++            try {
++                await lock?.release();
++            } catch {
++                // already released
++            }
++        };
++
++        this.webSocketController.addEventListener("statusChange", (status) => {
++            this.#wantWakeLock = !!status.connected;
++            void (status.connected ? acquire() : release());
++        }, true);
++
++        document.addEventListener("visibilitychange", () => {
++            void acquire();
++        });
++    }
++
++    #initLogin() {
++        const formEl = this.form.formEl;
++        const find = (name) => formEl.querySelectorAll(`[data-login="${name}"]`);
++        this.#login = {
++            session: find("session")[0] || null,
++            sessionText: find("session-text")[0] || null,
++            signOut: find("signout")[0] || null,
++            code: find("code")[0] || null,
++            codeInput: find("code-input")[0] || null,
++            codeHint: find("code-hint")[0] || null,
++            showPassword: find("show-password")[0] || null,
++            passwordRows: [...find("password")],
++            passwordShown: false
++        };
++
++        // QR link: https://voice.example.com/#pair=TOKEN. Take the token and
++        // remove it from the address bar, so it isn't bookmarked or shared.
++        const match = /(?:^#|&)pair=([A-Za-z0-9_-]+)/.exec(window.location.hash);
++        if (match) {
++            this.#pairToken = match[1];
++            history.replaceState(null, "", window.location.pathname + window.location.search);
++        }
++
++        this.#login.showPassword?.addEventListener("click", () => {
++            this.#login.passwordShown = true;
++            this.#updateLogin();
++        });
++
++        this.#login.signOut?.addEventListener("click", () => {
++            SvgWebSocket.forgetSavedDevice();
++            this.#updateLogin();
++        });
++
++        this.#login.codeInput?.addEventListener("input", () => {
++            // typing a code switches back from password login
++            if (this.#login.codeInput.value) {
++                this.#login.passwordShown = false;
++                this.#updateLogin();
++            }
++        });
++
++        this.webSocketController.addEventListener("message", (data) => {
++            if (data.type !== "json") {
++                return;
++            }
++            if (data.packetType === "session") {
++                this.#updateLogin();
++                if (data.username) {
++                    SvgLang.setElement(this.form.statusEl,
++                        () => `${SvgLang.string("statusConnectedAsPrefix")} ${data.username}`
++                    );
++                }
++            }
++            if (data.packetType === "error") {
++                this.#updateLogin(); // e.g. a used-up QR link or a removed device
++            }
++        }, true);
++
++        this.#updateLogin();
++    }
++
++    /**
++     * Show the rows that fit the current login state.
++     */
++    #updateLogin() {
++        const l = this.#login;
++        if (!l.code) {
++            return; // page without pairing elements
++        }
++
++        const saved = SvgWebSocket.getSavedDevice();
++        const pairing = !!this.#pairToken;
++        const showSession = pairing || !!saved;
++        const showPassword = !showSession && l.passwordShown;
++
++        if (l.session) {
++            l.session.hidden = !showSession;
++        }
++        if (l.signOut) {
++            l.signOut.hidden = pairing || !saved;
++        }
++        if (l.sessionText) {
++            SvgLang.setElement(l.sessionText, () => pairing
++                ? SvgLang.string("pairLinkReadyLabel")
++                : `${SvgLang.string("signedInAsPrefix")} ${saved?.username || "?"}`
++            );
++        }
++
++        l.code.hidden = showSession || showPassword;
++        if (l.codeHint) {
++            l.codeHint.hidden = showSession || showPassword;
++        }
++        for (const row of l.passwordRows) {
++            row.hidden = !showPassword;
++        }
++    }
++
++    /**
++     * Credentials for the next connection, in order of preference.
++     * @returns {Object|null}
++     */
++    #takeCredentials() {
++        if (this.#pairToken) {
++            const pairToken = this.#pairToken;
++            this.#pairToken = null; // works once
++            return { pairToken };
++        }
++
++        const saved = SvgWebSocket.getSavedDevice();
++        if (saved) {
++            return { deviceToken: saved.token };
++        }
++
++        const code = this.#login.codeInput?.value.trim();
++        const { usernameInput, passwordInput } = this.form;
++        const pageWithoutPairing = !this.#login.code;
++
++        if (code && !this.#login.passwordShown) {
++            this.#login.codeInput.value = "";
++            return { pairCode: code };
++        }
++
++        if ((this.#login.passwordShown || pageWithoutPairing)
++            && usernameInput.value.trim() && passwordInput.value) {
++            return { username: usernameInput.value, password: passwordInput.value };
++        }
++
++        return null;
++    }
++
+     async init() {
+ 
+         const {
+@@ -239,6 +431,9 @@ export class SvgUI {
+                 this.pttController.isPttActive()
+         );
+ 
++        this.#initLogin();
++        this.#initWakeLock();
++
+         formEl.addEventListener("submit", async e => {
+                 e.preventDefault();
+ 
+@@ -250,8 +445,16 @@ export class SvgUI {
+                     return;
+                 }
+ 
+-                this.webSocketController.connect(usernameInput.value,
+-                    passwordInput.value,
++                const credentials = this.#takeCredentials();
++
++                if (!credentials) {
++                    SvgLang.setElement(statusEl, "loginMissingLabel");
++                    statusEl.classList.remove("connected");
++                    statusEl.classList.add("disconnected");
++                    return;
++                }
++
++                this.webSocketController.connect(credentials,
+ 
+                     async (status) => {
+                         if (status.connected) {
+@@ -284,6 +487,9 @@ export class SvgUI {
+                                 );
+                             }
+                         } else {
++                            // also on a lost connection: the reconnect
++                            // starts a fresh capture (see startMic)
++                            this.audioController.stopMic();
+                             SvgLang.setElement(statusEl, "statusDisconnectedLabel");
+                             statusEl.classList.remove("connected");
+                             statusEl.classList.add("disconnected");
+@@ -297,6 +503,31 @@ export class SvgUI {
+             }
+         );
+ 
++        // Coming back to the page: the audio context may be suspended and
++        // the microphone track may have died while in the background.
++        const restoreAudio = async () => {
++            if (!this.webSocketController.isConnected()) {
++                return;
++            }
++            await this.audioController.resume();
++            const runtime = this.audioController.getAudioRuntime();
++            if (runtime.canCaptureMic && !this.audioController.isMicLive()) {
++                try {
++                    await this.audioController.startMic(micSelect.value);
++                    Logger.log("[Audio] Microphone restarted.");
++                } catch (error) {
++                    console.error(error);
++                    Logger.log("Failed to restart the microphone. Receive/chat still available.");
++                }
++            }
++        };
++        document.addEventListener("visibilitychange", () => {
++            if (document.visibilityState === "visible") {
++                void restoreAudio();
++            }
++        });
++        this.audioController.onMicLost(() => void restoreAudio());
++
+         muteBtn.addEventListener("click",
+             () => {
+ 
+diff --git a/core/web/js/utils/lang.js b/core/web/js/utils/lang.js
+index 37dcf1d..906db34 100644
+--- a/core/web/js/utils/lang.js
++++ b/core/web/js/utils/lang.js
+@@ -51,7 +51,11 @@ export class SvgLang {
+             "colorEditorLabel": "Color Customization",
+             "pushToTalkFullscreenBtnText": "Hold to Talk",
+             "exitFullscreenPttBtnText": "Exit Fullscreen",
+-            "devToolsLabel": "Developer Tools"
++            "devToolsLabel": "Developer Tools",
++            "signOutBtnText": "Sign out",
++            "pairCodeInput": "Code from the game",
++            "pairCodeHint": "Get a code in Minecraft: Bedrock: emote, then \"Connect browser\". Java: /svg pair",
++            "usePasswordBtnText": "Log in with a password instead"
+         },
+         "pl": {
+             "joinLabel": "Dołącz do Simple Voice Chat",
+@@ -132,7 +136,10 @@ export class SvgLang {
+             "statusConnectedAsPrefix": "Connected as",
+             "statusDisconnectedLabel": "Disconnected",
+             "muteBtnUnmuteLabel": "Unmute",
+-            "muteBtnMuteLabel": "Mute"
++            "muteBtnMuteLabel": "Mute",
++            "loginMissingLabel": "Enter the code from the game",
++            "pairLinkReadyLabel": "Login link from the game ready. Tap Join.",
++            "signedInAsPrefix": "Signed in as"
+         }
+     };
+     static availableLanguages = Object.keys(SvgLang.#htmlTranslation);
+diff --git a/core/web/js/websocket.js b/core/web/js/websocket.js
+index 95a8dc5..5e70dbc 100644
+--- a/core/web/js/websocket.js
++++ b/core/web/js/websocket.js
+@@ -8,7 +8,16 @@ import {Logger} from "./utils/logger.js";
+ 
+ export class SvgWebSocket {
+ 
+-    static MAX_RECONNECT_ATTEMPTS = 5;
++    /**
++     * A session that never joined (wrong code, server down) gives up after
++     * this many attempts. A session that had joined keeps trying, with the
++     * delay growing from RECONNECT_DELAY_MS up to RECONNECT_MAX_DELAY_MS.
++     */
++    static MAX_PREJOIN_ATTEMPTS = 5;
++    static RECONNECT_DELAY_MS = 3000;
++    static RECONNECT_MAX_DELAY_MS = 30000;
++    /** how long a liveness ping may go unanswered before the socket is replaced */
++    static PING_TIMEOUT_MS = 4000;
+     static DisconnectPolicy = {
+         FATAL: new Set([4003, 4004, 4005]),
+         NO_RECONNECT: new Set([4001, 4004, 4005, 4006]),
+@@ -29,6 +38,7 @@ export class SvgWebSocket {
+         this.audioController = audioController;
+         this.ws = null;
+         this.reconnectTimeout = null;
++        this.pingTimeout = null;
+         this.lastCredentials = null;
+         this.#resetState();
+     }
+@@ -41,10 +51,98 @@ export class SvgWebSocket {
+                 this.ws.send(packet);
+             }
+         });
++
++        // Phones freeze the page in the background: timers don't fire, and
++        // the connection is often gone without the browser noticing. When the
++        // page comes back (or the network does), check or reconnect at once.
++        document.addEventListener("visibilitychange", () => {
++            if (document.visibilityState === "visible") {
++                this.checkConnection();
++            }
++        });
++        window.addEventListener("online", () => this.checkConnection());
++    }
++
++    /**
++     * Reconnect now if a retry is pending, or verify a connection that
++     * looks open with a ping; an unanswered ping closes it, which starts
++     * the normal reconnect.
++     */
++    checkConnection() {
++        if (this.manualClose || !this.lastCredentials || !this.reOpen) {
++            return;
++        }
++
++        if (this.reconnectTimeout) {
++            clearTimeout(this.reconnectTimeout);
++            this.reconnectTimeout = null;
++            Logger.log("Page is back, reconnecting now.");
++            this.#createSocket();
++            return;
++        }
++
++        if (this.ws && this.ws.readyState === WebSocket.OPEN && this.hasJoined && !this.pingTimeout) {
++            try {
++                this.ws.send(JSON.stringify({ type: "ping" }));
++            } catch {
++                return;
++            }
++            this.pingTimeout = setTimeout(() => {
++                this.pingTimeout = null;
++                Logger.log("Connection stopped answering, reconnecting.");
++                // onclose then reconnects; the server drops the old session
++                this.ws?.close(4000, "ping timeout");
++            }, SvgWebSocket.PING_TIMEOUT_MS);
++        }
++    }
++
++    #clearPing() {
++        if (this.pingTimeout) {
++            clearTimeout(this.pingTimeout);
++            this.pingTimeout = null;
++        }
++    }
++
++    static DEVICE_TOKEN_KEY = "svgDeviceToken";
++    static DEVICE_USER_KEY = "svgDeviceUser";
++
++    /**
++     * Saved login of a paired browser.
++     * @returns {{token: string, username: string}|null}
++     */
++    static getSavedDevice() {
++        try {
++            const token = localStorage.getItem(SvgWebSocket.DEVICE_TOKEN_KEY);
++            if (!token) {
++                return null;
++            }
++            return { token, username: localStorage.getItem(SvgWebSocket.DEVICE_USER_KEY) || "" };
++        } catch {
++            return null;
++        }
+     }
+ 
+-    connect(username, password, onStatusChange) {
+-        this.lastCredentials = { username, password };
++    static forgetSavedDevice() {
++        try {
++            localStorage.removeItem(SvgWebSocket.DEVICE_TOKEN_KEY);
++            localStorage.removeItem(SvgWebSocket.DEVICE_USER_KEY);
++        } catch {
++            // storage unavailable, nothing saved
++        }
++    }
++
++    /**
++     * @param {Object|string} credentials one of {pairToken}, {pairCode},
++     *        {deviceToken} or {username, password}. (Old form: username, password, onStatusChange.)
++     * @param {Function|string} onStatusChange
++     */
++    connect(credentials, onStatusChange) {
++        if (typeof credentials === "string") {
++            const [username, password, callback] = arguments;
++            credentials = { username, password };
++            onStatusChange = callback;
++        }
++        this.lastCredentials = { ...credentials };
+         this.#resetState();
+         this.addEventListener("statusChange", onStatusChange);
+         this.#createSocket();
+@@ -122,6 +220,8 @@ export class SvgWebSocket {
+             this.#runEventListeners("statusChange", {
+                 connected: true,
+                 username: this.lastCredentials.username
++                    || SvgWebSocket.getSavedDevice()?.username
++                    || ""
+             });
+         };
+ 
+@@ -142,10 +242,31 @@ export class SvgWebSocket {
+                         await this.#sendCapabilitiesOnce();
+                     }
+ 
++                    if (packetType === "session" && data.deviceToken) {
++                        // paired: remember this browser, and reconnect with the
++                        // device token (the one-time pairing is used up)
++                        try {
++                            localStorage.setItem(SvgWebSocket.DEVICE_TOKEN_KEY, data.deviceToken);
++                            localStorage.setItem(SvgWebSocket.DEVICE_USER_KEY, data.username || "");
++                        } catch {
++                            Logger.log("Could not save the login in this browser.");
++                        }
++                        this.lastCredentials = { deviceToken: data.deviceToken };
++                    }
++
++                    if (packetType === "error" && data.reason === "device_invalid") {
++                        SvgWebSocket.forgetSavedDevice();
++                    }
++
+                     if (packetType === "capabilities_ack") {
+                         Logger.log(`[AudioRX] Server selected transport mode: ${data.selectedMode || "legacy"}`);
+                     }
+ 
++                    if (packetType === "pong") {
++                        this.#clearPing();
++                        return;
++                    }
++
+                     if (packetType === "error") {
+                         const isFatalError = msg.includes("bedrock player to join") ||
+                             msg.includes("use /svg pswd") ||
+@@ -173,7 +294,9 @@ export class SvgWebSocket {
+                         type: "json",
+                         fatalAuthError: this.fatalAuthError,
+                         packetType: packetType,
+-                        msg: msg
++                        msg: msg,
++                        reason: data.reason,
++                        username: data.username
+                     })
+                 } catch {
+                     Logger.log("Received non-JSON message: " + event.type);
+@@ -197,6 +320,7 @@ export class SvgWebSocket {
+             Logger.log("Disconnected.");
+             console.log("WebSocket closed:", code, reason);
+ 
++            this.#clearPing();
+             this.audioController.resetAudioState();
+             this.#runEventListeners("statusChange", {
+                 connected: false,
+@@ -239,25 +363,29 @@ export class SvgWebSocket {
+                 && this.lastCredentials
+                 && this.reOpen
+                 && !this.fatalAuthError
+-                && this.reconnectAttempts < SvgWebSocket.MAX_RECONNECT_ATTEMPTS;
++                && (this.hasJoined || this.reconnectAttempts < SvgWebSocket.MAX_PREJOIN_ATTEMPTS);
+ 
+             if (shouldReconnect) {
+                 this.reconnectAttempts++;
++                const delay = Math.min(
++                    SvgWebSocket.RECONNECT_DELAY_MS * 2 ** (this.reconnectAttempts - 1),
++                    SvgWebSocket.RECONNECT_MAX_DELAY_MS
++                );
+                 this.reconnectTimeout = setTimeout(() => {
+-                    Logger.log(`Reconnecting... (${this.reconnectAttempts}/${SvgWebSocket.MAX_RECONNECT_ATTEMPTS})`);
++                    this.reconnectTimeout = null;
++                    Logger.log(`Reconnecting... (attempt ${this.reconnectAttempts})`);
+                     this.#createSocket();
+-                }, 3000);
++                }, delay);
+             } else if (!this.manualClose && !this.hasJoined) {
+                 Logger.log("Stopped reconnecting after repeated pre-join failures.");
+             }
+         };
+ 
+         this.ws.onerror = () => {
++            // a failed attempt is followed by onclose, which schedules the
++            // next one; giving up here would leave the page disconnected
++            // whenever the network isn't back yet on the first try
+             Logger.log("WebSocket error occurred.");
+-
+-            if (this.ws.readyState !== WebSocket.OPEN) {
+-                this.stopReconnection();
+-            }
+         };
+     }
+ 
+@@ -283,6 +411,7 @@ export class SvgWebSocket {
+         this.fatalAuthError = false;
+         this.reconnectAttempts = 0;
+ 
++        this.#clearPing();
+         if (this.reconnectTimeout) {
+             clearTimeout(this.reconnectTimeout);
+             this.reconnectTimeout = null;
+@@ -317,7 +446,13 @@ export class SvgWebSocket {
+                     protocols: canUseSvgV2 ? ["legacy", "svg-v2"] : ["legacy"],
+                     supportsOpusDecoder: canDecodeOpus,
+                     secureContext: caps.secureContext,
+-                    decoder: caps.decoder
++                    decoder: caps.decoder,
++                    // for the server log: browser-specific audio problems
++                    runtime: {
++                        sampleRate: this.audioController.audioContext?.sampleRate ?? null,
++                        baseLatency: this.audioController.audioContext?.baseLatency ?? null,
++                        userAgent: navigator.userAgent
++                    }
+                 }
+             }));
+ 
+diff --git a/spigot/build.gradle b/spigot/build.gradle
+index a478ae3..f78502d 100644
+--- a/spigot/build.gradle
++++ b/spigot/build.gradle
+@@ -14,6 +14,9 @@ repositories {
+ dependencies {
+     compileOnly("org.spigotmc:spigot-api:${spigot_api_version}-R0.1-SNAPSHOT")
+ 
++    // QR codes for password-less pairing (MIT)
++    implementation("io.nayuki:qrcodegen:1.8.0")
++
+     // CORE MODULE
+     implementation(project(":core"))
+ 
+diff --git a/spigot/src/main/java/io/github/theodoremeyer/simplevoicegeyser/spigotmc/SvgPlugin.java b/spigot/src/main/java/io/github/theodoremeyer/simplevoicegeyser/spigotmc/SvgPlugin.java
+index c502fa7..edf0cc3 100644
+--- a/spigot/src/main/java/io/github/theodoremeyer/simplevoicegeyser/spigotmc/SvgPlugin.java
++++ b/spigot/src/main/java/io/github/theodoremeyer/simplevoicegeyser/spigotmc/SvgPlugin.java
+@@ -7,7 +7,17 @@ import io.github.theodoremeyer.simplevoicegeyser.core.api.chat.SvgLogger;
+ import io.github.theodoremeyer.simplevoicegeyser.core.api.data.DataType;
+ import io.github.theodoremeyer.simplevoicegeyser.core.api.data.SvgFile;
+ import io.github.theodoremeyer.simplevoicegeyser.core.svc.VoiceChatBridge;
++import io.github.theodoremeyer.simplevoicegeyser.core.api.sender.SvgPlayer;
++import io.github.theodoremeyer.simplevoicegeyser.core.geyser.GeyserHook;
++import io.github.theodoremeyer.simplevoicegeyser.core.managers.InviteManager;
+ import io.github.theodoremeyer.simplevoicegeyser.spigotmc.impl.BukkitLogger;
++import io.github.theodoremeyer.simplevoicegeyser.spigotmc.impl.PairingMaps;
++import net.md_5.bungee.api.ChatMessageType;
++import net.md_5.bungee.api.chat.ClickEvent;
++import net.md_5.bungee.api.chat.TextComponent;
++import org.bukkit.Sound;
++import org.bukkit.SoundCategory;
++import org.bukkit.entity.Player;
+ import io.github.theodoremeyer.simplevoicegeyser.spigotmc.impl.SvgCommand;
+ import io.github.theodoremeyer.simplevoicegeyser.spigotmc.impl.SvgListener;
+ import io.github.theodoremeyer.simplevoicegeyser.spigotmc.impl.data.ConfigFile;
+@@ -18,6 +28,9 @@ import org.bukkit.event.HandlerList;
+ import org.bukkit.plugin.java.JavaPlugin;
+ 
+ import java.io.File;
++import java.util.UUID;
++import java.util.concurrent.Callable;
++import java.util.concurrent.TimeUnit;
+ 
+ public class SvgPlugin extends JavaPlugin implements Platform {
+ 
+@@ -27,6 +40,8 @@ public class SvgPlugin extends JavaPlugin implements Platform {
+ 
+     private BukkitLogger logger;
+ 
++    private PairingMaps pairingMaps;
++
+     //JAVA PLUGIN
+     @Override
+     public void onLoad() {
+@@ -79,10 +94,16 @@ public class SvgPlugin extends JavaPlugin implements Platform {
+         command.setExecutor(new SvgCommand());
+ 
+         Bukkit.getPluginManager().registerEvents(new SvgListener(), this);
++
++        this.pairingMaps = new PairingMaps(this);
++        Bukkit.getPluginManager().registerEvents(pairingMaps, this);
+     }
+ 
+     @Override
+     public void onDisable() {
++        if (pairingMaps != null) {
++            pairingMaps.hideAll();
++        }
+         HandlerList.unregisterAll(this);
+         SvgCore.disable();
+     }
+@@ -149,4 +170,97 @@ public class SvgPlugin extends JavaPlugin implements Platform {
+     public boolean isDependencyEnabled(String name) {
+         return Bukkit.getPluginManager().isPluginEnabled(name);
+     }
++
++    @Override
++    public boolean showPairing(SvgPlayer player, String link, long expiresAtMillis) {
++        if (pairingMaps == null || !isEnabled()) {
++            return false;
++        }
++
++        Callable<Boolean> show = () -> {
++            Player p = Bukkit.getPlayer(player.getUniqueId());
++            return p != null && pairingMaps.show(p, link, expiresAtMillis);
++        };
++
++        try {
++            if (Bukkit.isPrimaryThread()) {
++                return show.call();
++            }
++            // e.g. from a Bedrock form callback: wait for the next tick
++            return Bukkit.getScheduler().callSyncMethod(this, show).get(5, TimeUnit.SECONDS);
++        } catch (Exception e) {
++            logger.error("Failed to show pairing map", e);
++            return false;
++        }
++    }
++
++    @Override
++    public void hidePairing(UUID uuid) {
++        if (pairingMaps == null || !isEnabled()) {
++            return;
++        }
++
++        if (Bukkit.isPrimaryThread()) {
++            pairingMaps.hide(uuid);
++        } else {
++            Bukkit.getScheduler().runTask(this, () -> pairingMaps.hide(uuid));
++        }
++    }
++
++    /**
++     * Chat line plus action bar and a sound, so the invite is noticed in
++     * play without a form taking over the screen. Java clients get clickable
++     * Accept / Decline; Bedrock can't click chat and is pointed to the menu.
++     */
++    @Override
++    public void showInvite(SvgPlayer to, InviteManager.Invite invite) {
++        if (!isEnabled()) {
++            return;
++        }
++
++        Runnable show = () -> {
++            Player p = Bukkit.getPlayer(to.getUniqueId());
++            if (p == null) {
++                return;
++            }
++
++            boolean bedrock = GeyserHook.isEnabled()
++                    && Boolean.TRUE.equals(GeyserHook.isBedrock(p.getUniqueId()));
++            String prefix = ChatColor.translateAlternateColorCodes('&', SvgCore.getPrefix());
++            String intro = prefix + ChatColor.YELLOW + invite.fromName() + ChatColor.RESET
++                    + " invites you to the voice group " + ChatColor.YELLOW + "\"" + invite.groupName()
++                    + "\"" + ChatColor.RESET + ".";
++
++            if (bedrock) {
++                p.sendMessage(intro);
++                p.sendMessage(prefix + ChatColor.GRAY + "Open the voice menu (emote) to accept.");
++            } else {
++                TextComponent line = new TextComponent(TextComponent.fromLegacyText(intro + " "));
++
++                TextComponent accept = new TextComponent("[Accept]");
++                accept.setColor(net.md_5.bungee.api.ChatColor.GREEN);
++                accept.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/svg accept"));
++
++                TextComponent decline = new TextComponent("[Decline]");
++                decline.setColor(net.md_5.bungee.api.ChatColor.RED);
++                decline.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/svg decline"));
++
++                line.addExtra(accept);
++                line.addExtra(new TextComponent(" "));
++                line.addExtra(decline);
++                p.spigot().sendMessage(line);
++            }
++
++            p.spigot().sendMessage(ChatMessageType.ACTION_BAR, TextComponent.fromLegacyText(
++                    ChatColor.YELLOW + invite.fromName() + " invites you to voice group \""
++                            + invite.groupName() + "\""));
++            p.playSound(p.getLocation(), Sound.BLOCK_NOTE_BLOCK_PLING, SoundCategory.PLAYERS, 1.0f, 1.5f);
++        };
++
++        if (Bukkit.isPrimaryThread()) {
++            show.run();
++        } else {
++            Bukkit.getScheduler().runTask(this, show);
++        }
++    }
+ }
+diff --git a/spigot/src/main/java/io/github/theodoremeyer/simplevoicegeyser/spigotmc/impl/PairingMaps.java b/spigot/src/main/java/io/github/theodoremeyer/simplevoicegeyser/spigotmc/impl/PairingMaps.java
+new file mode 100644
+index 0000000..13d7b7e
+--- /dev/null
++++ b/spigot/src/main/java/io/github/theodoremeyer/simplevoicegeyser/spigotmc/impl/PairingMaps.java
+@@ -0,0 +1,452 @@
++package io.github.theodoremeyer.simplevoicegeyser.spigotmc.impl;
++
++import io.nayuki.qrcodegen.DataTooLongException;
++import io.nayuki.qrcodegen.QrCode;
++import org.bukkit.Bukkit;
++import org.bukkit.ChatColor;
++import org.bukkit.Material;
++import org.bukkit.NamespacedKey;
++import org.bukkit.entity.ItemFrame;
++import org.bukkit.entity.Player;
++import org.bukkit.event.EventHandler;
++import org.bukkit.event.EventPriority;
++import org.bukkit.event.Listener;
++import org.bukkit.event.entity.PlayerDeathEvent;
++import org.bukkit.event.inventory.InventoryClickEvent;
++import org.bukkit.event.inventory.InventoryDragEvent;
++import org.bukkit.event.inventory.InventoryType;
++import org.bukkit.event.player.PlayerDropItemEvent;
++import org.bukkit.event.player.PlayerInteractEntityEvent;
++import org.bukkit.event.player.PlayerJoinEvent;
++import org.bukkit.inventory.Inventory;
++import org.bukkit.inventory.ItemStack;
++import org.bukkit.inventory.PlayerInventory;
++import org.bukkit.inventory.meta.ItemMeta;
++import org.bukkit.inventory.meta.MapMeta;
++import org.bukkit.map.MapCanvas;
++import org.bukkit.map.MapRenderer;
++import org.bukkit.map.MapView;
++import org.bukkit.persistence.PersistentDataContainer;
++import org.bukkit.persistence.PersistentDataType;
++import org.bukkit.plugin.java.JavaPlugin;
++import org.bukkit.scheduler.BukkitTask;
++import org.bukkit.util.io.BukkitObjectInputStream;
++import org.bukkit.util.io.BukkitObjectOutputStream;
++
++import java.awt.Color;
++import java.io.ByteArrayInputStream;
++import java.io.ByteArrayOutputStream;
++import java.lang.reflect.Method;
++import java.util.ArrayList;
++import java.util.List;
++import java.util.ListIterator;
++import java.util.Map;
++import java.util.UUID;
++import java.util.concurrent.ConcurrentHashMap;
++import java.util.logging.Level;
++
++/**
++ * Shows the pairing link as a QR code on a map in the player's hand.
++ * <p>
++ * The map is a temporary item: it is removed when the pairing is used or
++ * expires, when the player leaves or dies, and it can't be put into
++ * containers, crafting grids or item frames.
++ * <p>
++ * The map always goes into the hand, also with a full inventory: then the
++ * held item is stored inside the map item itself and put back when the map
++ * goes away (also after a crash: leftover maps are swapped back on join, and
++ * on death the stored item drops instead of the map). Everything here runs
++ * on the main thread.
++ */
++public final class PairingMaps implements Listener {
++
++    /** Map size in pixels. */
++    private static final int MAP_SIZE = 128;
++
++    /** Minimum white margin around the code (the map background is white). */
++    private static final int MIN_MARGIN = 2;
++
++    private final JavaPlugin plugin;
++    private final NamespacedKey key;
++    private final NamespacedKey stashKey;
++
++    /** One map id per player and server run, reused for later pairings. */
++    private final Map<UUID, MapView> views = new ConcurrentHashMap<>();
++    private final Map<UUID, Shown> shown = new ConcurrentHashMap<>();
++
++    /**
++     * A shown map.
++     * @param mapSlot slot the map was put in
++     * @param previousHeldSlot held slot before
++     * @param expiry task that removes the map
++     */
++    private record Shown(int mapSlot, int previousHeldSlot, BukkitTask expiry) {}
++
++    /**
++     * @param plugin the plugin
++     */
++    public PairingMaps(JavaPlugin plugin) {
++        this.plugin = plugin;
++        this.key = new NamespacedKey(plugin, "pairing_map");
++        this.stashKey = new NamespacedKey(plugin, "pairing_stash");
++    }
++
++    /**
++     * Put a QR map into the player's hand.
++     * @param player player
++     * @param link link to encode
++     * @param expiresAtMillis when to remove it again
++     * @return whether the map is shown
++     */
++    public boolean show(Player player, String link, long expiresAtMillis) {
++        QrCode qr;
++        try {
++            // smallest code that fits, so the modules are as big as possible;
++            // the error correction is raised if that still fits
++            qr = QrCode.encodeText(link, QrCode.Ecc.LOW);
++        } catch (DataTooLongException e) {
++            plugin.getLogger().warning("Pairing link too long for a QR map: " + link.length() + " chars");
++            return false;
++        }
++        if (qr.size + 2 * MIN_MARGIN > MAP_SIZE) {
++            return false;
++        }
++
++        hide(player);
++
++        PlayerInventory inv = player.getInventory();
++        int held = inv.getHeldItemSlot();
++        int mapSlot = -1;
++
++        if (isEmpty(inv.getItem(held))) {
++            mapSlot = held;
++        } else {
++            for (int slot = 0; slot < 9; slot++) {
++                if (isEmpty(inv.getItem(slot))) {
++                    mapSlot = slot;
++                    break;
++                }
++            }
++        }
++
++        // hotbar full: the held item goes into the map item for a moment
++        ItemStack stash = null;
++        if (mapSlot == -1) {
++            mapSlot = held;
++            stash = inv.getItem(held);
++        }
++
++        MapView view = views.computeIfAbsent(player.getUniqueId(), uuid -> Bukkit.createMap(player.getWorld()));
++        for (MapRenderer renderer : new ArrayList<>(view.getRenderers())) {
++            view.removeRenderer(renderer);
++        }
++        view.setScale(MapView.Scale.CLOSEST);
++        view.setTrackingPosition(false);
++        view.setUnlimitedTracking(false);
++        view.addRenderer(new QrRenderer(qr));
++
++        ItemStack item = new ItemStack(Material.FILLED_MAP);
++        MapMeta meta = (MapMeta) item.getItemMeta();
++        if (meta == null) {
++            return false;
++        }
++        meta.setMapView(view);
++        meta.setDisplayName(ChatColor.AQUA + "Voice chat login");
++        List<String> lore = new ArrayList<>(List.of(
++                ChatColor.GRAY + "Scan it with your phone's camera.",
++                ChatColor.GRAY + "Disappears after use."
++        ));
++        PersistentDataContainer data = meta.getPersistentDataContainer();
++        data.set(key, PersistentDataType.BYTE, (byte) 1);
++        if (stash != null) {
++            try {
++                data.set(stashKey, PersistentDataType.BYTE_ARRAY, serialize(stash));
++            } catch (Exception e) {
++                plugin.getLogger().log(Level.WARNING, "Could not store the held item, no QR map", e);
++                return false;
++            }
++            lore.add(ChatColor.GRAY + "Your item comes back when it disappears.");
++        }
++        meta.setLore(lore);
++        item.setItemMeta(meta);
++
++        inv.setItem(mapSlot, item);
++        inv.setHeldItemSlot(mapSlot);
++
++        long ticks = Math.max(20, (expiresAtMillis - System.currentTimeMillis()) / 50);
++        UUID uuid = player.getUniqueId();
++        BukkitTask expiry = Bukkit.getScheduler().runTaskLater(plugin, () -> hide(uuid), ticks);
++
++        shown.put(uuid, new Shown(mapSlot, held, expiry));
++        return true;
++    }
++
++    /**
++     * Remove the QR map again and give back the stored item.
++     * @param player player
++     */
++    public void hide(Player player) {
++        Shown state = shown.remove(player.getUniqueId());
++        if (state != null) {
++            state.expiry().cancel();
++        }
++
++        removeTagged(player);
++
++        PlayerInventory inv = player.getInventory();
++        if (state != null && inv.getHeldItemSlot() == state.mapSlot()
++                && isEmpty(inv.getItem(state.mapSlot()))) {
++            inv.setHeldItemSlot(state.previousHeldSlot());
++        }
++    }
++
++    /**
++     * Remove the QR map of a player by uuid, if online.
++     * @param uuid player
++     */
++    public void hide(UUID uuid) {
++        Player player = Bukkit.getPlayer(uuid);
++        if (player != null) {
++            hide(player);
++        } else {
++            Shown state = shown.remove(uuid);
++            if (state != null) {
++                state.expiry().cancel();
++            }
++        }
++    }
++
++    /**
++     * Remove every QR map (plugin disable).
++     */
++    public void hideAll() {
++        for (UUID uuid : new ArrayList<>(shown.keySet())) {
++            hide(uuid);
++        }
++    }
++
++    /**
++     * Swap every pairing map in the inventory (and on the cursor) back for
++     * the item stored in it, or nothing.
++     */
++    private void removeTagged(Player player) {
++        PlayerInventory inv = player.getInventory();
++        ItemStack[] contents = inv.getContents();
++        for (int i = 0; i < contents.length; i++) {
++            if (isPairingMap(contents[i])) {
++                ItemStack back = unstash(contents[i], player);
++                if (back != contents[i]) {
++                    inv.setItem(i, back);
++                }
++            }
++        }
++        ItemStack cursor = player.getItemOnCursor();
++        if (isPairingMap(cursor)) {
++            ItemStack back = unstash(cursor, player);
++            if (back != cursor) {
++                player.setItemOnCursor(back);
++            }
++        }
++    }
++
++    /**
++     * What a pairing map turns back into.
++     * @return the stored item, null if none, or the map itself if the stored
++     *         item can't be read (so it is never lost)
++     */
++    private ItemStack unstash(ItemStack map, Player player) {
++        ItemMeta meta = map.getItemMeta();
++        byte[] bytes = meta == null ? null
++                : meta.getPersistentDataContainer().get(stashKey, PersistentDataType.BYTE_ARRAY);
++        if (bytes == null) {
++            return null;
++        }
++        try {
++            return deserialize(bytes);
++        } catch (Exception e) {
++            plugin.getLogger().log(Level.SEVERE, "Could not restore the item stored in "
++                    + player.getName() + "'s pairing map; leaving the map in place", e);
++            return map;
++        }
++    }
++
++    private boolean isPairingMap(ItemStack item) {
++        if (item == null || item.getType() != Material.FILLED_MAP || !item.hasItemMeta()) {
++            return false;
++        }
++        ItemMeta meta = item.getItemMeta();
++        return meta != null && meta.getPersistentDataContainer().has(key, PersistentDataType.BYTE);
++    }
++
++    private boolean hasStash(ItemStack item) {
++        ItemMeta meta = item == null ? null : item.getItemMeta();
++        return meta != null && meta.getPersistentDataContainer().has(stashKey, PersistentDataType.BYTE_ARRAY);
++    }
++
++    private static boolean isEmpty(ItemStack item) {
++        return item == null || item.getType().isAir();
++    }
++
++    // Paper: ItemStack#serializeAsBytes / deserializeBytes, Spigot: Bukkit object streams
++
++    private static byte[] serialize(ItemStack item) throws Exception {
++        try {
++            Method method = ItemStack.class.getMethod("serializeAsBytes");
++            return (byte[]) method.invoke(item);
++        } catch (NoSuchMethodException ignored) {
++            // not Paper
++        }
++        ByteArrayOutputStream bytes = new ByteArrayOutputStream();
++        try (BukkitObjectOutputStream out = new BukkitObjectOutputStream(bytes)) {
++            out.writeObject(item);
++        }
++        return bytes.toByteArray();
++    }
++
++    private static ItemStack deserialize(byte[] data) throws Exception {
++        try {
++            Method method = ItemStack.class.getMethod("deserializeBytes", byte[].class);
++            return (ItemStack) method.invoke(null, (Object) data);
++        } catch (NoSuchMethodException ignored) {
++            // not Paper
++        }
++        try (BukkitObjectInputStream in = new BukkitObjectInputStream(new ByteArrayInputStream(data))) {
++            return (ItemStack) in.readObject();
++        }
++    }
++
++    //---------------------------------------------
++    // keep the map from leaving the player's hands
++    //---------------------------------------------
++
++    @EventHandler
++    public void onJoin(PlayerJoinEvent event) {
++        // leftovers from a crash or restart
++        removeTagged(event.getPlayer());
++    }
++
++    @EventHandler(priority = EventPriority.LOWEST)
++    public void onDeath(PlayerDeathEvent event) {
++        Player player = event.getEntity();
++        // the stored item drops (or goes into the grave) instead of the map
++        ListIterator<ItemStack> drops = event.getDrops().listIterator();
++        while (drops.hasNext()) {
++            ItemStack drop = drops.next();
++            if (isPairingMap(drop)) {
++                ItemStack back = unstash(drop, player);
++                if (back == null) {
++                    drops.remove();
++                } else {
++                    drops.set(back);
++                }
++            }
++        }
++        if (event.getKeepInventory()) {
++            removeTagged(player);
++        }
++        Shown state = shown.remove(player.getUniqueId());
++        if (state != null) {
++            state.expiry().cancel();
++        }
++    }
++
++    @EventHandler(ignoreCancelled = true)
++    public void onDrop(PlayerDropItemEvent event) {
++        ItemStack item = event.getItemDrop().getItemStack();
++        if (!isPairingMap(item)) {
++            return;
++        }
++        if (hasStash(item)) {
++            event.setCancelled(true); // it holds the player's item, keep it
++        } else {
++            event.getItemDrop().remove(); // dropping it means "done with it"
++        }
++    }
++
++    @EventHandler(ignoreCancelled = true)
++    public void onClick(InventoryClickEvent event) {
++        boolean involved = isPairingMap(event.getCurrentItem()) || isPairingMap(event.getCursor());
++        if (!involved && event.getHotbarButton() >= 0) {
++            involved = isPairingMap(event.getWhoClicked().getInventory().getItem(event.getHotbarButton()));
++        }
++        if (!involved) {
++            return;
++        }
++
++        Inventory top = event.getView().getTopInventory();
++        InventoryType type = top.getType();
++        boolean ownInventoryOnly = type == InventoryType.CRAFTING || type == InventoryType.CREATIVE;
++
++        // anything with a chest etc. open, and the 2x2 crafting grid
++        if (!ownInventoryOnly || top.equals(event.getClickedInventory())) {
++            event.setCancelled(true);
++        }
++    }
++
++    @EventHandler(ignoreCancelled = true)
++    public void onDrag(InventoryDragEvent event) {
++        if (!isPairingMap(event.getOldCursor())) {
++            return;
++        }
++        int topSize = event.getView().getTopInventory().getSize();
++        for (int raw : event.getRawSlots()) {
++            if (raw < topSize) {
++                event.setCancelled(true);
++                return;
++            }
++        }
++    }
++
++    @EventHandler(ignoreCancelled = true)
++    public void onItemFrame(PlayerInteractEntityEvent event) {
++        if (event.getRightClicked() instanceof ItemFrame) {
++            ItemStack hand = event.getPlayer().getInventory().getItem(event.getHand());
++            if (isPairingMap(hand)) {
++                event.setCancelled(true);
++            }
++        }
++    }
++
++    /**
++     * Draws a QR code, black on white, as big as fits.
++     */
++    private static final class QrRenderer extends MapRenderer {
++
++        private final QrCode qr;
++        private boolean drawn = false;
++
++        QrRenderer(QrCode qr) {
++            super(false);
++            this.qr = qr;
++        }
++
++        @Override
++        public void render(MapView map, MapCanvas canvas, Player player) {
++            if (drawn) {
++                return;
++            }
++            drawn = true;
++
++            int scale = (MAP_SIZE - 2 * MIN_MARGIN) / qr.size;
++            int offset = (MAP_SIZE - qr.size * scale) / 2;
++
++            for (int x = 0; x < MAP_SIZE; x++) {
++                for (int y = 0; y < MAP_SIZE; y++) {
++                    canvas.setPixelColor(x, y, Color.WHITE);
++                }
++            }
++            for (int mx = 0; mx < qr.size; mx++) {
++                for (int my = 0; my < qr.size; my++) {
++                    if (!qr.getModule(mx, my)) {
++                        continue;
++                    }
++                    for (int dx = 0; dx < scale; dx++) {
++                        for (int dy = 0; dy < scale; dy++) {
++                            canvas.setPixelColor(offset + mx * scale + dx, offset + my * scale + dy, Color.BLACK);
++                        }
++                    }
++                }
++            }
++        }
++    }
++}
+diff --git a/spigot/src/main/java/io/github/theodoremeyer/simplevoicegeyser/spigotmc/impl/SvgCommand.java b/spigot/src/main/java/io/github/theodoremeyer/simplevoicegeyser/spigotmc/impl/SvgCommand.java
+index 16cb647..aafa551 100644
+--- a/spigot/src/main/java/io/github/theodoremeyer/simplevoicegeyser/spigotmc/impl/SvgCommand.java
++++ b/spigot/src/main/java/io/github/theodoremeyer/simplevoicegeyser/spigotmc/impl/SvgCommand.java
+@@ -7,6 +7,7 @@ import io.github.theodoremeyer.simplevoicegeyser.core.commands.CommandArgs;
+ import io.github.theodoremeyer.simplevoicegeyser.core.commands.CommandFlagParser;
+ import io.github.theodoremeyer.simplevoicegeyser.core.geyser.GeyserHook;
+ import io.github.theodoremeyer.simplevoicegeyser.spigotmc.impl.sender.BukkitConsole;
++import org.bukkit.Bukkit;
+ import org.bukkit.command.*;
+ import org.bukkit.entity.Player;
+ import org.checkerframework.checker.nullness.qual.NonNull;
+@@ -73,6 +74,12 @@ public class SvgCommand implements CommandExecutor, TabCompleter {
+                 }
+             }
+ 
++            case "pair" -> {
++                if (args.length >= 2) {
++                    out.put("action", args[1]);
++                }
++            }
++
+             case "jgroup" -> {
+                 if (args.length >= 2) {
+                     out.put("name", args[1]);
+@@ -88,6 +95,12 @@ public class SvgCommand implements CommandExecutor, TabCompleter {
+                     out.putAll(CommandFlagParser.parse(CommandFlagParser.CGROUP_FLAGS, Arrays.copyOfRange(args, 2, args.length), 0));
+                 }
+             }
++
++            case "invite" -> {
++                if (args.length >= 2) {
++                    out.put("player", args[1]);
++                }
++            }
+         }
+ 
+         return out;
+@@ -139,12 +152,27 @@ public class SvgCommand implements CommandExecutor, TabCompleter {
+ 
+         return switch (sub) {
+             case "cgroup" -> suggestCreateGroup(args);
++            case "pair" -> args.length == 2 ? filter(args[1], List.of("signout")) : Collections.<String>emptyList();
++            case "invite" -> args.length == 2 ? suggestOtherPlayers(args[1], sender) : Collections.<String>emptyList();
+             default -> Collections.emptyList();
+         };
+     }
+ 
++    private List<String> suggestOtherPlayers(String input, CommandSender sender) {
++        // nicknames (the command accepts those as well as account names)
++        List<String> names = new ArrayList<>();
++        UUID self = sender instanceof Player p ? p.getUniqueId() : null;
++        for (SvgPlayer online : SvgCore.getPlayerManager().getAllPlayers()) {
++            if (!online.getUniqueId().equals(self)) {
++                names.add(online.getDisplayName());
++            }
++        }
++        return filter(input, names);
++    }
++
+     private List<String> suggestSubcommands(String input, CommandSender sender) {
+-        List<String> suggestions = new ArrayList<>(filter(input, List.of("help", "lgroup", "pswd", "jgroup", "cgroup")));
++        List<String> suggestions = new ArrayList<>(filter(input,
++                List.of("help", "pair", "lgroup", "pswd", "jgroup", "cgroup", "invite", "accept", "decline")));
+         if (sender.hasPermission("svg.admin")) {
+             suggestions.addAll(filter(input, List.of("checkUpdate", "reload")));
+         }
+diff --git a/spigot/src/main/java/io/github/theodoremeyer/simplevoicegeyser/spigotmc/impl/SvgListener.java b/spigot/src/main/java/io/github/theodoremeyer/simplevoicegeyser/spigotmc/impl/SvgListener.java
+index f96febb..fdd9716 100644
+--- a/spigot/src/main/java/io/github/theodoremeyer/simplevoicegeyser/spigotmc/impl/SvgListener.java
++++ b/spigot/src/main/java/io/github/theodoremeyer/simplevoicegeyser/spigotmc/impl/SvgListener.java
+@@ -26,6 +26,12 @@ public class SvgListener implements Listener {
+     @EventHandler
+     public void onLeave(PlayerQuitEvent event) {
+         UUID playerUuid = event.getPlayer().getUniqueId();
++
++        // a pending pairing (and its QR map) ends when the player leaves
++        if (SvgCore.getPairingManager() != null) {
++            SvgCore.getPairingManager().cancel(playerUuid);
++        }
++
+         SvgPlayer player = SvgCore.getPlayerManager().getPlayer(playerUuid);
+ 
+         if (player != null) {
+diff --git a/spigot/src/main/java/io/github/theodoremeyer/simplevoicegeyser/spigotmc/impl/sender/BukkitPlayer.java b/spigot/src/main/java/io/github/theodoremeyer/simplevoicegeyser/spigotmc/impl/sender/BukkitPlayer.java
+index 38b54b8..d1d0e73 100644
+--- a/spigot/src/main/java/io/github/theodoremeyer/simplevoicegeyser/spigotmc/impl/sender/BukkitPlayer.java
++++ b/spigot/src/main/java/io/github/theodoremeyer/simplevoicegeyser/spigotmc/impl/sender/BukkitPlayer.java
+@@ -32,6 +32,22 @@ public class BukkitPlayer extends SvgPlayer {
+         return player.hasPermission(permission);
+     }
+ 
++    /**
++     * The nickname (Essentials and others put it in the Bukkit display
++     * name), without colours and without Essentials' "~" nickname prefix.
++     */
++    @Override
++    public String getDisplayName() {
++        String display = ChatColor.stripColor(player.getDisplayName());
++        if (display != null) {
++            display = display.trim();
++            if (display.startsWith("~") && display.length() > 1) {
++                display = display.substring(1);
++            }
++        }
++        return display == null || display.isEmpty() ? player.getName() : display;
++    }
++
+     @Override
+     public void chat(String message) {
+         if (Bukkit.isPrimaryThread()) {
+diff --git a/spigot/src/main/resources/config.yml b/spigot/src/main/resources/config.yml
+index aa59f33..6c21a9b 100644
+--- a/spigot/src/main/resources/config.yml
++++ b/spigot/src/main/resources/config.yml
+@@ -90,6 +90,33 @@ server:
+     # During migration, fallback to legacy transport for incompatible clients.
+     allow-legacy-fallback: true
+ 
++  security:
++
++    # default: true
++    # Allow logging in with Minecraft name + password (/svg pswd).
++    # Turn off to allow only pairing (below).
++    password-login: true
++
++  # Password-less login: in-game, /svg pair (Bedrock: "Connect browser" in
++  # the SVG menu) gives a one-time code and puts a QR code on a map in the
++  # player's hand. The browser that uses it stays logged in.
++  pairing:
++
++    # default: true
++    enabled: true
++
++    # default: "" (no QR code, only the typed code)
++    # Public URL of the web page, as players open it, e.g. https://voice.example.com
++    public-url: ""
++
++    # default: 120
++    # How long a code / QR code works, in seconds.
++    ttl-seconds: 120
++
++    # default: 180
++    # Forget a paired browser after this many days without use (0 = never).
++    device-days: 180
++
+ # default: false
+ # Debug logs
+ # Do NOT use this in production. This will very quickly fill up your server logs.
+diff --git a/spigot/src/main/resources/plugin.yml b/spigot/src/main/resources/plugin.yml
+index 27827ef..da1c44a 100644
+--- a/spigot/src/main/resources/plugin.yml
++++ b/spigot/src/main/resources/plugin.yml
+@@ -34,10 +34,15 @@ permissions:
+     description: Allows player to use voice chat group creation
+     default: true
+     children:
++      svg.vc.group.join: true
+       svg.vc.group.create: true
+       svg.vc.group.type: true
+       svg.vc.group.type.isolated: true
+ 
++  svg.vc.group.join:
++    description: "Allows the player to join voice chat groups"
++    default: true
++
+   svg.vc.group.create:
+     description: "Allows the player to create voice chat groups"
+     default: true
+@@ -50,6 +55,6 @@ permissions:
+     description: "Allows the player to create isolated groups"
+     default: op
+ 
+-  svg.vc.group.setpersistant:
++  svg.vc.group.setpersistent:
+     description: "Allows the player to set persistent groups"
+     default: op
