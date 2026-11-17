@@ -28,6 +28,7 @@
     inputs.home-manager.nixosModules.home-manager
 
     ./impermanence.nix
+    ./auto-upgrade.nix
   ];
 
   # copyfail cve

@@ -125,6 +125,13 @@
   # Needed for internet access in the video-paper module
   nix.settings.sandbox = "relaxed";
 
+  # The laptop is off at night, and a switch under a running session is
+  # asking for trouble: build at noon, activate on the next boot.
+  system.autoUpgrade = {
+    dates = "12:30";
+    operation = "boot";
+  };
+
   # Bootloader.
   boot.loader = {
     grub = {
