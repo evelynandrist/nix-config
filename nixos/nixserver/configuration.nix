@@ -19,11 +19,11 @@
     ./calibre-web.nix
     # ./archisteamfarm.nix
     ./mailserver.nix
-    ./immich.nix
     # ./mediawiki-legends.nix
     ./nix-minecraft.nix
     ./minecraft.nix
     ./actual-budget.nix
+    ./backup.nix
 
     ./userconfig.nix
   ];

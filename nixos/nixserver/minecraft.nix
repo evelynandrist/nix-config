@@ -509,8 +509,10 @@ in {
     };
   };
 
-  # Hourly local snapshots. restic only stores changed chunks of the region
-  # files, so this grows slowly. Add a second repository on the TrueNAS later.
+  # Hourly local snapshots, for rolling back. restic only stores changed chunks
+  # of the region files, so this grows slowly. Only two weeks are kept here:
+  # every snapshot is copied to the TrueNAS each night and kept there for good
+  # (backup.nix), which is also the material for timelapses.
   # Restore: sudo restic -r /persist/backups/minecraft \
   #   -p /persist/backups/minecraft-restic.password snapshots / restore
   services.restic.backups.minecraft = {
@@ -532,11 +534,11 @@ in {
       OnCalendar = "hourly";
       Persistent = true;
     };
+    # 48 hourly: a snapshot has to survive here until the nightly copy to the
+    # TrueNAS has picked it up, this leaves room for two days without it.
     pruneOpts = [
-      "--keep-hourly 24"
-      "--keep-daily 7"
-      "--keep-weekly 4"
-      "--keep-monthly 6"
+      "--keep-hourly 48"
+      "--keep-daily 14"
     ];
     # Flush the world to disk and pause saving while restic reads it
     backupPrepareCommand = ''
@@ -556,30 +558,5 @@ in {
       #!${pkgs.runtimeShell}
       ${sendCommand "save-on"} || true
     '';
-  };
-
-  # Raw material for a 3D timelapse later: one snapshot of the world per day,
-  # kept for good (thinned out with age). Rendered afterwards with BlueMap from
-  # whatever camera angle fits the builds by then. Only world/, so the plugin
-  # databases don't take space. Its own repository, because `forget` in the
-  # hourly one would apply the hourly retention to these snapshots too.
-  # A day of play adds ~200 MB, a quiet day a few MB (measured 2026-11).
-  services.restic.backups.minecraft-timelapse = {
-    repository = "${backupDir}/minecraft-timelapse";
-    passwordFile = backupPasswordFile;
-    initialize = true;
-    paths = [ "${dataDir}/world" ];
-    # between two hourly backups and before the 04:30 restart
-    timerConfig = {
-      OnCalendar = "*-*-* 03:30:00 Europe/Zurich";
-      Persistent = true;
-    };
-    pruneOpts = [
-      "--keep-daily 90"
-      "--keep-weekly 104"
-      "--keep-monthly unlimited"
-    ];
-    inherit (config.services.restic.backups.minecraft)
-      backupPrepareCommand backupCleanupCommand;
   };
 }

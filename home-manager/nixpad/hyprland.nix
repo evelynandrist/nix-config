@@ -385,6 +385,8 @@ in {
       window_rule = [
         { match.class = ".*"; suppress_event = "maximize"; } # You'll probably like this.
         { match.title = "^(Picture-in-Picture)$"; float = true; pin = true; }
+        # Maximised windows (mod+F) look like a lone tiled window otherwise.
+        { match.fullscreen_state_internal = 1; border_color = "rgb(${config.colorScheme.palette.base0F})"; }
       ];
       layer_rule = [
         { match.namespace = "waybar"; blur = true; }

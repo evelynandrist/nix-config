@@ -19,14 +19,7 @@ in {
 
   users.groups."${group}".gid = 992;
 
-  services.jellyfin = {
-    enable = true;
-    cacheDir = "${dataDir}/jellyfin/cache";
-    configDir = "${dataDir}/jellyfin/config";
-    dataDir = "${dataDir}/jellyfin/data";
-    logDir = "${dataDir}/jellyfin/log";
-    group = "${group}";
-  };
+  # jellyfin runs on the TrueNAS (jellyfin.qwt.ch in nginx.nix proxies there)
 
   services.sonarr = {
     enable = true;
@@ -56,16 +49,21 @@ in {
     configFile = "${dataDir}/sabnzbd/sabnzbd.ini";
     group = "${group}";
   };
+  # Started right at boot, sabnzbd hangs before it writes its first log line
+  # and runs into the start timeout; started later it is up within a second.
+  # Presumably it waits on the network, so order it after that, and retry in
+  # case that is not the whole story.
+  systemd.services.sabnzbd = {
+    wants = [ "network-online.target" ];
+    after = [ "network-online.target" ];
+    serviceConfig = {
+      Restart = "on-failure";
+      RestartSec = "30s";
+    };
+  };
 
   systemd.tmpfiles.rules = [
       "d '${dataDir}/jellyseerr' 0770 root ${group} - -"
       "d '${dataDir}/sabnzbd' 0700 sabnzbd ${group} - -"
-  ];
-
-
-  environment.systemPackages = [
-    pkgs.jellyfin
-    pkgs.jellyfin-web
-    pkgs.jellyfin-ffmpeg
   ];
 }
