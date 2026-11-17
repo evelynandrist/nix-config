@@ -11,6 +11,10 @@ let
         { mods = [ "mod" "shift" ]; key = ws; moveToWorkspace = n; }
       ])
     10);
+
+  # Lua dispatcher that runs a shell command, for `raw.hyprland`.
+  exec = cmd: "hl.dsp.exec_cmd(${lib.generators.toLua { } cmd})";
+  purgeCliphist = "rm -f $HOME/.cache/cliphist/db";
 in
 {
   keymap.mod = "SUPER";
@@ -21,7 +25,7 @@ in
     {
       mods = [ "mod" ]; key = "M";
       comment = "quit the compositor; AeroSpace has no equivalent";
-      raw.hyprland = "exit, ";
+      raw.hyprland = "hl.dsp.exit()";
     }
     { mods = [ "mod" ]; key = "E"; app = "fileManager"; }
     { mods = [ "mod" "shift" ]; key = "space"; toggleFloat = true; }
@@ -29,14 +33,14 @@ in
     {
       mods = [ "mod" ]; key = "P";
       comment = "pseudotiling is a dwindle concept with no AeroSpace analogue";
-      raw.hyprland = "pseudo, ";
+      raw.hyprland = "hl.dsp.window.pseudo()";
     }
     { mods = [ "mod" ]; key = "T"; toggleSplit = true; }
     { mods = [ "mod" ]; key = "I"; app = "editor"; }
     { mods = [ "mod" ]; key = "O"; app = "browser"; }
     {
       mods = [ "mod" "shift" ]; key = "C";
-      raw.hyprland = "exec, hyprctl reload";
+      raw.hyprland = "hl.dsp.reload_config()";
       raw.aerospace = "reload-config";
     }
 
@@ -52,11 +56,11 @@ in
     {
       mods = [ "mod" ]; key = "N";
       comment = "AeroSpace has no 'next empty workspace' concept";
-      raw.hyprland = "workspace, empty";
+      raw.hyprland = ''hl.dsp.focus({ workspace = "empty" })'';
     }
     {
       mods = [ "mod" "shift" ]; key = "N";
-      raw.hyprland = "movetoworkspace, empty";
+      raw.hyprland = ''hl.dsp.window.move({ workspace = "empty" })'';
     }
 
     { mods = [ "mod" ]; key = "S"; toggleScratch = "magic"; }
@@ -68,17 +72,17 @@ in
     {
       mods = [ "mod" "shift" ]; key = "F";
       comment = ''
-        Hyprland "fullscreen 0" is maximise-within-layout. AeroSpace's nearest
-        thing is macos-native-fullscreen, which creates a Space and fights the
-        tiler, so this stays Hyprland-only.
+        Real fullscreen (mod+F is maximise). AeroSpace's nearest thing is
+        macos-native-fullscreen, which creates a Space and fights the tiler,
+        so this stays Hyprland-only.
       '';
-      raw.hyprland = "fullscreen, 0";
+      raw.hyprland = ''hl.dsp.window.fullscreen({ mode = "fullscreen" })'';
     }
 
     {
       mods = [ "mod" "shift" ]; key = "p";
       comment = "cliphist picker; no clipboard-history daemon on the Mac";
-      raw.hyprland = "exec, cliphist list | wofi --show dmenu --normal-window --lines 14 | cliphist decode | wl-copy";
+      raw.hyprland = exec "cliphist list | wofi --show dmenu --normal-window --lines 14 | cliphist decode | wl-copy";
     }
   ] ++ workspaceBinds;
 
@@ -103,14 +107,14 @@ in
         {
           key = "l";
           comment = "lock";
-          raw.hyprland = "exec,$reset_submap && $locking # lock";
+          raw.hyprland = exec "hyprlock";
           # Locks given "require password immediately after sleep".
           raw.aerospace = [ "exec-and-forget /usr/bin/pmset displaysleepnow" "mode main" ];
         }
         {
           key = "e";
           comment = "logout";
-          raw.hyprland = "exec,$reset_submap && $purge_cliphist; loginctl terminate-user $USER # logout";
+          raw.hyprland = exec "${purgeCliphist}; loginctl terminate-user $USER";
           raw.aerospace = [
             "exec-and-forget /usr/bin/osascript -e 'tell application \"System Events\" to log out'"
             "mode main"
@@ -119,18 +123,18 @@ in
         {
           key = "u";
           comment = "suspend";
-          raw.hyprland = "exec,$reset_submap && systemctl suspend # suspend";
+          raw.hyprland = exec "systemctl suspend";
           raw.aerospace = [ "exec-and-forget /usr/bin/pmset sleepnow" "mode main" ];
         }
         {
           key = "h";
           comment = "hibernate; macOS has no user-visible equivalent";
-          raw.hyprland = "exec,$reset_submap && systemctl hibernate # hibernate";
+          raw.hyprland = exec "systemctl hibernate";
         }
         {
           key = "s";
           comment = "shutdown";
-          raw.hyprland = "exec,$reset_submap && $purge_cliphist; systemctl poweroff # shutdown";
+          raw.hyprland = exec "${purgeCliphist}; systemctl poweroff";
           raw.aerospace = [
             "exec-and-forget /usr/bin/osascript -e 'tell application \"System Events\" to shut down'"
             "mode main"
@@ -139,7 +143,7 @@ in
         {
           key = "r";
           comment = "reboot";
-          raw.hyprland = "exec,$reset_submap && $purge_cliphist; systemctl reboot # reboot";
+          raw.hyprland = exec "${purgeCliphist}; systemctl reboot";
           raw.aerospace = [
             "exec-and-forget /usr/bin/osascript -e 'tell application \"System Events\" to restart'"
             "mode main"
@@ -158,19 +162,19 @@ in
         {
           key = "a";
           comment = "copy area";
-          raw.hyprland = "exec,$reset_submap && grimblast copy area";
+          raw.hyprland = exec "grimblast copy area";
           raw.aerospace = [ "exec-and-forget /usr/sbin/screencapture -i -c" "mode main" ];
         }
         {
           key = "s";
           comment = "copy screen";
-          raw.hyprland = "exec,$reset_submap && grimblast copy screen";
+          raw.hyprland = exec "grimblast copy screen";
           raw.aerospace = [ "exec-and-forget /usr/sbin/screencapture -c" "mode main" ];
         }
         {
           mods = [ "shift" ]; key = "a";
           comment = "save area";
-          raw.hyprland = "exec,$reset_submap && grimblast save area";
+          raw.hyprland = exec "grimblast save area";
           raw.aerospace = [
             ''exec-and-forget /usr/sbin/screencapture -i "$HOME/Screenshots/$(date +%Y-%m-%d_%H-%M-%S).png"''
             "mode main"
@@ -179,7 +183,7 @@ in
         {
           mods = [ "shift" ]; key = "s";
           comment = "save screen";
-          raw.hyprland = "exec,$reset_submap && grimblast save screen";
+          raw.hyprland = exec "grimblast save screen";
           raw.aerospace = [
             ''exec-and-forget /usr/sbin/screencapture "$HOME/Screenshots/$(date +%Y-%m-%d_%H-%M-%S).png"''
             "mode main"

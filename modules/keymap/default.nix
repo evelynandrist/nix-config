@@ -15,12 +15,9 @@ let
         type = types.nullOr types.str;
         default = null;
         description = ''
-          Verbatim tail of a Hyprland bind line, i.e. everything after the key:
-          `dispatcher, args`. null means "do not emit this bind on Hyprland".
-
-          Note the separator style differs by context, because the existing
-          config does: top-level binds are written `dispatcher, args`, binds
-          inside a submap are written `dispatcher,args`.
+          Verbatim Lua dispatcher expression for the bind, e.g.
+          `hl.dsp.exit()` or `hl.dsp.exec_cmd("grimblast copy area")`.
+          null means "do not emit this bind on Hyprland".
         '';
       };
       aerospace = mkOption {
@@ -53,7 +50,7 @@ let
         type = types.bool;
         default = false;
         description = ''
-          Hold-to-repeat. Renders as `binde` on Hyprland; a no-op on AeroSpace,
+          Hold-to-repeat. Renders as `repeating = true` on Hyprland; a no-op on AeroSpace,
           which repeats held keys natively.
         '';
       };
@@ -116,8 +113,8 @@ let
         type = types.int;
         default = 100;
         description = ''
-          Emission order. Hyprland submaps are order-dependent text, so this
-          keeps the generated block stable instead of alphabetical.
+          Emission order of the generated Hyprland submaps, so the generated
+          block is stable instead of alphabetical.
         '';
       };
       enter = mkOption {
@@ -135,18 +132,19 @@ let
           type = types.str;
           default = "";
           description = ''
-            Pango markup assigned to `$submap_<name>`, which waybar's submap
-            module displays. AeroSpace mode names are plain identifiers with no
-            display concept, which is why a mode's identity and its label are
-            separate things here.
+            Pango markup used as the Hyprland submap's name, which waybar's
+            submap module displays. AeroSpace mode names are plain identifiers
+            with no display concept, which is why a mode's identity and its
+            label are separate things here. Empty means use the mode name.
           '';
         };
-        extraLines = mkOption {
-          type = types.listOf types.str;
-          default = [ ];
+        resetOnDispatch = mkOption {
+          type = types.bool;
+          default = false;
           description = ''
-            Raw hyprlang emitted directly after the label line and before the
-            enter bind — variable definitions the submap's binds refer to.
+            Leave the submap again after any of its binds has fired (one-shot
+            menus such as shutdown or screenshot), instead of staying in it
+            until escape (resize).
           '';
         };
       };

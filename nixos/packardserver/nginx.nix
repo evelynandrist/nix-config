@@ -85,17 +85,6 @@
 	  proxyPass = "http://127.0.0.1:8080";
 	};
       };
-      "fish-speech.qwt.ch" = {
-	enableACME = true;
-	forceSSL = true;
-	locations."/" = {
-	  proxyPass = "http://192.168.1.56:7862";
-	};
-	extraConfig = ''
-	  allow 140.238.214.181;
-	  deny all; # block all remaining ips
-	'';
-      };
     };
   };
 

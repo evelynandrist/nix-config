@@ -1,47 +1,43 @@
 { config, lib, ... }:
-# keymap -> Hyprland.
+# keymap -> Hyprland (Lua config, Hyprland >= 0.55).
 #
-# This renderer has two outputs, not one:
-#
-#   settings.bind / settings.binde   an unordered attrset-shaped list
-#   extraConfig                      raw hyprlang text
-#
-# The submaps cannot live in settings.bind: hyprlang submaps are order
-# dependent (`submap=X` opens a block, every following `bind=` belongs to it,
-# `submap=reset` closes it) and have no attrset representation. So modes are
-# emitted as text and everything else as structure.
+# Everything is emitted as Lua text into extraConfig rather than through
+# `settings`: binds and submaps are order dependent (a submap's binds are
+# registered inside its `hl.define_submap` callback), and home-manager's
+# `settings` renders attributes alphabetically.
 let
   km = config.keymap;
 
-  dir = {
-    left = "l";
-    right = "r";
-    up = "u";
-    down = "d";
-  };
+  toLua = lib.generators.toLua { };
 
-  modsStr = mods:
-    lib.concatStringsSep " "
-      (map (m: if m == "mod" then "$mod" else lib.toUpper m) mods);
+  keys = mods: key:
+    lib.concatStringsSep " + "
+      ((map (m: if m == "mod" then km.mod else lib.toUpper m) mods) ++ [ key ]);
 
-  # Everything after the key. `sep` is ", " at the root and "," inside a
-  # submap, matching how the hand-written config was spelled.
-  tail = sep: b:
+  # Workspace selectors: plain ids are Lua integers, everything else
+  # ("empty", "special:magic", "e+1") is a string.
+  ws = w: if builtins.match "[0-9]+" w != null then w else toLua w;
+
+  # The dispatcher expression for a bind.
+  action = b:
     if b.raw.hyprland != null then b.raw.hyprland
-    else if b.focus != null then "movefocus${sep}${dir.${b.focus}}"
-    else if b.move != null then "movewindow${sep}${dir.${b.move}}"
-    else if b.resize != null then "resizeactive${sep}${toString b.resize.w} ${toString b.resize.h}"
-    else if b.workspace != null then "workspace${sep}${b.workspace}"
-    else if b.moveToWorkspace != null then "movetoworkspace${sep}${b.moveToWorkspace}"
-    else if b.close then "killactive,"
-    else if b.fullscreen then "fullscreen${sep}1"
-    else if b.toggleFloat then "togglefloating,"
-    else if b.toggleSplit then "layoutmsg${sep}togglesplit"
-    else if b.mode != null then "submap${sep}$submap_${b.mode}"
-    else if b.toggleScratch != null then "togglespecialworkspace${sep}${b.toggleScratch}"
-    else if b.moveToScratch != null then "movetoworkspace${sep}special:${b.moveToScratch}"
-    else if b.app != null then "exec${sep}${km.apps.${b.app}}"
-    else throw "keymap: bind ${modsStr b.mods}+${b.key} has no action Hyprland can render";
+    else if b.focus != null then "hl.dsp.focus({ direction = ${toLua b.focus} })"
+    else if b.move != null then "hl.dsp.window.move({ direction = ${toLua b.move} })"
+    else if b.resize != null then
+      "hl.dsp.window.resize({ x = ${toString b.resize.w}, y = ${toString b.resize.h}, relative = true })"
+    else if b.workspace != null then "hl.dsp.focus({ workspace = ${ws b.workspace} })"
+    else if b.moveToWorkspace != null then "hl.dsp.window.move({ workspace = ${ws b.moveToWorkspace} })"
+    else if b.close then "hl.dsp.window.close()"
+    # "maximized" keeps bars and gaps; real fullscreen is a raw bind.
+    else if b.fullscreen then ''hl.dsp.window.fullscreen({ mode = "maximized" })''
+    else if b.toggleFloat then ''hl.dsp.window.float({ action = "toggle" })''
+    else if b.toggleSplit then ''hl.dsp.layout("togglesplit")''
+    else if b.mode != null then "hl.dsp.submap(${submapName b.mode})"
+    else if b.toggleScratch != null then "hl.dsp.workspace.toggle_special(${toLua b.toggleScratch})"
+    else if b.moveToScratch != null then
+      "hl.dsp.window.move({ workspace = ${toLua "special:${b.moveToScratch}"} })"
+    else if b.app != null then "hl.dsp.exec_cmd(${toLua km.apps.${b.app}})"
+    else throw "keymap: bind ${keys b.mods b.key} has no action Hyprland can render";
 
   hasAction = b:
     b.focus != null || b.move != null || b.resize != null
@@ -56,11 +52,16 @@ let
     (b.raw.hyprland != null || hasAction b)
     && !(b.app != null && (km.apps.${b.app} or null) == null);
 
-  rootBinds = builtins.filter emit km.binds;
+  bindLine = indent: b:
+    "${indent}hl.bind(${toLua (keys b.mods b.key)}, ${action b}"
+    + lib.optionalString b.repeat ", { repeating = true }"
+    + ")";
 
-  rootLine = b: "${modsStr b.mods}, ${b.key}, ${tail ", " b}";
-  submapLine = b:
-    "${if b.repeat then "binde" else "bind"}=${modsStr b.mods},${b.key},${tail "," b}";
+  # A submap's name is its label: waybar's hyprland/submap module displays
+  # the submap name, so the Pango markup has to be the name itself.
+  submapName = name:
+    let label = km.modes.${name}.hyprland.label;
+    in toLua (if label != "" then label else name);
 
   modes = lib.sortOn (m: [ m.value.order m.name ])
     (lib.mapAttrsToList (name: value: { inherit name value; })
@@ -68,16 +69,16 @@ let
 
   modeBlock = { name, value }:
     lib.concatStringsSep "\n" (
-      [ "$submap_${name} = ${value.hyprland.label}" ]
-      ++ value.hyprland.extraLines
-      ++ [
-        "bind=${modsStr value.enter.mods},${value.enter.key},submap,$submap_${name}"
-        "submap=$submap_${name}"
+      [
+        "hl.bind(${toLua (keys value.enter.mods value.enter.key)}, hl.dsp.submap(${submapName name}))"
+        ("hl.define_submap(${submapName name}, "
+          + lib.optionalString value.hyprland.resetOnDispatch ''"reset", ''
+          + "function()")
       ]
-      ++ map submapLine (builtins.filter emit value.binds)
+      ++ map (bindLine "  ") (builtins.filter emit value.binds)
       ++ [
-        "bind=,escape,submap,reset"
-        "submap=reset"
+        "  hl.bind(\"escape\", hl.dsp.submap(\"reset\"))"
+        "end)"
       ]
     );
 in
@@ -85,17 +86,8 @@ in
   imports = [ ./default.nix ];
 
   config = lib.mkIf (km.binds != [ ] || km.modes != { }) {
-    wayland.windowManager.hyprland = {
-      settings =
-        {
-          bind = map rootLine (builtins.filter (b: !b.repeat) rootBinds);
-        }
-        // lib.optionalAttrs (builtins.any (b: b.repeat) rootBinds) {
-          binde = map rootLine (builtins.filter (b: b.repeat) rootBinds);
-        };
-
-      # Order sensitive, so it has to be text.
-      extraConfig = lib.concatMapStrings (m: modeBlock m + "\n") modes;
-    };
+    wayland.windowManager.hyprland.extraConfig =
+      lib.concatMapStrings (b: bindLine "" b + "\n") (builtins.filter emit km.binds)
+      + lib.concatMapStrings (m: modeBlock m + "\n") modes;
   };
 }

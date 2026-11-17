@@ -153,7 +153,7 @@
 
           # only on darwin, needs a buildServer.json in project root (generate with xcode-build-server)
           sourcekit = {
-            enable = pkgs.stdenv.isDarwin;
+            enable = pkgs.stdenv.hostPlatform.isDarwin;
             cmd = [ "xcrun" "sourcekit-lsp" ];
           };
 
@@ -234,11 +234,11 @@
     extraPlugins = [
       pkgs.vimPlugins."headlines-nvim"
       pkgs.vimPlugins."kmonad-vim"
-      pkgs.vimPlugins."himalaya-vim"
+      pkgs.vimPlugins."himalaya-vim9"
     ];
 
     extraConfigLua = ''
-    ${lib.optionalString (!pkgs.stdenv.isDarwin) ''
+    ${lib.optionalString (!pkgs.stdenv.hostPlatform.isDarwin) ''
     -- Remote iOS builds from nixpad. The iOS project is edited here and built
     -- on the Mac; `:make` runs the build over ssh and drops the errors into the
     -- quickfix list. `--raw` is load-bearing: the plain `ios build` pipes

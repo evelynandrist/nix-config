@@ -1,5 +1,5 @@
 { config, lib, pkgs, ... }:
-lib.mkIf pkgs.stdenv.isLinux {
+lib.mkIf pkgs.stdenv.hostPlatform.isLinux {
   # Nicely reload system units when changing configs
   systemd.user.startServices = "sd-switch";
 

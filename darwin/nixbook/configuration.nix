@@ -37,7 +37,7 @@
   nix = {
     registry = (lib.mapAttrs (_: flake: {inherit flake;})) ((lib.filterAttrs (_: lib.isType "flake")) inputs);
     nixPath = ["/etc/nix/path"];
-    settings.experimental-features = "nix-command flakes";
+    settings.experimental-features = [ "nix-command" "flakes" ];
     optimise.automatic = true;
     gc = {
       automatic = true;

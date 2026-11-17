@@ -11,23 +11,7 @@ in {
     configDir = "${configDir}";
     # not using the module default (overrideAttrs doInstallCheck = false), that misses
     # the binary cache and rebuilds home-assistant locally. the plain package is cached.
-    # from nixpkgs-master (locked to a nixos-unstable rev, so it's cached) for
-    # 2026.10: 2026.8 used CARTO map tiles, which now need an API key.
-    # back to pkgs.home-assistant once the main nixpkgs input has >= 2026.10
-    package = pkgs.master.home-assistant.override {
-      packageOverrides = self: super: {
-        # pywizlight 0.6.6 changed Bulb.state to a list, HA 2026.10 still expects 0.6.3
-        pywizlight = super.pywizlight.overridePythonAttrs (old: rec {
-          version = "0.6.3";
-          src = pkgs.fetchFromGitHub {
-            owner = "sbidy";
-            repo = "pywizlight";
-            tag = "v${version}";
-            hash = "sha256-rCoWdqvFLSLNBAHeFJ6f9kZpIg4WyE8VJLpmsYl+gJM=";
-          };
-        });
-      };
-    };
+    package = pkgs.home-assistant;
     extraPackages = ps: with ps; [
       openai
       pysabnzbd

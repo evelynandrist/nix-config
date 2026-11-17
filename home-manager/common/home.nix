@@ -52,7 +52,7 @@
   home = {
     username = "${config.userConfig.username}";
     homeDirectory =
-      if pkgs.stdenv.isDarwin
+      if pkgs.stdenv.hostPlatform.isDarwin
       then "/Users/${config.userConfig.username}"
       else "/home/${config.userConfig.username}";
   };
@@ -88,7 +88,7 @@
     #   "6CEBAD8E8B33D245E1E25D05468D0A92F6A02E3B"
     # ];
     pinentry.package =
-      if pkgs.stdenv.isDarwin
+      if pkgs.stdenv.hostPlatform.isDarwin
       then pkgs.pinentry_mac
       else pkgs.pinentry-tty;
   };

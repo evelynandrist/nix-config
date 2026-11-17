@@ -9,10 +9,12 @@
     imap = {
       host = "mail.andrist.dev";
       port = 993;
+      authentication = "plain";
     };
     smtp = {
       host = "mail.andrist.dev";
       port = 465;
+      authentication = "plain";
     };
     # /run/secrets on NixOS; on darwin sops runs as a home-manager module and
     # materialises elsewhere, so the directory comes from userConfig.

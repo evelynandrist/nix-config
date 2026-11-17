@@ -18,7 +18,18 @@ in {
     waybar = addPatches prev.waybar [
       # ./waybar_markup.patch # add support for pangu markup to the hyprland/submaps module
       # ./waybar_workspaces.patch # fix a bug in the hyprland/workspaces module
+      # Clicking a workspace sends legacy `dispatch workspace N`, which Hyprland
+      # 0.55+ rejects (dispatch is Lua now). Upstream: Alexays/Waybar#5013.
+      # Drop once nixpkgs ships a waybar release containing it.
+      ./waybar_hyprland_lua_ipc.patch
     ];
+    # The cargo setup hook exports LIBGIT2_NO_VENDOR=1, but the himalaya
+    # package doesn't list libgit2 (or sqlite, which it links), so the build
+    # fails. Give it both from nixpkgs. Drop once nixpkgs fixes the package.
+    himalaya = prev.himalaya.overrideAttrs (old: {
+      nativeBuildInputs = (old.nativeBuildInputs or [ ]) ++ [ final.pkg-config ];
+      buildInputs = (old.buildInputs or [ ]) ++ [ final.libgit2 final.sqlite ];
+    });
     inputs.nix-pkgs-24-05.qemu = addPatches prev.qemu [
       ./qemu-8.2.0.patch # anti-detection qemu
     ];

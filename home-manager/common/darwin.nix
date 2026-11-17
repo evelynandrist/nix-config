@@ -1,5 +1,5 @@
 { config, lib, pkgs, ... }:
-lib.mkIf pkgs.stdenv.isDarwin {
+lib.mkIf pkgs.stdenv.hostPlatform.isDarwin {
   programs.zsh.initContent = lib.mkOrder 1100 ''
     # BSD ls has no --color and there is no dircolors; deliberately not pulling
     # GNU coreutils in, which would replace ls/date/readlink/stat machine-wide.

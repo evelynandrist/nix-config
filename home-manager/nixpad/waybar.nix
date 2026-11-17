@@ -1,4 +1,10 @@
-{ config, lib, pkgs, ... }: {
+{ config, lib, pkgs, ... }:
+let
+  # Launch a command as a floating window. `hyprctl dispatch` takes a Lua
+  # dispatcher expression since Hyprland 0.55.
+  floating = cmd:
+    "hyprctl dispatch ${lib.escapeShellArg "hl.dsp.exec_cmd(${lib.generators.toLua { } cmd}, { float = true })"}";
+in {
   programs.waybar = {
     enable = true;
     settings = {
@@ -56,7 +62,6 @@
           format = "{:%e %b %Y %H:%M}";
           tooltip = true;
           tooltip-format = "<big>{:%B %Y}</big>\n<tt>{calendar}</tt>";
-          on-click = "hyprctl dispatch exec [floating] \\$calendar";
         };
 
         cpu = {
@@ -66,7 +71,7 @@
             warning = 70;
             critical = 90;
           };
-          on-click = "hyprctl dispatch exec [floating] kitty 'sh -c \"$HOME/.config/color-sequences.sh & htop\"'";
+          on-click = floating "kitty 'sh -c \"$HOME/.config/color-sequences.sh & htop\"'";
         };
 
         memory = {
@@ -76,7 +81,7 @@
             warning = 70;
             critical = 90;
           };
-          on-click = "hyprctl dispatch exec [floating] kitty 'sh -c \"$HOME/.config/color-sequences.sh & htop\"'";
+          on-click = floating "kitty 'sh -c \"$HOME/.config/color-sequences.sh & htop\"'";
         };
 
         network = {
@@ -85,7 +90,7 @@
           format-ethernet = "󰈀";
           format-disconnected = "󰖪";
           tooltip-format = "{ifname} ({essid}): {ipaddr}";
-          on-click = "hyprctl dispatch exec [floating] kitty 'sh -c \"$HOME/.config/color-sequences.sh & nmtui\"'";
+          on-click = floating "kitty 'sh -c \"$HOME/.config/color-sequences.sh & nmtui\"'";
         };
 
         "hyprland/submap" = {
@@ -94,7 +99,101 @@
         };
 
         "hyprland/workspaces" = {
-          format = "{name}";
+          # Window icons per workspace. This used to be done by
+          # hyprland-autoname-workspaces renaming the workspaces, which broke with
+          # Hyprland's Lua dispatch (0.55+). Rules are case-insensitive regex
+          # searches on "class<…> title<…>"; rules with a title win over class-only ones.
+          format = "<b>{name}:</b> {windows}";
+          format-window-separator = " ";
+          window-rewrite-default = "";
+          window-rewrite = {
+            "class<jetbrains-studio>" = "";
+            "class<signal>" = "";
+            "class<streamlink-twitch-gui>" = "";
+            "class<whatsapp-nativefier-d52542>" = "";
+            "class<libreoffice-calc>" = "";
+            "class<nemo>" = "";
+            "class<sun-awt-x11-xframepeer>" = "";
+            "class<waydroid[^>]*>" = "droid";
+            "class<dmenu-pass generator>" = "";
+            "class<brave-browser>" = "<span>󰖟</span>";
+            "class<fontforge>" = "";
+            "class<swappy>" = "";
+            "class<discord>" = "󰙯";
+            "class<org-ksnip-ksnip>" = "";
+            "class<shopping>" = "";
+            "class<taskwarrior-tui>" = "";
+            "class<rapid-photo-downloader>" = "";
+            "class<element>" = "";
+            "class<qalculate-gtk>" = "";
+            "class<xplr>" = "";
+            "class<personal>" = "";
+            "class<wire>" = "󰁀";
+            "class<spotify>" = "";
+            "class<kak>" = "";
+            "class<dmenu-browser>" = "";
+            "class<krita>" = "";
+            "class<kicad>" = "";
+            "class<vlc>" = "";
+            "class<songrec>" = "";
+            "class<dmenu-clipboard>" = "";
+            "class<qutepreview>" = "";
+            "class<paperwork>" = "";
+            "class<burp-startburp>" = "";
+            "class<snappergui>" = "";
+            "class<code-oss>" = "";
+            "class<whatsapp-desktop>" = "";
+            "class<darktable>" = "";
+            "class<gcr-prompter>" = "";
+            "class<wayvnc>" = "󰀄";
+            "class<virt-manager>" = "";
+            "class<org-qutebrowser-qutebrowser>" = "";
+            "class<work>" = "";
+            "class<libreoffice-startcenter>" = "";
+            "class<wlfreerdp>" = "󰀄";
+            "class<libreoffice-impress>" = "";
+            "class<neomutt>" = "";
+            "class<zen[^>]*>" = "<span>󰖟</span>";
+            "class<calibre-gui>" = "";
+            "class<plexamp>" = "";
+            "class<molotov>" = "";
+            "class<[^>]*transmission[^>]*>" = "";
+            "class<mpv>" = "";
+            "class<pavucontrol>" = "";
+            "class<dmenu-emoji>" = "󰂛";
+            "class<remote-viewer>" = "";
+            "class<alacritty>" = "";
+            "class<firefox>" = "<span color='orange'> </span>";
+            "class<chrome-faolnafnngnfdaknnbpnkhgohbobgegn-default>" = "";
+            "class<obsidian>" = "";
+            "class<kitty>" = "";
+            "class<wireshark-gtk>" = "";
+            "class<duolingo>" = "";
+            "class<slack>" = "";
+            "class<telegramdesktop>" = "";
+            "class<vncviewer>" = "";
+            "class<bleachbit>" = "";
+            "class<gimp-2\\.10>" = "";
+            "class<dmenu-pass>" = "";
+            "class<scli>" = "";
+            "class<emacs>" = "";
+            "class<org-pwmt-zathura>" = "";
+            "class<steam>" = "";
+            "class<cssh>" = "";
+            "class<vimiv>" = "";
+            "class<chromium>" = "";
+            "class<zoom>" = "";
+            "class<nm-connection-editor>" = "";
+            "class<org-telegram-desktop>" = "";
+            "class<udiskie>" = "";
+            "class<libreoffice-writer>" = "";
+            "class<sandboxed-tor-browser>" = "";
+            "class<gsimplecalc>" = "";
+            "class<kitty> title<.*nvim" = "";
+            "class<(brave-browser|firefox|chrom[^>]*|zen[^>]*)> title<.*twitch" = "";
+            "class<(brave-browser|firefox|chrom[^>]*|zen[^>]*)> title<.*youtube" = "";
+            "class<(brave-browser|firefox|chrom[^>]*|zen[^>]*)> title<.*github" = "";
+          };
           sort-by-number = true;
           active-only = false;
           on-click = "activate";
@@ -138,9 +237,9 @@
             default = [ "󰕿" "󰖀" "󰕾" ];
           };
           tooltip-format = "{icon} {volume}% {format_source}";
-          on-click = "hyprctl dispatch exec wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle";
-          on-scroll-up = "hyprctl dispatch exec \"wpctl set-volume -l 1.5 @DEFAULT_AUDIO_SINK@ 5%+\"";
-          on-scroll-down = "hyprctl dispatch exec \"wpctl set-volume -l 1.5 @DEFAULT_AUDIO_SINK@ 5%-\"";
+          on-click = "wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle";
+          on-scroll-up = "wpctl set-volume -l 1.5 @DEFAULT_AUDIO_SINK@ 5%+";
+          on-scroll-down = "wpctl set-volume -l 1.5 @DEFAULT_AUDIO_SINK@ 5%-";
         };
 
         temperature = {
@@ -150,7 +249,7 @@
           format = "{icon} {temperatureC}°";
           format-icons = [ "" "" "" ];
           tooltip = false;
-          on-click = "hyprctl dispatch exec [floating] kitty 'sh -c \"$HOME/.config/color-sequences.sh & watch sensors\"'";
+          on-click = floating "kitty 'sh -c \"$HOME/.config/color-sequences.sh & watch sensors\"'";
         };
 
         tray = {
@@ -160,14 +259,14 @@
 
         "custom/menu" = {
           format = "";
-          on-click = "hyprctl dispatch exec [floating] \\$menu";
+          on-click = floating config.keymap.apps.menu;
           tooltip = false;
         };
 
         bluetooth = {
           format = "󰂯";
           format-disabled = "󰂲";
-          on-click = "hyprctl dispatch exec [floating] kitty 'sh -c \"$HOME/.config/color-sequences.sh & bluetuith\"'";
+          on-click = floating "kitty 'sh -c \"$HOME/.config/color-sequences.sh & bluetuith\"'";
           on-click-right = "rfkill toggle bluetooth";
           tooltip-format = "{}";
         };
@@ -523,6 +622,10 @@ window#waybar {
 
 #workspaces button.active {
     border-color: @theme_selected_bg_color;
+}
+
+#workspaces button.empty {
+    color: grey;
 }
 
 #workspaces button.urgent {

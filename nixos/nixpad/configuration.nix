@@ -204,7 +204,7 @@
     enable = true;
     settings = {
       default_session = {
-        command = "${pkgs.tuigreet}/bin/tuigreet --user-menu --user-menu-min-uid 1000 -c Hyprland --time --issue --asterisks";
+        command = "${pkgs.tuigreet}/bin/tuigreet --user-menu --user-menu-min-uid 1000 --user-menu-max-uid 29999 -c Hyprland --time --issue --asterisks";
         user = "greeter";
       };
     };
