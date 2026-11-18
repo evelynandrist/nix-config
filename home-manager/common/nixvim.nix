@@ -144,7 +144,10 @@
 
           jsonls.enable = true;
 
-          ltex.enable = true;
+	  ltex_plus = {
+	    enable = true;
+	    package = pkgs.ltex-ls-plus;
+	  };
           texlab.enable = true;
 
           nil_ls.enable = true;
