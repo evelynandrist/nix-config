@@ -146,6 +146,12 @@
           ./nixos/packardserver/configuration.nix
         ];
       };
+      dellserver = nixpkgs.lib.nixosSystem {
+        specialArgs = {inherit inputs outputs;};
+        modules = [
+          ./nixos/dellserver/configuration.nix
+        ];
+      };
     };
 
     # nix-darwin configuration entrypoint

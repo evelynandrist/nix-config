@@ -3,6 +3,7 @@ keys:
   - &nixpad e047a92689ed03eb9932070722ce2adfcbedc741
   - &nixserver 84cd2d946f6b71aaa4f1609e5766e1b71b9a8f85
   - &packardserver 8b8039a072ba2ae185e969fddfe8008b7f7a87ae
+  - &dellserver b5943909f7d23935a4c689ba4ee788cbd0d5aeca
   # Fill this in with the output of
   #   age-keygen -y ~/.config/sops/age/keys.txt
   # run on the Mac after its first darwin-rebuild switch, then uncomment the
@@ -17,6 +18,7 @@ creation_rules:
           - *nixpad
           - *nixserver
           - *packardserver
+          - *dellserver
   - path_regex: secrets/nixbook.yaml$
     key_groups:
       - pgp:
