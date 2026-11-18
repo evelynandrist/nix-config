@@ -16,6 +16,7 @@
     ./media-stack.nix
     ./home-assistant
     ./backup.nix
+    ./radicale.nix
 
     ./userconfig.nix
   ];

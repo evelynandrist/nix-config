@@ -90,6 +90,11 @@
         upstream = "http://truenas.internal.qwt.ch";
         websockets = true;
       };
+      "radicale.internal.qwt.ch" = internalSite {
+        upstream = "http://127.0.0.1:5232";
+        # imports of whole calendars or address books
+        extraConfig = "client_max_body_size 100M;";
+      };
       "mainsail.internal.qwt.ch" = internalSite {
         upstream = "http://anycubic.internal.qwt.ch";
         websockets = true;
