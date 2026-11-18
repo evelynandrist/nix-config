@@ -8,6 +8,7 @@
 }: {
   imports = [
     ../common/configuration.nix
+    ../common/lan-hosts.nix
 
     ./hardware-configuration.nix
 

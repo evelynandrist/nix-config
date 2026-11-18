@@ -15,6 +15,25 @@
     allowCloudflareIPv6s =
       lib.concatMapStrings (ip: "allow ${ip};\n")
 	(lib.strings.splitString "\n" (builtins.readFile "${cloudflareIPv6s}"));
+
+    # Sites under internal.qwt.ch: LAN and VPN only. nginx also answers on
+    # the public address, so without the allow/deny anyone who guesses a name
+    # gets in. Names without a site here end up at the catch-all below (the
+    # wildcard record sends all of *.internal.qwt.ch to this host).
+    internalRanges = [ "192.168.1.0/24" ];
+    internalSite = { upstream, websockets ? false, extraConfig ? "" }: {
+      useACMEHost = "internal.qwt.ch";
+      forceSSL = true;
+      locations."/" = {
+        proxyPass = upstream;
+        proxyWebsockets = websockets;
+      };
+      extraConfig = ''
+        ${lib.concatMapStrings (range: "allow ${range};\n") internalRanges}
+        deny all;
+        ${extraConfig}
+      '';
+    };
   in {
     enable = true;
     recommendedProxySettings = true;
@@ -28,7 +47,7 @@
 	enableACME = true;
 	forceSSL = true;
 	locations."/" = {
-	  proxyPass = "http://192.168.1.56:30041";
+	  proxyPass = "http://truenas.internal.qwt.ch:30041";
 	  proxyWebsockets = true;
 	};
 	extraConfig = ''
@@ -53,24 +72,12 @@
 	enableACME = true;
 	forceSSL = true;
 	locations."/" = {
-	  proxyPass = "http://192.168.1.56:30013";
+	  proxyPass = "http://truenas.internal.qwt.ch:30013";
 	  proxyWebsockets = true;
 	};
       };
-      "sonarr.qwt.ch" = {
-	enableACME = true;
-	forceSSL = true;
-	locations."/" = {
-	  proxyPass = "http://127.0.0.1:8989";
-	};
-      };
-      "radarr.qwt.ch" = {
-	enableACME = true;
-	forceSSL = true;
-	locations."/" = {
-	  proxyPass = "http://127.0.0.1:7878";
-	};
-      };
+      "sonarr.internal.qwt.ch" = internalSite { upstream = "http://127.0.0.1:8989"; };
+      "radarr.internal.qwt.ch" = internalSite { upstream = "http://127.0.0.1:7878"; };
       "jellyseerr.qwt.ch" = {
 	enableACME = true;
 	forceSSL = true;
@@ -78,12 +85,16 @@
 	  proxyPass = "http://127.0.0.1:5055";
 	};
       };
-      "sabnzbd.qwt.ch" = {
-	enableACME = true;
-	forceSSL = true;
-	locations."/" = {
-	  proxyPass = "http://127.0.0.1:8080";
-	};
+      "sabnzbd.internal.qwt.ch" = internalSite { upstream = "http://127.0.0.1:8080"; };
+      "nas.internal.qwt.ch" = internalSite {
+        upstream = "http://truenas.internal.qwt.ch";
+        websockets = true;
+      };
+      "mainsail.internal.qwt.ch" = internalSite {
+        upstream = "http://anycubic.internal.qwt.ch";
+        websockets = true;
+        # gcode uploads
+        extraConfig = "client_max_body_size 0;";
       };
     };
   };
@@ -91,5 +102,20 @@
   security.acme = {
     acceptTerms = true;
     defaults.email = "evelyn@andrist.dev";
+
+    # One wildcard certificate for all internal sites. The names resolve to
+    # private addresses, so Let's Encrypt cannot reach them over HTTP; the
+    # proof goes through a DNS record at Cloudflare instead.
+    certs."internal.qwt.ch" = {
+      domain = "*.internal.qwt.ch";
+      dnsProvider = "cloudflare";
+      credentialFiles."CLOUDFLARE_DNS_API_TOKEN_FILE" =
+        config.sops.secrets."cloudflare/dns_api_token".path;
+      group = config.services.nginx.group;
+    };
   };
+
+  # Can edit DNS for all of qwt.ch, so it is kept out of secrets.yaml, which
+  # every host can read.
+  sops.secrets."cloudflare/dns_api_token".sopsFile = ../../secrets/internal.yaml;
 }

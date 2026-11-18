@@ -23,3 +23,8 @@ creation_rules:
           - *primary
         age:
           - *nixbook
+  - path_regex: secrets/internal.yaml$
+    key_groups:
+      - pgp:
+          - *primary
+          - *packardserver

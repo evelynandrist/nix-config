@@ -1,7 +1,7 @@
 { config, lib, pkgs, ... }:
 let
   # rest-server app on the TrueNAS, started with --private-repos
-  restServer = "http://192.168.1.56:30080";
+  restServer = "http://truenas.internal.qwt.ch:30080";
 in {
   imports = [ ../common/truenas-backup.nix ];
 

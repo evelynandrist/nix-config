@@ -6,7 +6,7 @@ in {
   # imports = [ ./bitthief.nix ];
 
   fileSystems."/mnt/neocortexmedia" = {
-    device = "//192.168.1.56/Media";
+    device = "//truenas.internal.qwt.ch/Media";
     fsType = "cifs";
     options = let
       # this line prevents hanging on network split

@@ -8,6 +8,7 @@
 }: {
   imports = [
     ../common/configuration.nix
+    ../common/lan-hosts.nix
 
     inputs.nixos-hardware.nixosModules.lenovo-thinkpad-z
 

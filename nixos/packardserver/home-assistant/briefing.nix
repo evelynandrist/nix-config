@@ -42,7 +42,7 @@ let
       user = "evelyn@andrist.dev";
     };
     ollama = {
-      url = "http://192.168.1.131:11434";
+      url = "http://nixbook.internal.qwt.ch:11434";
       model = "qwen3.5:9b";
       # same as the HA ollama integration (context window option in its UI)
       # and keep_alive -1 like HA, so the two don't make ollama reload the model
