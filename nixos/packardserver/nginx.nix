@@ -112,6 +112,11 @@
       credentialFiles."CLOUDFLARE_DNS_API_TOKEN_FILE" =
         config.sops.secrets."cloudflare/dns_api_token".path;
       group = config.services.nginx.group;
+      # Before asking Let's Encrypt, lego waits until it can see the record
+      # itself. Through the router's DNS that timed out (an old "no such
+      # record" answer is kept for 30 minutes), so only ask Cloudflare's own
+      # name servers.
+      extraLegoFlags = [ "--dns.propagation.disable-rns" ];
     };
   };
 
