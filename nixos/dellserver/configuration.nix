@@ -10,6 +10,7 @@
     ../common/configuration.nix
     ../common/lan-hosts.nix
     ../common/truenas-backup.nix
+    ../common/hardening.nix
 
     ./hardware-configuration.nix
 

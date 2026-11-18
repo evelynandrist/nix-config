@@ -104,6 +104,16 @@
     };
   };
 
+  # Everything public on this host. home and backup are defined in
+  # home-assistant/ and backup.nix.
+  hardening.geoBlock.sites = [
+    "photos.qwt.ch"
+    "jellyfin.qwt.ch"
+    "jellyseerr.qwt.ch"
+    "home.qwt.ch"
+    "backup.qwt.ch"
+  ];
+
   security.acme = {
     acceptTerms = true;
     defaults.email = "evelyn@andrist.dev";

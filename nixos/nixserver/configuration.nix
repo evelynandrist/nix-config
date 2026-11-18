@@ -8,6 +8,7 @@
 }: {
   imports = [
     ../common/configuration.nix
+    ../common/hardening.nix
 
     ./hardware-configuration.nix
 

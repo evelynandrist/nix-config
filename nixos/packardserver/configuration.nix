@@ -9,6 +9,7 @@
   imports = [
     ../common/configuration.nix
     ../common/lan-hosts.nix
+    ../common/hardening.nix
 
     ./hardware-configuration.nix
 

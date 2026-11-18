@@ -1,6 +1,5 @@
-{ config, lib, pkgs, ... }: {
-  services.nginx =
-  let
+{ config, lib, pkgs, ... }:
+let
     cloudflareIPv4s = builtins.fetchurl {
       url = "https://www.cloudflare.com/ips-v4";
       sha256 = "0ywy9sg7spafi3gm9q5wb59lbiq0swvf0q3iazl0maq1pj1nsb7h";
@@ -15,7 +14,27 @@
     allowCloudflareIPv6s =
       lib.concatMapStrings (ip: "allow ${ip};\n")
 	(lib.strings.splitString "\n" (builtins.readFile "${cloudflareIPv6s}"));
-  in {
+    cloudflareRanges = lib.filter (range: range != "")
+      (lib.concatMap (file: lib.strings.splitString "\n" (builtins.readFile "${file}"))
+        [ cloudflareIPv4s cloudflareIPv6s ]);
+in {
+  # vault, books and the webmail are reached directly, budget and search
+  # through Cloudflare. Left open on purpose: Minecraft (mc, voice.mc) and
+  # the rickroll (rr, holysnit.ch). Mail itself (SMTP, IMAP) does not go
+  # through nginx and stays open to every country.
+  hardening.geoBlock = {
+    sites = [ "vault.qwt.ch" "books.qwt.ch" "mail.andrist.dev" ];
+    cloudflareSites = [ "budget.qwt.ch" "search.qwt.ch" ];
+  };
+
+  services.fail2ban.ignoreIP =
+    # Requests to the proxied sites all come from these addresses; a ban
+    # would take the site down for everyone.
+    cloudflareRanges
+    # home (DDNS record), so a typo there never locks the VPS away
+    ++ [ "orchard.qwt.ch" ];
+
+  services.nginx = {
     enable = true;
     recommendedProxySettings = true;
     recommendedTlsSettings = true;
@@ -116,16 +135,6 @@
 	#   recommendedProxySettings = true;
 	# };
  #      };
-      "rc-email.qwt.ch" = {
-	locations."/" = {
-	  proxyPass = "http://127.0.0.1:8007";
-	};
-	extraConfig = ''
-	  ${allowCloudflareIPv4s}
-	  ${allowCloudflareIPv6s}
-	  deny all; # block all remaining ips
-	'';
-      };
       "mail.andrist.dev" = {
 	enableACME = true;
       };
