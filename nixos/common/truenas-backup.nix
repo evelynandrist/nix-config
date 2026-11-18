@@ -29,9 +29,13 @@ in {
     "backup/ha_webhook_id" = { };
   };
 
+  # Read twice: by systemd (EnvironmentFile) for the nightly run and by the
+  # shell for the restic-truenas command. The quotes keep the shell from
+  # interpreting spaces, $ and the like in the password; systemd drops them.
+  # The password itself must not contain a single quote.
   sops.templates."restic-truenas.env".content = ''
     RESTIC_REST_USERNAME=${host}
-    RESTIC_REST_PASSWORD=${config.sops.placeholder.${secret "rest_password"}}
+    RESTIC_REST_PASSWORD='${config.sops.placeholder.${secret "rest_password"}}'
   '';
 
   services.restic.backups.truenas = {
