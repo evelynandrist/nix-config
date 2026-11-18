@@ -15,14 +15,12 @@ in {
     # ...
     # });
     # pcmanfm = prev.pcmanfm.override { withGtk3 = true; };
-    waybar = addPatches prev.waybar [
-      # ./waybar_markup.patch # add support for pangu markup to the hyprland/submaps module
-      # ./waybar_workspaces.patch # fix a bug in the hyprland/workspaces module
+    waybar = addPatches prev.waybar (prev.lib.optionals (prev.lib.versionOlder prev.waybar.version "0.16.0") [
       # Clicking a workspace sends legacy `dispatch workspace N`, which Hyprland
-      # 0.55+ rejects (dispatch is Lua now). Upstream: Alexays/Waybar#5013.
-      # Drop once nixpkgs ships a waybar release containing it.
+      # 0.55+ rejects (dispatch is Lua now). Fixed upstream in 0.16.0 (Alexays/Waybar#5013);
+      # remove this override once main's lock is past 0.15.
       ./waybar_hyprland_lua_ipc.patch
-    ];
+    ]);
     # The cargo setup hook exports LIBGIT2_NO_VENDOR=1, but the himalaya
     # package doesn't list libgit2 (or sqlite, which it links), so the build
     # fails. Give it both from nixpkgs. Drop once nixpkgs fixes the package.
