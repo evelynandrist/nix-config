@@ -61,6 +61,19 @@
   hardware.graphics.enable = true;
   hardware.nvidia.open = true;
 
+  # Docker with access to the GPU. A container asks for the card with
+  # `--device nvidia.com/gpu=all` (not `--gpus all`). Nobody is in the docker
+  # group, which would be root without a password: use `sudo docker`.
+  virtualisation.docker.enable = true;
+  virtualisation.docker.storageDriver = "btrfs";
+  virtualisation.oci-containers.backend = "docker";
+  hardware.nvidia-container-toolkit.enable = true;
+  # Kept across reboots, so the large GPU images are not pulled again every
+  # time. Left out of the backup: images can be pulled again, and container
+  # data belongs in /persist/data, not in Docker's own volumes.
+  environment.persistence."/persist".directories = [ "/var/lib/docker" ];
+  services.restic.backups.truenas.exclude = [ "/persist/var/lib/docker" ];
+
   # All state lives in /persist (impermanence).
   services.restic.backups.truenas.paths = [ "/persist" ];
 
