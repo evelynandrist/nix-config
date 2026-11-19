@@ -17,6 +17,22 @@
     ./userconfig.nix
   ];
 
+  zramSwap = {
+    enable = true;
+    algorithm = "zstd";
+    memoryPercent = 50;
+  };
+
+  boot.kernel.sysctl = {
+    # Swapping to zram is cheap, so prefer it over dropping page cache.
+    "vm.swappiness" = 180;
+    # Readahead is pointless for RAM-backed swap.
+    "vm.page-cluster" = 0;
+    # Start reclaiming earlier and more gradually. The default (10) lets the machine
+    # run into direct reclaim, which is what blocks processes for tens of ms at a time.
+    "vm.watermark_scale_factor" = 125;
+  };
+
   boot.loader = {
     grub = {
       enable = true;
