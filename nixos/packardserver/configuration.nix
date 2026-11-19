@@ -52,7 +52,7 @@
     hostName = "packardserver";
   };
 
-  users.users.${config.userConfig.username}.extraGroups = [ "network" "rfkill" "power" "wheel" "docker" ];
+  users.users.${config.userConfig.username}.extraGroups = [ "network" "rfkill" "power" "wheel" ];
 
   # allow deploying from other machines (nh os switch --target-host), wheel can sudo anyway
   nix.settings.trusted-users = [ "root" "@wheel" ];
