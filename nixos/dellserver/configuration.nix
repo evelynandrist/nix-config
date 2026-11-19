@@ -15,6 +15,7 @@
     ./hardware-configuration.nix
 
     ./userconfig.nix
+    ./paperless.nix
   ];
 
   zramSwap = {

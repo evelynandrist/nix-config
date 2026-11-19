@@ -95,6 +95,12 @@
         # imports of whole calendars or address books
         extraConfig = "client_max_body_size 100M;";
       };
+      "paperless.internal.qwt.ch" = internalSite {
+        upstream = "http://dellserver.internal.qwt.ch:28981";
+        websockets = true;
+        # uploads of large scans through the web UI
+        extraConfig = "client_max_body_size 0;";
+      };
       "mainsail.internal.qwt.ch" = internalSite {
         upstream = "http://anycubic.internal.qwt.ch";
         websockets = true;
