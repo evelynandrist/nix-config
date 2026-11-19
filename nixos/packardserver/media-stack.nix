@@ -46,7 +46,10 @@ in {
 
   services.sabnzbd = {
     enable = true;
-    configFile = "${dataDir}/sabnzbd/sabnzbd.ini";
+    # The module wants the settings in Nix; here sabnzbd keeps its own file
+    # and is configured in its web interface. The configFile option is
+    # deprecated, so the file is passed to the service directly below.
+    configFile = null;
     group = "${group}";
   };
   # Started right at boot, sabnzbd hangs before it writes its first log line
@@ -54,9 +57,12 @@ in {
   # Presumably it waits on the network, so order it after that, and retry in
   # case that is not the whole story.
   systemd.services.sabnzbd = {
+    preStart = lib.mkForce "";
     wants = [ "network-online.target" ];
     after = [ "network-online.target" ];
     serviceConfig = {
+      ExecStart = lib.mkForce
+        "${lib.getExe config.services.sabnzbd.package} -d -f ${dataDir}/sabnzbd/sabnzbd.ini";
       Restart = "on-failure";
       RestartSec = "30s";
     };
