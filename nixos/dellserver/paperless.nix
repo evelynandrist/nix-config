@@ -46,6 +46,11 @@ in {
       PAPERLESS_OCR_LANGUAGE = "deu+eng";
       PAPERLESS_CONSUMER_RECURSIVE = true;
       PAPERLESS_CONSUMER_SUBDIRS_AS_TAGS = true;
+      # Since 3.0 a file whose content is already in the archive is imported
+      # a second time unless this is set. With it, the copy is removed from
+      # the consume folder instead. Documents in the trash count too: empty
+      # the trash before importing something again.
+      PAPERLESS_CONSUMER_DELETE_DUPLICATES = true;
     };
   };
 
