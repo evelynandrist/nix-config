@@ -60,6 +60,11 @@ in {
     services.nginx = lib.mkIf geoBlockUsed {
       additionalModules = [ pkgs.nginxModules.geoip2 ];
 
+      # 1.30.7 fixes remote code execution over HTTP/2 (CVE-2026-123007,
+      # CVE-2026-123633, CERT-EU 2026-022). nixos-unstable was still on
+      # 1.30.6 on 2026-11-19. Remove this line once it has 1.30.7 or newer.
+      package = pkgs.master.nginxStable;
+
       # The database comes from nixpkgs and gets newer with every flake
       # update, so there is no account and no download timer.
       commonHttpConfig = ''
