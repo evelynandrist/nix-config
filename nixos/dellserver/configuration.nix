@@ -16,6 +16,8 @@
 
     ./userconfig.nix
     ./paperless.nix
+    ./samba.nix
+    ./paperless-single-sheets.nix
   ];
 
   zramSwap = {

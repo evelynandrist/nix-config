@@ -9,6 +9,9 @@
 #   consume/   drop files here; paperless imports and then deletes them.
 #              Subfolders become tags: consume/evelyn/school/kanti/bio/x.pdf
 #              gets the tags evelyn, school, kanti and bio.
+#              Folders named single_sheets are not imported: their PDFs
+#              are cut into one document per sheet first, see
+#              paperless-single-sheets.nix.
 #   export/    nightly export (01:30, before restic at 02:30): documents
 #              plus a dump of the database, which restic could otherwise
 #              catch in the middle of a write. Paperless is stopped while
@@ -18,8 +21,12 @@
 # users and the workflows that set the owner live in paperless's database
 # and are created in the web UI.
 #
-# Barcode splitting is off on purpose until the backlog is in; it
-# rasterises every page of every PDF.
+# Barcode splitting is on: a page whose barcode reads PATCHT separates two
+# documents and is thrown away. Paperless keeps the split documents, not
+# the PDF the scanner sent, so a wrong split can only be redone from paper.
+# It rasterises every page of every PDF, which makes large imports slow.
+#
+# The scanner writes into consume/ over SMB, see samba.nix.
 #
 # Manage:  sudo paperless-manage <command>
 { config, ... }:
@@ -51,6 +58,11 @@ in {
       # the consume folder instead. Documents in the trash count too: empty
       # the trash before importing something again.
       PAPERLESS_CONSUMER_DELETE_DUPLICATES = true;
+      PAPERLESS_CONSUMER_ENABLE_BARCODES = true;
+      # How sure the OCR must be of a page's direction to turn it (default
+      # 12). Scanned landscape pages were left sideways at 7.6 to 9.7, and
+      # no upright page was misjudged anywhere near that.
+      PAPERLESS_OCR_ROTATE_PAGES_THRESHOLD = 7;
     };
   };
 
