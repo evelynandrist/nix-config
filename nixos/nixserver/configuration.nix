@@ -9,6 +9,7 @@
   imports = [
     ../common/configuration.nix
     ../common/hardening.nix
+    ../common/agent-access.nix
 
     ./hardware-configuration.nix
 

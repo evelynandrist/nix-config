@@ -11,6 +11,7 @@
     ../common/lan-hosts.nix
     ../common/truenas-backup.nix
     ../common/hardening.nix
+    ../common/agent-access.nix
 
     ./hardware-configuration.nix
 
