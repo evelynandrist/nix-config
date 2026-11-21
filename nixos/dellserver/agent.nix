@@ -87,6 +87,9 @@ let
 in {
   # The user itself, its key on the other hosts and its sudo rules:
   # ../common/agent-access.nix
+  # throwaway: marker for the first test deploy, never merge
+  environment.etc."agent-test-deploy".text = "test deploy works\n";
+
   users.users.agent = {
     inherit home;
     shell = pkgs.zsh;
