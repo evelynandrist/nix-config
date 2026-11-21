@@ -101,6 +101,15 @@
         # uploads of large scans through the web UI
         extraConfig = "client_max_body_size 0;";
       };
+      # T3 Code on dellserver (nixos/dellserver/agent.nix). The credential
+      # endpoint for T3 Connect is always mounted; it is only for T3's own
+      # tunnel, which is not used (publish-only), so nobody may reach it.
+      "t3.internal.qwt.ch" = lib.recursiveUpdate
+        (internalSite {
+          upstream = "http://dellserver.internal.qwt.ch:3773";
+          websockets = true;
+        })
+        { locations."= /api/t3-connect/mint-credential".return = "404"; };
       "mainsail.internal.qwt.ch" = internalSite {
         upstream = "http://anycubic.internal.qwt.ch";
         websockets = true;

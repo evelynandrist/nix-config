@@ -18,6 +18,8 @@
     ./paperless.nix
     ./samba.nix
     ./paperless-single-sheets.nix
+    ./agent.nix
+    ./flake-update.nix
   ];
 
   zramSwap = {
