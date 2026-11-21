@@ -1,10 +1,13 @@
 # Weekly flake.lock bump.
 #
 # Updates the lock on the branch auto/flake-update, builds every NixOS host
-# and evaluates the darwin host against it. Green: main is fast-forwarded to
-# the bump and the hosts pick it up through system.autoUpgrade
-# (nixos/common/auto-upgrade.nix). Red: a PR with the bump stays open, and
-# the failed run sends the usual GitHub mail.
+# and evaluates the darwin host against it, then opens a PR (or comments on
+# the open one) saying whether it built. It never pushes to main: main
+# requires signed commits, so the bump lands when Evelyn squash-merges the
+# PR (the bot commit is unsigned, the squash commit GitHub makes is signed).
+# The hosts then pick it up through system.autoUpgrade
+# (nixos/common/auto-upgrade.nix). A failed build also
+# sends the usual GitHub mail.
 #
 # Run by hand: gh workflow run update-flake.yml
 name: Update flake.lock
@@ -105,31 +108,27 @@ jobs:
     runs-on: ubuntu-latest
     env:
       GH_TOKEN: ${{ github.token }}
-      SHA: ${{ needs.update.outputs.sha }}
+      GREEN: ${{ needs.build.result == 'success' && needs.eval-nixbook.result == 'success' }}
     steps:
+      # gh needs the checkout to know the repo
       - uses: actions/checkout@v5
-        with:
-          ref: ${{ needs.update.outputs.sha }}
-          fetch-depth: 0
 
-      # Not a force push: if main moved during the run this fails, and the
-      # next run starts again from the new main.
-      - name: Fast-forward main
-        if: needs.build.result == 'success' && needs.eval-nixbook.result == 'success'
-        run: |
-          git push origin "$SHA:refs/heads/main"
-          git push origin --delete "$BRANCH"
-
-      - name: Open a PR with the failing bump
-        if: needs.build.result != 'success' || needs.eval-nixbook.result != 'success'
+      - name: Open or update the PR
         run: |
           run_url="$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
+          if [ "$GREEN" = true ]; then
+            status="All hosts build and nixbook evaluates: $run_url
+
+          Ready to squash-merge."
+          else
+            status="The bump did not build or evaluate: $run_url
+
+          Push fixes to this branch and squash-merge, or fix main and wait for next week's run (it overwrites this branch)."
+          fi
           if [ "$(gh pr view "$BRANCH" --json state --jq .state 2>/dev/null)" = "OPEN" ]; then
-            gh pr comment "$BRANCH" --body "Still failing with this week's bump: $run_url"
+            gh pr comment "$BRANCH" --body "New bump on this branch. $status"
           else
             gh pr create --base main --head "$BRANCH" \
               --title "chore: update flake.lock" \
-              --body "The weekly bump did not build or evaluate: $run_url
-
-          Push fixes to this branch and merge, or fix main and wait for next week's run (it overwrites this branch)."
+              --body "$status"
           fi
