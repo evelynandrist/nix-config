@@ -72,6 +72,9 @@ in {
     ];
   };
 
+  # throwaway: marker for the first test deploy, never merge
+  environment.etc."agent-test-deploy".text = "test deploy works\n";
+
   environment.systemPackages = [ testDeploy ];
 
   security.sudo.extraRules = [{
