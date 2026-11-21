@@ -85,12 +85,10 @@ let
     '';
   };
 in {
-  users.groups.agent = { };
+  # The user itself, its key on the other hosts and its sudo rules:
+  # ../common/agent-access.nix
   users.users.agent = {
-    isNormalUser = true;
-    group = "agent";
     inherit home;
-    extraGroups = [ "systemd-journal" ];
     shell = pkgs.zsh;
     openssh.authorizedKeys.keys = [
       "sk-ssh-ed25519@openssh.com AAAAGnNrLXNzaC1lZDI1NTE5QG9wZW5zc2guY29tAAAAIOmZZyhqDHkirDFXCoT9sw008Mj0GwlD9qv9M51MONQKAAAAC3NzaDp5dWJpa2V5 yubikey-main"
@@ -106,6 +104,10 @@ in {
   programs.ssh.knownHosts = {
     "github.com".publicKey = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOMqqnkVzrm0SdG6UOoqKLsabgH5C9okWi0dh2l9GKJl";
     "bitbucket.org".publicKey = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIIazEu89wgQZ4bqs3d63QSMzYVa0MuJ2e2gKTKqu+UUO";
+    # for test deploys (../common/agent-access.nix)
+    "packardserver".publicKey = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIC+DM5/muda4czqL7luaLqVfuS67fb9sYZiw6bXbHp+V";
+    "nixserver.qwt.ch".publicKey = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAINeSBKfQ3vO2GZbGQFMzFC5G5HVf2D5E04eQmkaoPgUs";
+    "dellserver".publicKey = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIAay68SE2169vKMzJssyYpQXZ0J7lvj3GAQeYZYVyu8S";
   };
 
   systemd.services.agent-ssh-key = {

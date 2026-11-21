@@ -10,6 +10,7 @@
     ../common/configuration.nix
     ../common/lan-hosts.nix
     ../common/hardening.nix
+    ../common/agent-access.nix
 
     ./hardware-configuration.nix
 
