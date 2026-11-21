@@ -1,7 +1,7 @@
 # Every host follows main on GitHub by itself.
 #
-# .github/workflows/update-flake.yml bumps flake.lock once a week and only
-# puts it on main when every host still builds. This pulls main every night
+# dellserver bumps flake.lock once a week on the branch auto/flake-update
+# (nixos/dellserver/flake-update.nix), which Evelyn merges. This pulls main every night
 # and switches to it, so anything pushed to main goes live the next night.
 # There are no automatic reboots: a new kernel waits for the next manual one.
 #
