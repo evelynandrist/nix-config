@@ -106,9 +106,7 @@ in {
     "bitbucket.org".publicKey = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIIazEu89wgQZ4bqs3d63QSMzYVa0MuJ2e2gKTKqu+UUO";
     # for test deploys (../common/agent-access.nix)
     "packardserver".publicKey = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIC+DM5/muda4czqL7luaLqVfuS67fb9sYZiw6bXbHp+V";
-    "nixserver.qwt.ch".publicKey = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAINeSBKfQ3vO2GZbGQFMzFC5G5HVf2D5E04eQmkaoPgUs";
-    "dellserver".publicKey = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIAay68SE2169vKMzJssyYpQXZ0J7lvj3GAQeYZYVyu8S";
-  };
+    "nixserver.qwt.ch".publicKey = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAINeSBKfQ3vO2GZbGQFMzFC5G5HVf2D5E04eQmkaoPgUs";  };
 
   systemd.services.agent-ssh-key = {
     description = "Make the agent's ssh key if it has none";
