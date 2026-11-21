@@ -15,8 +15,13 @@
 #                   Added to Evelyn's GitHub and Bitbucket: it can push
 #                   branches to every repo she can reach, but not to
 #                   nix-config main (changes only through a pull request,
-#                   and merging one needs a GitHub login).
+#                   and merging one needs a GitHub login). It also logs in
+#                   to the nixbook as Evelyn (home-manager/nixbook/ssh.nix).
 #   repos/          clones.  worktrees/  T3's worktrees (set in T3 settings).
+#
+# iOS builds on the nixbook: `mac sync`, `mac run nix/build.sh`, `mac clean`
+# (home-manager/dellserver/agent.nix). The agent logs in there as Evelyn and
+# writes only under ~/t3.
 #
 # Commits are authored as Evelyn, unsigned (home-manager/dellserver/agent.nix).
 # No GitHub token may ever be readable by this user: setting the test-deploy
@@ -50,7 +55,7 @@
 #     fixes what breaks (read how T3 scheduling works first). Today a plain
 #     timer does the bump without Claude: flake-update.nix.
 #   - Restart T3 only when idle, if the nightly restart interrupts real work.
-#   - Skills (rsync to nixbook, planning), Azure and database access.
+#   - Skills (planning), Azure and database access.
 #   - PRs from the T3 app (enableGitHub plus a token): needs a deploy
 #     approval that a token cannot give, instead of the test-deploy label.
 #   - If Claude turns fail without a user session, switch to a user unit with
@@ -106,7 +111,10 @@ in {
     "bitbucket.org".publicKey = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIIazEu89wgQZ4bqs3d63QSMzYVa0MuJ2e2gKTKqu+UUO";
     # for test deploys (../common/agent-access.nix)
     "packardserver".publicKey = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIC+DM5/muda4czqL7luaLqVfuS67fb9sYZiw6bXbHp+V";
-    "nixserver.qwt.ch".publicKey = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAINeSBKfQ3vO2GZbGQFMzFC5G5HVf2D5E04eQmkaoPgUs";  };
+    "nixserver.qwt.ch".publicKey = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAINeSBKfQ3vO2GZbGQFMzFC5G5HVf2D5E04eQmkaoPgUs";
+    # iOS builds (`mac`, home-manager/dellserver/agent.nix)
+    "nixbook.internal.qwt.ch".publicKey = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIN9UeWoyTfsPkpgv8dyCF5icOLdac7+I528tlLxQkCkp";
+  };
 
   systemd.services.agent-ssh-key = {
     description = "Make the agent's ssh key if it has none";
