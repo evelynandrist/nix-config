@@ -2,6 +2,10 @@
 let
   authorizedKeys = [
     "sk-ssh-ed25519@openssh.com AAAAGnNrLXNzaC1lZDI1NTE5QG9wZW5zc2guY29tAAAAIOmZZyhqDHkirDFXCoT9sw008Mj0GwlD9qv9M51MONQKAAAAC3NzaDp5dWJpa2V5 yubikey-main"
+    # The agent on dellserver (nixos/dellserver/agent.nix), for iOS builds.
+    # It logs in as Evelyn; by rule it writes only under ~/t3 (its `mac`
+    # tool), Evelyn's own repo folders are never written to.
+    "restrict ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAID4Bn41L9SvJwW6xRdnysYEwDuhd9gG/5YD1WOGyuAvU agent@dellserver"
   ];
 
   keysFile = pkgs.writeText "authorized_keys"
