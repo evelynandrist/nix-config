@@ -10,7 +10,8 @@
 #   .t3/userdata/   T3's thread database, logs and secrets.
 #                   settings.json and keybindings.json are in the nightly
 #                   restic backup, nothing else (transcripts are not).
-#   .claude/        Claude Code's login and settings.
+#   .claude/        Claude Code's login and settings. skills/ is in the
+#                   backup, except synced/ (downloaded by Claude Code).
 #   .ssh/id_ed25519 the agent's own key, made by agent-ssh-key on first boot.
 #                   Added to Evelyn's GitHub and Bitbucket: it can push
 #                   branches to every repo she can reach, but not to
@@ -176,10 +177,11 @@ in {
   # Without fonts every page renders in one fallback face.
   fonts.enableDefaultPackages = true;
 
-  # Only the two settings files. Listed only when they exist: a missing path
-  # makes restic fail the whole run.
+  # The two settings files and the skills written by hand. Listed only when
+  # they exist: a missing path makes restic fail the whole run.
   services.restic.backups.truenas.dynamicFilesFrom = ''
-    for f in ${userdata}/settings.json ${userdata}/keybindings.json; do
+    for f in ${userdata}/settings.json ${userdata}/keybindings.json ${home}/.claude/skills/*; do
+      case "$f" in */synced) continue ;; esac
       [ -e "$f" ] && echo "$f"
     done
     true
