@@ -79,6 +79,10 @@
   };
 
   users.users.${config.userConfig.username}.extraGroups = [ "network" "rfkill" "power" "wheel" "minecraft" ];
+  # The agent (../common/agent-access.nix) gets the Minecraft console and
+  # data dir too: full control of that server, without sudo. What it may
+  # do there without asking is in .claude/skills/obstgarten/SKILL.md.
+  users.users.agent.extraGroups = [ "minecraft" ];
 
   virtualisation.docker.enable = true;
   virtualisation.docker.storageDriver = "btrfs";
