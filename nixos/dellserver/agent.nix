@@ -18,6 +18,12 @@
 #                   and merging one needs a GitHub login). It also logs in
 #                   to the nixbook as Evelyn (home-manager/nixbook/ssh.nix).
 #   repos/          clones.  worktrees/  T3's worktrees (set in T3 settings).
+#   .t3/tools/      the headless Chrome behind T3's browser (the agent's
+#                   preview_* tools). T3 downloads it itself, pinned by
+#                   version and hash, so it only changes with t3code.
+#   .t3/userdata/server-browser/profiles/
+#                   that browser's cookies. A tab can be taken over from the
+#                   T3 app: whatever is signed in to there, the agent has too.
 #
 # iOS builds on the nixbook: `mac sync`, `mac run nix/build.sh`, `mac clean`
 # (home-manager/dellserver/agent.nix). The agent logs in there as Evelyn and
@@ -158,6 +164,17 @@ in {
       Restart = "on-failure";
     };
   };
+
+  # T3's browser: its Chrome is a plain Linux binary and finds these through
+  # nix-ld (`t3 browser setup`, which the journal suggests, only knows apt).
+  # Chrome's own sandbox works as it is; never set
+  # T3CODE_SERVER_BROWSER_SANDBOX=0.
+  programs.nix-ld.libraries = with pkgs; [
+    glib nspr nss at-spi2-core dbus expat alsa-lib libgbm libxkbcommon
+    libx11 libxcb libxcomposite libxdamage libxext libxfixes libxrandr
+  ];
+  # Without fonts every page renders in one fallback face.
+  fonts.enableDefaultPackages = true;
 
   # Only the two settings files. Listed only when they exist: a missing path
   # makes restic fail the whole run.
