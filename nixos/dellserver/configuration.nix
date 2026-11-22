@@ -21,6 +21,7 @@
     ./paperless-single-sheets.nix
     ./agent.nix
     ./flake-update.nix
+    ./upgrade-check.nix
   ];
 
   zramSwap = {

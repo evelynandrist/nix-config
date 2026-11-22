@@ -15,8 +15,10 @@
 # payload is {"host": ..., "message": ...}, where message is the list of
 # failed units, separated by spaces. Secret in secrets/secrets.yaml:
 #   upgrade/ha_webhook_id
-# A failed weekly bump on dellserver comes through the same webhook
-# (nixos/dellserver/flake-update.nix).
+# Other units report through the same webhook with
+#   unitConfig.OnFailure = [ "ha-notify-failed@%n.service" ];
+# and arrive with their own name as the message (the weekly bump and the
+# nightly check on dellserver do).
 #
 # Run now:   sudo systemctl start nixos-upgrade.service
 # Undo:      sudo nixos-rebuild switch --rollback, and revert the commit on
@@ -103,6 +105,15 @@ in {
       failed=$(${failedUnits})
       ${notify} "''${failed:-nixos-upgrade.service}"
     '';
+  };
+
+  # Root, for the webhook secret. The instance is the name of the failed unit.
+  systemd.services."ha-notify-failed@" = {
+    description = "Report the failed unit %i to Home Assistant";
+    serviceConfig = {
+      Type = "oneshot";
+      ExecStart = "${notify} %i";
+    };
   };
 
   # Units that fall over shortly after a switch that looked fine.

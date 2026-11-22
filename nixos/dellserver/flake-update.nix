@@ -26,8 +26,8 @@
 #
 # A host that does not build is the agent's job and does not fail the unit.
 # The unit fails when the bump, the push or the thread start fails (T3 not
-# running, for one), and Home Assistant is told, through the webhook of
-# ../common/auto-upgrade.nix. A week without updates is silent.
+# running, for one), and Home Assistant is told (ha-notify-failed@ in
+# ../common/auto-upgrade.nix). A week without updates is silent.
 #
 # The thread runs unattended and without approvals, so its message is made
 # of host names and input names only, never of build output.
@@ -56,7 +56,7 @@ in {
       "/etc/profiles/per-user/agent"
     ];
     environment.HOME = config.users.users.agent.home;
-    unitConfig.OnFailure = [ "flake-update-failed.service" ];
+    unitConfig.OnFailure = [ "ha-notify-failed@%n.service" ];
     serviceConfig = {
       Type = "oneshot";
       User = "agent";
@@ -141,19 +141,6 @@ in {
       Next Sunday's bump force-pushes the branch. A fix that is not merged
       by then is made again.
       EOF
-    '';
-  };
-
-  # Root, for the webhook secret, which the agent must not read.
-  systemd.services.flake-update-failed = {
-    description = "Report a failed flake update to Home Assistant";
-    serviceConfig.Type = "oneshot";
-    script = ''
-      payload=$(${pkgs.jq}/bin/jq -cn --arg host ${config.networking.hostName} \
-        '{host: $host, message: "flake-update.service"}')
-      ${pkgs.curl}/bin/curl -fsS --retry 5 --retry-delay 30 --retry-all-errors \
-        -X POST -H 'Content-Type: application/json' -d "$payload" \
-        "https://home.qwt.ch/api/webhook/$(cat ${config.sops.secrets."upgrade/ha_webhook_id".path})"
     '';
   };
 

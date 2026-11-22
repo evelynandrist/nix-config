@@ -31,6 +31,10 @@
 #
 # T3 restarts with the nightly upgrade; a running turn waits for Resume.
 #
+# Two timers start threads by themselves, with `t3 thread start`: the weekly
+# bump (flake-update.nix) and the check for failed units after the nightly
+# upgrade (upgrade-check.nix).
+#
 # Manage:
 #   ssh agent@dellserver
 #   sudo systemctl restart t3code;  journalctl -u t3code
@@ -51,9 +55,6 @@
 # fixes the server and CLI). Use the CLI.
 #
 # Later:
-#   - A check after the nightly upgrade that starts a thread when units are
-#     failed on a server, the way flake-update.nix starts one for the
-#     weekly bump (`t3 thread start`, no T3 scheduled task).
 #   - Test-deploying the weekly bump before the merge as the rule. Today
 #     only when Evelyn asks for it in the bump's thread.
 #   - Restart T3 only when idle, if the nightly restart interrupts real work.
