@@ -131,7 +131,7 @@ let
 
       LFS files arrive as pointers. docking-station-ios-app: copy the
       extracted SDK from Evelyn's checkout, then bootstrap skips the zip:
-        mac run sh -c 'cp -c -R ~/<her checkout>/insta360-camera-x4-ios-sdk/iOS_v1.10.4 insta360-camera-x4-ios-sdk/'
+        mac run sh -c 'cp -c -R ~/repos/docking-station-ios-app/insta360-camera-x4-ios-sdk/iOS_v1.10.4 insta360-camera-x4-ios-sdk/'
 
       reframe: pass --no-open, reach videos through a symlink inside the
       folder (results land beside the input), commit the caches there, then
