@@ -15,6 +15,8 @@
 # payload is {"host": ..., "message": ...}, where message is the list of
 # failed units, separated by spaces. Secret in secrets/secrets.yaml:
 #   upgrade/ha_webhook_id
+# A failed weekly bump on dellserver comes through the same webhook
+# (nixos/dellserver/flake-update.nix).
 #
 # Run now:   sudo systemctl start nixos-upgrade.service
 # Undo:      sudo nixos-rebuild switch --rollback, and revert the commit on

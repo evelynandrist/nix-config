@@ -51,9 +51,11 @@
 # fixes the server and CLI). Use the CLI.
 #
 # Later:
-#   - A T3 scheduled task for the weekly flake update, so the agent also
-#     fixes what breaks (read how T3 scheduling works first). Today a plain
-#     timer does the bump without Claude: flake-update.nix.
+#   - A check after the nightly upgrade that starts a thread when units are
+#     failed on a server, the way flake-update.nix starts one for the
+#     weekly bump (`t3 thread start`, no T3 scheduled task).
+#   - Test-deploying the weekly bump before the merge as the rule. Today
+#     only when Evelyn asks for it in the bump's thread.
 #   - Restart T3 only when idle, if the nightly restart interrupts real work.
 #   - Skills (planning), Azure and database access.
 #   - PRs from the T3 app (enableGitHub plus a token): needs a deploy
