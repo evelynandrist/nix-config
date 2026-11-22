@@ -4,7 +4,8 @@
 # ObstgartenGang Xbox account (MCXboxBroadcast).
 #
 # Console:  tmux -S /run/minecraft/obstgarten.sock attach   (detach: Ctrl-b d)
-#           (the socket is mode 660 minecraft:minecraft; the main user is in that group)
+#           (the socket is mode 660 minecraft:minecraft; the main user and
+#           the agent are in that group)
 # Map:      https://mc.qwt.ch
 # Voice:    Simple Voice Chat (Java mod, UDP 24454) + https://voice.mc.qwt.ch
 #           for everyone else (SimpleVoice-Geyser, login = one-time code / QR

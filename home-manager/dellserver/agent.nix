@@ -152,7 +152,23 @@ in {
   home.homeDirectory = "/home/agent";
   home.stateVersion = "26.11";
 
-  home.packages = [ mac ];
+  # jq: reading GitHub API replies (.claude/skills/deploy)
+  home.packages = [ mac pkgs.jq ];
+
+  # Read by every Claude session of this user, in every repo. Only what a
+  # session cannot see for itself and would otherwise learn by failing;
+  # repo rules belong in that repo's CLAUDE.md.
+  home.file.".claude/CLAUDE.md".text = ''
+    # The agent on dellserver
+
+    - No GitHub or Bitbucket login: you can push branches, but not open, label
+      or merge pull requests. Give Evelyn the link instead:
+      https://github.com/<owner>/<repo>/compare/<base>...<branch>?quick_pull=1
+    - No sudo password. If something needs root or a secret, give Evelyn the
+      exact command.
+    - iOS and macOS builds run on the Mac: `mac` prints the help. Only `~/t3`
+      there is yours.
+  '';
 
   programs.git = {
     enable = true;
