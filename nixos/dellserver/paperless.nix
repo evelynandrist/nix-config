@@ -71,9 +71,15 @@ in {
       # Until a workflow uses it, it only answers the "Suggest" button on
       # a document, which shows the result and changes nothing.
       PAPERLESS_AI_ENABLED = true;
-      PAPERLESS_AI_LLM_BACKEND = "ollama";
-      PAPERLESS_AI_LLM_ENDPOINT = "http://nixbook.internal.qwt.ch:11434";
+      # ollama's OpenAI-compatible endpoint, not the "ollama" backend: that
+      # one cannot turn the model's thinking off (llama-index-llms-ollama
+      # 0.11.0 drops paperless's think=False), and with thinking one
+      # document took 285 s instead of 9 to 13, longer than paperless's
+      # own timeout of 120 s. Here reasoning_effort turns it off.
+      PAPERLESS_AI_LLM_BACKEND = "openai-like";
+      PAPERLESS_AI_LLM_ENDPOINT = "http://nixbook.internal.qwt.ch:11434/v1";
       PAPERLESS_AI_LLM_MODEL = "qwen3.5:9b";
+      PAPERLESS_AI_LLM_EXTRA_PARAMS = { reasoning_effort = "none"; };
       # The AI's prompt is fixed: it gets the text and the stored file name,
       # nothing else. So the stored name is the original one instead of
       # 0000123.pdf, which hands it the subject and topic of the GoodNotes
