@@ -7,6 +7,10 @@
 
   mailserver.stateVersion = 3;
 
+  # The mailserver needs a local DNSSEC-validating resolver. Until 26.11 it
+  # switched on Knot Resolver 5 (services.kresd) itself; this is version 6.
+  services.knot-resolver.enable = true;
+
   mailserver = {
     enable = true;
     fqdn = "mail.andrist.dev";
