@@ -7,6 +7,10 @@
 
   mailserver.stateVersion = 3;
 
+  # The mailserver needs a local DNSSEC-validating resolver. It used to
+  # switch this on itself (mailserver.localDnsResolver, removed in 26.11).
+  services.kresd.enable = true;
+
   mailserver = {
     enable = true;
     fqdn = "mail.andrist.dev";
