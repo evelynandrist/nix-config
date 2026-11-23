@@ -3,11 +3,13 @@
 # thing that writes to the data on the pools; after it, going back to
 # TrueNAS needs the owners set back.
 #
-# On the TrueNAS, the apps ran as one shared user, `apps` (uid 568). Here
-# each service has its own. Immich has 568 itself (immich.nix), so the
-# photos stay as they are. What else 568 owns stays shared with Immich
-# until the change, which this file does:
+# On the TrueNAS, the apps ran as one shared user, `apps` (uid 568), and the
+# datasets' NFSv4 ACLs were written for it (they still count, pools.nix).
+# Here each service has its own user. Immich has 568 itself (immich.nix),
+# so the photos stay as they are. Until the change, the rest shares 568
+# with Immich, as on the TrueNAS:
 #   - the rest-server runs as uid 568, not as its own user `restic`;
+#   - Jellyfin is in group 568, for whatever the ACLs grant `apps`;
 #   - nothing chowns or chmods the pools: the modules of the rest-server
 #     and Immich would, at every boot.
 #
@@ -20,6 +22,12 @@
 # then remove this file and its import in configuration.nix, and deploy.
 # The modules then set the folders' modes: the library 0700, the
 # repositories' folder 0700 (user restic's home).
+#
+# Not worked out: the ACLs. Entries that name 568 keep naming it after the
+# chown, and Linux has no tool to edit them; with aclmode=restricted ZFS may
+# refuse the chmods. Try each service as its new uid before deploying; the
+# way out is likely `zfs set acltype=posix` per dataset plus a chmod, which
+# TrueNAS would then no longer see as it did.
 { config, lib, ... }: {
   systemd.services.restic-rest-server.serviceConfig = {
     User = lib.mkForce "immich";
@@ -33,6 +41,8 @@
     privateRepos = lib.mkForce false;
     extraFlags = [ "--private-repos" ];
   };
+
+  users.users.jellyfin.extraGroups = [ "immich" ];
 
   # chmod 0700 of the library at every boot
   systemd.tmpfiles.settings.immich = lib.mkForce { };

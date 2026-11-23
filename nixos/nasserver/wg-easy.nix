@@ -11,8 +11,14 @@
 # does not update it: change the tag by hand, after reading wg-easy's
 # release notes.
 #
-# At the cutover (not tried):
-#   sudo rsync -a /mnt/Thalamus/Apps/wg_easy/ /persist/data/wg-easy/
+# It never starts without its data: an empty wg-easy would make new server
+# keys, and every client would need a new configuration. It starts once
+# the file `restored` (below) exists.
+#
+# At the cutover (not tried), best done at the machine, not over the VPN:
+#   sudo rsync -a --delete /mnt/Thalamus/Apps/wg_easy/ /persist/data/wg-easy/
+#   sudo touch /persist/data/wg-easy/restored
+#   sudo systemctl start podman-wg-easy
 # Then check in wg-easy's settings (web UI) that:
 #   - the network interface of the NAT rule (eth0 by default) is this
 #     host's: `ip -br link`;
@@ -23,10 +29,11 @@
 let
   wgPort = 51820;
   uiPort = 30058;
+  data = "/persist/data/wg-easy";
 in {
   virtualisation.oci-containers.containers.wg-easy = {
     image = "ghcr.io/wg-easy/wg-easy:15.5.0";
-    volumes = [ "/persist/data/wg-easy:/etc/wireguard" ];
+    volumes = [ "${data}:/etc/wireguard" ];
     environment = {
       PORT = toString uiPort;
       INSECURE = "true";
@@ -39,6 +46,8 @@ in {
     ];
   };
 
+  systemd.services.podman-wg-easy.unitConfig.ConditionPathExists = "${data}/restored";
+
   # With the host network the container cannot set these itself. The host
   # also loads the module, so the container needs no SYS_MODULE.
   boot.kernel.sysctl = {
@@ -47,7 +56,7 @@ in {
   };
   boot.kernelModules = [ "wireguard" ];
 
-  systemd.tmpfiles.rules = [ "d /persist/data/wg-easy 0700 root root -" ];
+  systemd.tmpfiles.rules = [ "d ${data} 0700 root root -" ];
 
   # podman's images, so the VPN comes up after a reboot without the internet
   environment.persistence."/persist".directories = [ "/var/lib/containers" ];

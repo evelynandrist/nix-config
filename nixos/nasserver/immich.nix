@@ -22,10 +22,13 @@
 # out of backups/. It starts once the file `restored` (below) exists.
 #
 # At the cutover (none of this was tried):
-#   1. On the TrueNAS, with Immich running, dump its database. The user and
+#   1. On the TrueNAS: stop the Immich server container first, so no upload
+#      comes in after the dump (`sudo docker ps` for the names), then dump
+#      the database from the postgres container, still running. The user and
 #      database name are in the app's settings (DB_USERNAME, often postgres):
-#        sudo docker exec <postgres container> pg_dump -U <user> -Fc \
-#          --no-owner --no-privileges <database> > /mnt/Thalamus/Apps/immich.dump
+#        sudo docker stop <server container>
+#        sudo sh -c 'docker exec <postgres container> pg_dump -U <user> -Fc \
+#          --no-owner --no-privileges <database> > /mnt/Thalamus/Apps/immich.dump'
 #      Then stop the app and shut down.
 #   2. On NixOS, the module has created an empty database `immich` with its
 #      extensions. Restore into it as the role immich (only root can read
@@ -72,5 +75,9 @@ in {
     ConditionPathExists = restored;
   };
 
-  environment.persistence."/persist".directories = [ "/var/lib/postgresql" ];
+  environment.persistence."/persist".directories = [
+    "/var/lib/postgresql"
+    # the machine learning models, otherwise downloaded again at every boot
+    "/var/cache/immich"
+  ];
 }

@@ -2,39 +2,47 @@
 # Home Assistant on packardserver and by the CO2 sensor, which has this
 # host's address built in.
 #
-# The logins are declared here; the password hashes are sops secrets, one
-# per user, copied from the TrueNAS's password file (each line is
-# `user:hash`; the secret is the hash alone). mosquitto 2.1 reads the 2.0
-# hashes, so nobody needs a new password.
+# The logins are the TrueNAS broker's password file, unchanged, as one sops
+# secret (mosquitto/password_file): the user names stay out of this public
+# repo and nobody needs a new password (mosquitto 2.1 reads the 2.0 hashes).
+# Every login may use every topic.
 #
-# PLACEHOLDER: the user names. Use the ones in the TrueNAS's password file
-# (/mnt/Thalamus/Apps/eclipse-mosquitto/config/), and the ACL if that config
-# had one (everyone may use every topic here).
+# Assumes the TrueNAS broker had password logins and no ACL. Its
+# mosquitto.conf (/mnt/Thalamus/Apps/eclipse-mosquitto/config/) says: with
+# `allow_anonymous true`, the sensor may log in without a password and this
+# would lock it out; with an `acl_file`, that has to come over too.
 #
 # At the cutover (not tried): the retained messages are in mosquitto.db in
 # the app's data folder; copying it is optional (the sensor sends again):
+#   sudo systemctl stop mosquitto
 #   sudo cp /mnt/Thalamus/Apps/eclipse-mosquitto/data/mosquitto.db /var/lib/mosquitto/
 #   sudo chown mosquitto:mosquitto /var/lib/mosquitto/mosquitto.db
-{ config, lib, ... }:
+#   sudo systemctl start mosquitto
+{ config, lib, pkgs, ... }:
 let
-  userNames = [ "homeassistant" "co2sensor" ];
-  secret = name: "mosquitto/${name}_hash";
-  users = lib.genAttrs userNames (name: {
-    hashedPasswordFile = config.sops.secrets.${secret name}.path;
-    acl = [ "readwrite #" ];
-  });
+  listener = extra: {
+    # the module's own password plugin wants every user declared here
+    omitPasswordAuth = true;
+    authPlugins = [{
+      plugin = "${lib.getLib config.services.mosquitto.package}/lib/mosquitto_password_file.so";
+      options.password_file = config.sops.secrets."mosquitto/password_file".path;
+    }];
+    acl = [ "pattern readwrite #" ];
+  } // extra;
 in {
-  sops.secrets = lib.genAttrs (map secret userNames) (_: { });
+  sops.secrets."mosquitto/password_file" = {
+    owner = "mosquitto";
+    restartUnits = [ "mosquitto.service" ];
+  };
 
   services.mosquitto = {
     enable = true;
     listeners = [
-      { port = 1883; inherit users; }
-      {
+      (listener { port = 1883; })
+      (listener {
         port = 8081;
         settings.protocol = "websockets";
-        inherit users;
-      }
+      })
     ];
   };
 

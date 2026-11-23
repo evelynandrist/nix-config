@@ -11,7 +11,8 @@
 # property nixos:shutdown-time at every shutdown (zfs-sync-<pool>), the
 # snapshots below and the `zfs allow` that sanoid sets for itself. Nothing
 # that TrueNAS would mind. Owners and modes are left alone until
-# truenas-owners.nix goes.
+# truenas-owners.nix goes. No TRIM (on by default in NixOS, off on the
+# TrueNAS): the HDDs have none and the SSD is behind USB.
 #
 # TrueNAS imports the pools under /mnt (altroot), so their own mountpoints
 # are /Neocortex, /.ix-apps and so on, and both pools have an ix-apps with
@@ -24,11 +25,18 @@
 # start on an empty folder of the root file system.
 #
 # /mnt/Neocortex is only open to the group `pools` (the services, Evelyn,
-# media-stack), not to `agent`: what the TrueNAS left in the mode bits does
-# not decide that. The NFSv4 ACLs from TrueNAS are not used on Linux.
+# media-stack), not to `agent`: what the TrueNAS left on the pools does not
+# decide that.
+#
+# The TrueNAS's NFSv4 ACLs still count. OpenZFS on Linux cannot show or
+# edit them, but it evaluates the stored entries for looking into, creating
+# and deleting in folders (zfs_zaccess_common); reading and writing a file
+# go by the mode bits. Whether a service gets in is therefore only known by
+# trying as its uid (the rehearsal).
 #
 # Snapshots: sanoid, daily, kept 30 days. Backups/restic as on the TrueNAS
-# (what ../common/truenas-backup.nix relies on); Photos and Share are new.
+# (what ../common/truenas-backup.nix relies on). Photos and Share are new,
+# not asked for: one line each to drop.
 # The TrueNAS's own auto-* snapshots are left alone and do not expire: delete
 # them by hand once the way back is no longer needed.
 #
@@ -72,6 +80,8 @@ in {
     # the TrueNAS's app data includes wg-easy's private keys
     "d /mnt/Thalamus 0700 root root -"
   ];
+
+  services.zfs.trim.enable = false;
 
   services.zfs.autoScrub = {
     enable = true;

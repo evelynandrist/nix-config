@@ -10,7 +10,8 @@
 # as the other hosts (README, pre-install.sh). The TrueNAS boot SSD stays as
 # it is: choosing it in the firmware's boot menu is the way back.
 #
-# The host keeps 192.168.1.56 and the TrueNAS's ports (Immich 30041,
+# The host keeps 192.168.1.56 (from the router, a DHCP reservation for its
+# network card, as for the other hosts) and the TrueNAS's ports (Immich 30041,
 # Jellyfin 30013, rest-server 30080), so the other hosts reach it as
 # before, under the old name truenas.internal.qwt.ch too
 # (../common/lan-hosts.nix).
@@ -84,6 +85,8 @@
   # supported by the open kernel module nor by the current driver branch;
   # 580 is the last branch that has it. There is no X server; this option is
   # still what turns the driver on. The Intel GPU stays unused.
+  # A flake bump that changes the driver is switched to at night but the old
+  # kernel module stays loaded: NVENC fails until the next reboot.
   services.xserver.videoDrivers = [ "nvidia" ];
   hardware.graphics.enable = true;
   hardware.nvidia = {
@@ -105,6 +108,8 @@
     paths = [ "/persist" ];
     exclude = [
       "/persist/var/lib/postgresql"
+      # downloaded again
+      "/persist/var/cache/immich"
       # images, pulled again
       "/persist/var/lib/containers"
     ];
