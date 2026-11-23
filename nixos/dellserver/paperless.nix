@@ -63,6 +63,24 @@ in {
       # 12). Scanned landscape pages were left sideways at 7.6 to 9.7, and
       # no upright page was misjudged anywhere near that.
       PAPERLESS_OCR_ROTATE_PAGES_THRESHOLD = 7;
+
+      # The built-in AI, for title, date and document type. It talks to
+      # ollama on the nixbook (../../darwin/nixbook/ollama.nix), so nothing
+      # leaves the LAN. No embedding backend: that would build a vector
+      # index of every document each night, which nothing here needs.
+      # Until a workflow uses it, it only answers the "Suggest" button on
+      # a document, which shows the result and changes nothing.
+      PAPERLESS_AI_ENABLED = true;
+      PAPERLESS_AI_LLM_BACKEND = "ollama";
+      PAPERLESS_AI_LLM_ENDPOINT = "http://nixbook.internal.qwt.ch:11434";
+      PAPERLESS_AI_LLM_MODEL = "qwen3.5:9b";
+      # The AI's prompt is fixed: it gets the text and the stored file name,
+      # nothing else. So the stored name is the original one instead of
+      # 0000123.pdf, which hands it the subject and topic of the GoodNotes
+      # files ("bio ~ Zoologie ~ x.pdf"). A document already in the archive
+      # is renamed when it is next saved, or all at once with
+      # `sudo paperless-manage document_renamer`.
+      PAPERLESS_FILENAME_FORMAT = "{{ original_name }}";
     };
   };
 
