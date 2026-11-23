@@ -75,7 +75,32 @@ let
   port = 3773;
   home = "/home/agent";
   userdata = "${home}/.t3/userdata";
+  # Dictation only loads models from the catalog bundled into the server, each
+  # checked by size and sha256. This adds one: the Swiss German fine-tune of
+  # Parakeet TDT 0.6B v3 (speech in dialect, text in Standard German; weights
+  # CC BY-NC 4.0). Everything not set here is copied from the stock v3 entry,
+  # so the benchmark grades shown for it are the stock model's. Costs a build
+  # of t3code from source; fails the build if the bundle no longer matches.
+  t3codeUnwrapped = pkgs.t3code.unwrapped.overrideAttrs (old: {
+    postInstall = (old.postInstall or "") + ''
+      substituteInPlace "$out"/libexec/t3code/apps/server/dist/server-*.mjs \
+        --replace-fail 'const SPEECH_MODELS = models.map(' 'models.push({
+        ...models.find((model) => model.id === "handy-computer/parakeet-tdt-0.6b-v3-gguf"),
+        id: "Flurin17/parakeet-tdt-0.6b-v3-swiss-german-gguf",
+        revision: "9fd42ce860829291a16a1d1df49682604a198d94",
+        name: "Parakeet TDT 0.6B v3 Swiss German",
+        description: "Swiss German speech, written as Standard German",
+        filename: "parakeet-tdt-0.6b-v3-swiss-german-Q8_0.gguf",
+        size: 739508672,
+        sha256: "5897ae32e24f5bec40b8316e671e71d885bc248b163238b6b4b53c86969f6e33",
+        license: "cc-by-nc-4.0",
+        languages: ["de"]
+      });
+      const SPEECH_MODELS = models.map('
+    '';
+  });
   t3codeBase = pkgs.t3code.override {
+    t3code-unwrapped = t3codeUnwrapped;
     enableClaude = true;
     enableCodex = false;
     # gh would let T3 open PRs from the app, but only with a token, and any
