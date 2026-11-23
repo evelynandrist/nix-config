@@ -152,6 +152,13 @@
           ./nixos/dellserver/configuration.nix
         ];
       };
+      # the NAS, a draft (nixos/nasserver/configuration.nix)
+      nasserver = nixpkgs.lib.nixosSystem {
+        specialArgs = {inherit inputs outputs;};
+        modules = [
+          ./nixos/nasserver/configuration.nix
+        ];
+      };
     };
 
     # nix-darwin configuration entrypoint
