@@ -26,10 +26,7 @@ let
 in {
   virtualisation.oci-containers.containers.wg-easy = {
     image = "ghcr.io/wg-easy/wg-easy:15.5.0";
-    volumes = [
-      "/persist/data/wg-easy:/etc/wireguard"
-      "/run/current-system/kernel-modules/lib/modules:/lib/modules:ro"
-    ];
+    volumes = [ "/persist/data/wg-easy:/etc/wireguard" ];
     environment = {
       PORT = toString uiPort;
       INSECURE = "true";
@@ -37,11 +34,13 @@ in {
     extraOptions = [
       "--network=host"
       "--cap-add=NET_ADMIN"
-      "--cap-add=SYS_MODULE"
+      # needed under podman (wg-easy's docs)
+      "--cap-add=NET_RAW"
     ];
   };
 
-  # With the host network the container cannot set these itself.
+  # With the host network the container cannot set these itself. The host
+  # also loads the module, so the container needs no SYS_MODULE.
   boot.kernel.sysctl = {
     "net.ipv4.ip_forward" = 1;
     "net.ipv4.conf.all.src_valid_mark" = 1;
