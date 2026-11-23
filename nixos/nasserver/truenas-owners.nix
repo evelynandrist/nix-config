@@ -11,13 +11,13 @@
 #   - nothing chowns or chmods the pools: the modules of the rest-server
 #     and Immich would, at every boot.
 #
-# The change, with the services stopped (assumes 568 owned the
+# The change, with the rest-server stopped (assumes 568 owned the
 # repositories, see the rehearsal):
-#   sudo systemctl stop restic-rest-server.socket restic-rest-server immich-server
+#   sudo systemctl stop restic-rest-server.socket restic-rest-server
 #   sudo chown -R --from=568 restic:restic /mnt/Neocortex/Backups/restic
 #   # anything else of 568's, outside the photos, gets the owner of its service:
 #   sudo find /mnt/Neocortex -path /mnt/Neocortex/Photos -prune -o -uid 568 -print
-# then remove this file and its import in configuration.nix, and switch.
+# then remove this file and its import in configuration.nix, and deploy.
 # The modules then set the folders' modes: the library 0700, the
 # repositories' folder 0700 (user restic's home).
 { config, lib, ... }: {

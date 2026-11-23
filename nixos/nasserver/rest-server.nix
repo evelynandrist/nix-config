@@ -3,9 +3,9 @@
 # through nginx on packardserver (backup.qwt.ch).
 #
 # --private-repos: each login only gets into the repository of its name.
-# The logins are the .htpasswd in the data folder, which the TrueNAS app
-# kept there too, so they come with the data. If it is not there, it is in
-# the app's own folder on Thalamus/Apps: copy it next to the repositories.
+# The logins are read from .htpasswd in the data folder, rest-server's
+# default. If the TrueNAS app kept them there, they come with the data;
+# otherwise copy its file there at the cutover (see the rehearsal).
 #
 # The repositories are protected by the daily snapshots in pools.nix, kept
 # 30 days.
