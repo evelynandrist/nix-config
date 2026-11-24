@@ -1,6 +1,6 @@
 # Radicale: calendars and contacts (CalDAV/CardDAV).
 #
-# Moved here from the TrueNAS so that calendar sync depends on one always-on
+# Moved here from the NAS so that calendar sync depends on one always-on
 # machine only. Reached as radicale.internal.qwt.ch (site in nginx.nix).
 #
 # State, all in /persist/data/radicale (owner radicale:radicale):

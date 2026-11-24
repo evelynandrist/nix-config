@@ -1,12 +1,12 @@
 { config, lib, pkgs, ... }:
 let
-  # rest-server app on the TrueNAS, started with --private-repos
-  restServer = "http://truenas.internal.qwt.ch:30080";
+  # rest-server on cranium, started with --private-repos
+  restServer = "http://cranium.internal.qwt.ch:30080";
 in {
-  imports = [ ../common/truenas-backup.nix ];
+  imports = [ ../common/cranium-backup.nix ];
 
   # All state lives in /persist (impermanence).
-  services.restic.backups.truenas = {
+  services.restic.backups.cranium = {
     paths = [ "/persist" ];
     exclude = [
       # can be regenerated

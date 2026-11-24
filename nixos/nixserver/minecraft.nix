@@ -512,7 +512,7 @@ in {
 
   # Hourly local snapshots, for rolling back. restic only stores changed chunks
   # of the region files, so this grows slowly. Only two weeks are kept here:
-  # every snapshot is copied to the TrueNAS each night and kept there for good
+  # every snapshot is copied to cranium each night and kept there for good
   # (backup.nix), which is also the material for timelapses.
   # Restore: sudo restic -r /persist/backups/minecraft \
   #   -p /persist/backups/minecraft-restic.password snapshots / restore
@@ -535,8 +535,8 @@ in {
       OnCalendar = "hourly";
       Persistent = true;
     };
-    # 48 hourly: a snapshot has to survive here until the nightly copy to the
-    # TrueNAS has picked it up, this leaves room for two days without it.
+    # 48 hourly: a snapshot has to survive here until the nightly copy to
+    # cranium has picked it up, this leaves room for two days without it.
     pruneOpts = [
       "--keep-hourly 48"
       "--keep-daily 14"

@@ -47,7 +47,7 @@
 # in where: pool-access.nix.
 #
 # Snapshots: sanoid, daily, kept 30 days, of Backups/restic as on the TrueNAS
-# (what ../common/truenas-backup.nix relies on), and of Photos and Share
+# (what ../common/cranium-backup.nix relies on), and of Photos and Share
 # (new, Evelyn's decision). Media and Thalamus have none.
 # The TrueNAS's own auto-* snapshots are left alone and do not expire: delete
 # them by hand once the way back is no longer needed.

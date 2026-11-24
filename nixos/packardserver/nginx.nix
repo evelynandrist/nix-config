@@ -47,7 +47,7 @@
 	enableACME = true;
 	forceSSL = true;
 	locations."/" = {
-	  proxyPass = "http://truenas.internal.qwt.ch:30041";
+	  proxyPass = "http://cranium.internal.qwt.ch:30041";
 	  proxyWebsockets = true;
 	};
 	extraConfig = ''
@@ -72,7 +72,7 @@
 	enableACME = true;
 	forceSSL = true;
 	locations."/" = {
-	  proxyPass = "http://truenas.internal.qwt.ch:30013";
+	  proxyPass = "http://cranium.internal.qwt.ch:30013";
 	  proxyWebsockets = true;
 	};
       };
@@ -86,10 +86,6 @@
 	};
       };
       "sabnzbd.internal.qwt.ch" = internalSite { upstream = "http://127.0.0.1:8080"; };
-      "nas.internal.qwt.ch" = internalSite {
-        upstream = "http://truenas.internal.qwt.ch";
-        websockets = true;
-      };
       "radicale.internal.qwt.ch" = internalSite {
         upstream = "http://127.0.0.1:5232";
         # imports of whole calendars or address books

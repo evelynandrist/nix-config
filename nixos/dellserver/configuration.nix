@@ -9,7 +9,7 @@
   imports = [
     ../common/configuration.nix
     ../common/lan-hosts.nix
-    ../common/truenas-backup.nix
+    ../common/cranium-backup.nix
     ../common/hardening.nix
     ../common/agent-access.nix
 
@@ -79,10 +79,10 @@
   # time. Left out of the backup: images can be pulled again, and container
   # data belongs in /persist/data, not in Docker's own volumes.
   environment.persistence."/persist".directories = [ "/var/lib/docker" ];
-  services.restic.backups.truenas.exclude = [ "/persist/var/lib/docker" ];
+  services.restic.backups.cranium.exclude = [ "/persist/var/lib/docker" ];
 
   # All state lives in /persist (impermanence).
-  services.restic.backups.truenas.paths = [ "/persist" ];
+  services.restic.backups.cranium.paths = [ "/persist" ];
 
   home-manager = {
     extraSpecialArgs = { inherit inputs outputs; };

@@ -183,7 +183,7 @@ in {
 
   # The two settings files and the skills written by hand. Listed only when
   # they exist: a missing path makes restic fail the whole run.
-  services.restic.backups.truenas.dynamicFilesFrom = ''
+  services.restic.backups.cranium.dynamicFilesFrom = ''
     for f in ${userdata}/settings.json ${userdata}/keybindings.json ${home}/.claude/skills/*; do
       case "$f" in */synced) continue ;; esac
       [ -e "$f" ] && echo "$f"

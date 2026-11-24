@@ -1,7 +1,7 @@
-# The two SMB shares of the TrueNAS:
+# The two SMB shares, as the TrueNAS had them:
 #
-#   \\truenas\Share  ->  /mnt/Neocortex/Share   Evelyn
-#   \\truenas\Media  ->  /mnt/Neocortex/Media   Evelyn, media-stack
+#   \\cranium\Share  ->  /mnt/Neocortex/Share   Evelyn
+#   \\cranium\Media  ->  /mnt/Neocortex/Media   Evelyn, media-stack
 #
 # media-stack is the account packardserver mounts Media with (Sonarr and
 # Radarr write there, ../packardserver/media-stack.nix). It keeps its

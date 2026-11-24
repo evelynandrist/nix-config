@@ -1,6 +1,6 @@
 ---
 name: deploy
-description: Get a nix-config change onto a host - build, push a branch, hand Evelyn the link that opens the pull request with the test-deploy label, test-deploy it, check the result. Use whenever a change in this repo should be tried on or shipped to dellserver, packardserver or nixserver.
+description: Get a nix-config change onto a host - build, push a branch, hand Evelyn the link that opens the pull request with the test-deploy label, test-deploy it, check the result. Use whenever a change in this repo should be tried on or shipped to dellserver, packardserver, cranium or nixserver.
 ---
 
 # Deploying a nix-config change
@@ -46,7 +46,7 @@ On nixpad there is no such loop: show Evelyn the diff, she deploys.
 5. **Test-deploy.**
 
    ```sh
-   ssh <host> sudo agent-test-deploy <number>     # packardserver, nixserver.qwt.ch
+   ssh <host> sudo agent-test-deploy <number>     # packardserver, cranium, nixserver.qwt.ch
    sudo agent-test-deploy <number>                # dellserver itself
    ```
 
