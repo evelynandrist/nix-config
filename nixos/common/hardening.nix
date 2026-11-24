@@ -67,7 +67,7 @@ in {
           $geoip2_country_code country iso_code;
         }
 
-        # LAN, VPN (arrives as the TrueNAS) and the host itself: these
+        # LAN, VPN (arrives as cranium) and the host itself: these
         # addresses have no country.
         geo $geo_local {
           default        0;
@@ -116,7 +116,7 @@ in {
 
     services.fail2ban = {
       enable = true;
-      # Never the LAN: VPN clients all arrive as the TrueNAS, so one ban
+      # Never the LAN: VPN clients all arrive as cranium, so one ban
       # there would lock out everyone on the VPN.
       ignoreIP = [ "192.168.1.0/24" ];
       maxretry = 5;

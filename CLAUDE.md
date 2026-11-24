@@ -11,6 +11,7 @@ private details in files or commit messages. Secrets go through sops-nix
 | `nixpad` | laptop (Hyprland) | Evelyn's own machine |
 | `dellserver` | home server | Paperless, Samba, the agent workspace (T3 Code, `nixos/dellserver/agent.nix`) |
 | `packardserver` | home server | nginx for `*.internal.qwt.ch`, Home Assistant, media |
+| `cranium` | NAS | ZFS pools, Immich, Jellyfin, Samba, the backup target of all hosts, the VPN |
 | `nixserver` | public VPS, `nixserver.qwt.ch` | mail, Vaultwarden, the Minecraft server (skill `obstgarten`) |
 | `nixbook` | Mac (nix-darwin) | iOS builds |
 

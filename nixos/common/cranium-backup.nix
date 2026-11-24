@@ -1,13 +1,13 @@
-# Nightly restic backup to the rest-server on the TrueNAS.
+# Nightly restic backup to the rest-server on cranium, the NAS.
 #
 # Not imported by default: a host imports this file and sets
-# services.restic.backups.truenas.paths (and excludes) itself.
+# services.restic.backups.cranium.paths (and excludes) itself.
 #
 # The rest-server runs with --private-repos, so a host only gets into its own
 # repository (/<hostname>/). It is not append-only: every host prunes its own
 # old snapshots after the backup. What protects against a host that deletes
 # its repository (compromised, or a mistake) are the ZFS snapshots of the
-# dataset on the TrueNAS, kept for 30 days.
+# dataset on cranium, kept for 30 days.
 #
 # It is reached through nginx on packardserver (backup.qwt.ch), nothing is
 # mounted. Secrets, per host, in secrets/secrets.yaml:
@@ -15,9 +15,9 @@
 #   backup/<hostname>/rest_password   the host's login on the rest-server
 #   backup/ha_webhook_id              Home Assistant webhook for failures
 #
-# Run now:  sudo systemctl start restic-backups-truenas.service
-# Inspect:  sudo restic-truenas snapshots
-# Restore:  sudo restic-truenas restore latest --target /tmp/restore --include /persist/data/...
+# Run now:  sudo systemctl start restic-backups-cranium.service
+# Inspect:  sudo restic-cranium snapshots
+# Restore:  sudo restic-cranium restore latest --target /tmp/restore --include /persist/data/...
 { config, lib, pkgs, ... }:
 let
   host = config.networking.hostName;
@@ -30,18 +30,18 @@ in {
   };
 
   # Read twice: by systemd (EnvironmentFile) for the nightly run and by the
-  # shell for the restic-truenas command. The quotes keep the shell from
+  # shell for the restic-cranium command. The quotes keep the shell from
   # interpreting spaces, $ and the like in the password; systemd drops them.
   # The password itself must not contain a single quote.
-  sops.templates."restic-truenas.env".content = ''
+  sops.templates."restic-cranium.env".content = ''
     RESTIC_REST_USERNAME=${host}
     RESTIC_REST_PASSWORD='${config.sops.placeholder.${secret "rest_password"}}'
   '';
 
-  services.restic.backups.truenas = {
+  services.restic.backups.cranium = {
     repository = "rest:https://backup.qwt.ch/${host}/";
     passwordFile = config.sops.secrets.${secret "repo_password"}.path;
-    environmentFile = config.sops.templates."restic-truenas.env".path;
+    environmentFile = config.sops.templates."restic-cranium.env".path;
     initialize = true;
     exclude = [
       "**/.cache"
@@ -65,9 +65,9 @@ in {
 
   # Push notification to the phone when a backup fails. The webhook triggers
   # an automation in Home Assistant, which knows the notify service.
-  systemd.services.restic-backups-truenas.unitConfig.OnFailure = [ "restic-truenas-failed.service" ];
-  systemd.services.restic-truenas-failed = {
-    description = "Report a failed TrueNAS backup to Home Assistant";
+  systemd.services.restic-backups-cranium.unitConfig.OnFailure = [ "restic-cranium-failed.service" ];
+  systemd.services.restic-cranium-failed = {
+    description = "Report a failed backup to cranium to Home Assistant";
     serviceConfig.Type = "oneshot";
     script = ''
       ${pkgs.curl}/bin/curl -fsS --retry 5 --retry-delay 30 --retry-all-errors \

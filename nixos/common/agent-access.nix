@@ -15,7 +15,7 @@
 #   sudo systemctl start nixos-upgrade.service
 #     Returns the host to main now.
 #
-# Imported by packardserver, dellserver and nixserver.
+# Imported by packardserver, dellserver, cranium and nixserver.
 { config, pkgs, ... }:
 let
   repo = "evelynandrist/nix-config";

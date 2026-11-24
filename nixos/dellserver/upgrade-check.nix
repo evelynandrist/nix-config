@@ -2,7 +2,7 @@
 # (../common/auto-upgrade.nix).
 #
 # Runs as `agent`. It looks at dellserver itself and, over ssh, at
-# packardserver and nixserver (../common/agent-access.nix), and starts a T3
+# packardserver, cranium and nixserver (../common/agent-access.nix), and starts a T3
 # thread when the failed units of a host are not the ones of the last
 # check. The agent then reads the journal and proposes a fix or a revert as
 # a branch. A unit that stays failed is reported once, not every night.
@@ -27,7 +27,7 @@
 { config, pkgs, ... }:
 let
   # dellserver is looked at without ssh
-  remoteHosts = [ "packardserver" "nixserver.qwt.ch" ];
+  remoteHosts = [ "packardserver" "cranium" "nixserver.qwt.ch" ];
   # T3's project, where the thread starts
   project = "${config.users.users.agent.home}/repos/nix-config";
 

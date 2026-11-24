@@ -34,7 +34,7 @@
   imports = [
     ../common/configuration.nix
     ../common/lan-hosts.nix
-    ../common/truenas-backup.nix
+    ../common/cranium-backup.nix
     ../common/agent-access.nix
 
     ./hardware-configuration.nix
@@ -99,7 +99,7 @@
   # copying the files of a running PostgreSQL does not give a usable copy.
   # Immich dumps it every night into its own folder on the pool instead
   # (immich.nix).
-  services.restic.backups.truenas = {
+  services.restic.backups.cranium = {
     paths = [ "/persist" ];
     exclude = [
       "/persist/var/lib/postgresql"

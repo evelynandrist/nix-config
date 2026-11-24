@@ -6,7 +6,7 @@ in {
   # imports = [ ./bitthief.nix ];
 
   fileSystems."/mnt/neocortexmedia" = {
-    device = "//truenas.internal.qwt.ch/Media";
+    device = "//cranium.internal.qwt.ch/Media";
     fsType = "cifs";
     options = let
       # this line prevents hanging on network split
@@ -19,7 +19,7 @@ in {
 
   users.groups."${group}".gid = 992;
 
-  # jellyfin runs on the TrueNAS (jellyfin.qwt.ch in nginx.nix proxies there)
+  # jellyfin runs on cranium (jellyfin.qwt.ch in nginx.nix proxies there)
 
   services.sonarr = {
     enable = true;

@@ -1,5 +1,5 @@
 # restic rest-server: the backup target of all hosts
-# (../common/truenas-backup.nix), at port 30080 as on the TrueNAS, reached
+# (../common/cranium-backup.nix), at port 30080 as on the TrueNAS, reached
 # through nginx on packardserver (backup.qwt.ch).
 #
 # --private-repos: each login only gets into the repository of its name.

@@ -1,31 +1,31 @@
 { config, lib, pkgs, ... }:
 let
   local = config.services.restic.backups.minecraft;
-  truenas = config.services.restic.backups.truenas;
+  cranium = config.services.restic.backups.cranium;
 
   # Second repository of this host on the rest-server, next to the general
   # one: same login, same password, but nothing is ever forgotten in it.
   archiveEnv = {
     RESTIC_REPOSITORY = "rest:https://backup.qwt.ch/${config.networking.hostName}/minecraft/";
-    RESTIC_PASSWORD_FILE = truenas.passwordFile;
+    RESTIC_PASSWORD_FILE = cranium.passwordFile;
   };
 
   # sudo restic-minecraft-archive snapshots / mount / restore ...
   archiveWrapper = pkgs.writeShellScriptBin "restic-minecraft-archive" ''
     set -a
-    . ${truenas.environmentFile}
+    . ${cranium.environmentFile}
     set +a
     ${lib.concatStrings (lib.mapAttrsToList (k: v: "export ${k}=${lib.escapeShellArg v}\n") archiveEnv)}
     exec ${pkgs.restic}/bin/restic "$@"
   '';
 in {
-  imports = [ ../common/truenas-backup.nix ];
+  imports = [ ../common/cranium-backup.nix ];
 
   # All state lives in /persist (impermanence).
-  services.restic.backups.truenas = {
+  services.restic.backups.cranium = {
     paths = [ "/persist" ];
     exclude = [
-      # Minecraft has its own way to the TrueNAS, see below: not the live
+      # Minecraft has its own way to cranium, see below: not the live
       # world (it would be copied while the server writes to it), and not the
       # local restic repository as plain files either.
       "/persist/data/minecraft-servers"
@@ -37,20 +37,20 @@ in {
   # sqlite dump to /persist/data/vaultwarden every night at 23:00.
 
   #############################################################################
-  #                       Minecraft archive on the TrueNAS                    #
+  #                       Minecraft archive on cranium                        #
   #############################################################################
 
   # Every night, the snapshots of the local hourly repository (minecraft.nix)
-  # that the TrueNAS does not have yet are copied over, as snapshots: the
+  # that cranium does not have yet are copied over, as snapshots: the
   # archive ends up with one per hour, without pausing the world a second
   # time. The local repository only keeps two weeks; the archive keeps
   # everything, which is what a timelapse gets rendered from later.
   # A day of play adds ~200 MB, a quiet day a few MB (measured 2026-11).
   systemd.services.restic-minecraft-archive = {
-    description = "Copy the local minecraft snapshots to the TrueNAS";
+    description = "Copy the local minecraft snapshots to cranium";
     wants = [ "network-online.target" ];
     after = [ "network-online.target" ];
-    unitConfig.OnFailure = [ "restic-truenas-failed.service" ];
+    unitConfig.OnFailure = [ "restic-cranium-failed.service" ];
     environment = archiveEnv // {
       RESTIC_FROM_REPOSITORY = local.repository;
       RESTIC_FROM_PASSWORD_FILE = local.passwordFile;
@@ -59,7 +59,7 @@ in {
     path = [ pkgs.restic ];
     serviceConfig = {
       Type = "oneshot";
-      EnvironmentFile = truenas.environmentFile;
+      EnvironmentFile = cranium.environmentFile;
       CacheDirectory = "restic-minecraft-archive";
     };
     script = ''

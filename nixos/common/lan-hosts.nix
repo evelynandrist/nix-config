@@ -20,7 +20,7 @@ let
     packardserver = "192.168.1.170";
   };
   # Old names that still point at a machine. The NAS ran TrueNAS under the
-  # name truenas, which the other hosts and the Cloudflare record still use.
+  # name truenas, which things outside this repo may still use.
   aliases = {
     cranium = [ "truenas" ];
   };
@@ -30,6 +30,6 @@ in {
       ([ name ] ++ aliases.${name} or [ ]))
   ) machines;
 
-  # short names for everything else under the domain (sonarr, nas, ...)
+  # short names for everything else under the domain (sonarr, radarr, ...)
   networking.search = [ domain ];
 }
