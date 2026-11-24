@@ -97,3 +97,12 @@ mount $bootDrive /mnt/boot
 echo "Creating swap file..."
 
 btrfs filesystem mkswapfile --size 16g --uuid clear /mnt/swap/swapfile
+
+echo "Writing a machine id..."
+
+# Without this, impermanence writes "uninitialized" to
+# /persist/etc/machine-id, and since systemd-machine-id-commit is suppressed
+# (nixos/common/configuration.nix) it is never replaced: the host gets a new
+# random machine id at every boot. An existing id is kept as it is.
+mkdir -p /mnt/persist/etc
+systemd-machine-id-setup --root=/mnt/persist
