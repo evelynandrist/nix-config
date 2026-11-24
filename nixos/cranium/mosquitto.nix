@@ -46,7 +46,16 @@ in {
     ];
   };
 
-  environment.persistence."/persist".directories = [ "/var/lib/mosquitto" ];
+  # With owner and mode: impermanence creates a missing directory in
+  # /persist as root:root 0755, and the module does not fix that, so
+  # mosquitto could not write there after the install (2026-11-24).
+  # Applies only when the directory is created.
+  environment.persistence."/persist".directories = [{
+    directory = "/var/lib/mosquitto";
+    user = "mosquitto";
+    group = "mosquitto";
+    mode = "0700";
+  }];
 
   networking.firewall.allowedTCPPorts = [ 1883 8081 ];
 }
