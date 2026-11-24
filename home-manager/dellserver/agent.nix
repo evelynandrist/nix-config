@@ -162,8 +162,13 @@ in {
     # The agent on dellserver
 
     - No GitHub or Bitbucket login: you can push branches, but not open, label
-      or merge pull requests. Give Evelyn the link instead:
-      https://github.com/<owner>/<repo>/compare/<base>...<branch>?quick_pull=1
+      or merge pull requests. Give Evelyn the link that opens it filled in:
+      https://github.com/<owner>/<repo>/compare/<base>...<branch>?quick_pull=1&title=<title>&body=<body>
+      Title: what the branch does, written like a commit subject. Body: at most
+      two short lines of why the diff does not show; no headings, lists, test
+      plan or footer; leave it out if there is nothing to say. Encode each with
+      `jq -rn --arg s "<text>" '$s|@uri'`, never by hand. Write title and body
+      above the link as plain text too: the phone app ignores the link.
     - No sudo password. If something needs root or a secret, give Evelyn the
       exact command.
     - iOS and macOS builds run on the Mac: `mac` prints the help. Only `~/t3`
