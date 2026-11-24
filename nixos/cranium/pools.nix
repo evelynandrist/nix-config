@@ -3,16 +3,23 @@
 #   Neocortex  raidz1 of three 16 TB disks (USB): Photos, Media, Share, Backups
 #   Thalamus   one 2 TB SSD (USB), no redundancy: the TrueNAS's app data
 #
+# The TrueNAS's boot-pool, on a third USB disk, is never imported here.
+#
 # Never run `zpool upgrade` on them: the pools have no feature newer than
 # OpenZFS 2.2, which is what keeps the way back to TrueNAS open. NixOS does
 # not upgrade by itself; `zpool status` suggests it, ignore that.
 #
+# The host id is the TrueNAS's (`hostid` there, 2026-11-24). ZFS refuses to
+# import a pool last used by another host id without -f; with the same one,
+# NixOS and TrueNAS both import the pools as their own and the way back
+# needs no forced import.
+#
 # What NixOS writes to the pools without being asked: the import itself, a
 # property nixos:shutdown-time at every shutdown (zfs-sync-<pool>), the
 # snapshots below and the `zfs allow` that sanoid sets for itself. Nothing
-# that TrueNAS would mind. Owners and modes are left alone until
-# truenas-owners.nix goes. No TRIM (on by default in NixOS, off on the
-# TrueNAS): the HDDs have none and the SSD is behind USB.
+# that TrueNAS would mind. No owners, modes or ACLs (pool-access.nix). No
+# TRIM (on by default in NixOS, off on the TrueNAS): the HDDs have none and
+# the SSD is behind USB.
 #
 # TrueNAS imports the pools under /mnt (altroot), so their own mountpoints
 # are /Neocortex, /.ix-apps and so on, and both pools have an ix-apps with
@@ -24,19 +31,24 @@
 # that use a dataset require its mount (RequiresMountsFor), so they do not
 # start on an empty folder of the root file system.
 #
-# /mnt/Neocortex is only open to the group `pools` (the services, Evelyn,
-# media-stack), not to `agent`: what the TrueNAS left on the pools does not
-# decide that.
+# /mnt/Neocortex (a folder on the NVMe, not on the pool) is only open to the
+# group `pools`: the services, Evelyn and media-stack, not `agent`.
 #
-# The TrueNAS's NFSv4 ACLs still count. OpenZFS on Linux cannot show or
-# edit them, but it evaluates the stored entries for looking into, creating
-# and deleting in folders (zfs_zaccess_common); reading and writing a file
-# go by the mode bits. Whether a service gets in is therefore only known by
-# trying as its uid (the rehearsal).
+# Photos, Media, Share and Backups/restic still carry the TrueNAS's NFSv4
+# ACLs (acltype=nfsv4, aclinherit=passthrough). On Linux, OpenZFS treats
+# that acltype as off: access goes by the mode bits alone, the stored entries
+# grant nothing and practically never refuse (only an explicit deny entry on
+# delete would count; nobody has looked for one). They still set the mode of
+# new files: a new file or folder inherits its folder's entries, and its mode
+# is computed from them, not from the umask: 770 here, for files too. With
+# aclmode=restricted (Media, Share) a chmod of anything with such an ACL
+# fails with EPERM, for root too; Photos and Backups/restic have
+# aclmode=passthrough. Read in the OpenZFS 2.4.4 source, not tried. Who gets
+# in where: pool-access.nix.
 #
-# Snapshots: sanoid, daily, kept 30 days. Backups/restic as on the TrueNAS
-# (what ../common/truenas-backup.nix relies on). Photos and Share are new,
-# not asked for: one line each to drop.
+# Snapshots: sanoid, daily, kept 30 days, of Backups/restic as on the TrueNAS
+# (what ../common/truenas-backup.nix relies on), and of Photos and Share
+# (new, Evelyn's decision). Media and Thalamus have none.
 # The TrueNAS's own auto-* snapshots are left alone and do not expire: delete
 # them by hand once the way back is no longer needed.
 #
@@ -57,11 +69,8 @@ in {
   boot.supportedFilesystems = [ "zfs" ];
   boot.zfs.forceImportRoot = false;
 
-  # PLACEHOLDER. Set it to the TrueNAS's own (`hostid` there prints it).
-  # ZFS refuses to import a pool last used by another host id without -f;
-  # with the same one, NixOS and TrueNAS both import the pools as their own
-  # and the way back needs no forced import.
-  networking.hostId = "00000000";
+  # the TrueNAS's, see above
+  networking.hostId = "0aea1436";
 
   fileSystems = {
     "/mnt/Neocortex/Photos" = dataset "Neocortex/Photos" [ ];

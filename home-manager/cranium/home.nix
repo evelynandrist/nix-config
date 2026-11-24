@@ -10,6 +10,6 @@
 }: {
   imports = [
     ../common/home.nix
-    ../../nixos/nasserver/userconfig.nix
+    ../../nixos/cranium/userconfig.nix
   ];
 }

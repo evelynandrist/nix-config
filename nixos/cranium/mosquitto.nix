@@ -7,10 +7,10 @@
 # repo and nobody needs a new password (mosquitto 2.1 reads the 2.0 hashes).
 # Every login may use every topic.
 #
-# Assumes the TrueNAS broker had password logins and no ACL. Its
-# mosquitto.conf (/mnt/Thalamus/Apps/eclipse-mosquitto/config/) says: with
-# `allow_anonymous true`, the sensor may log in without a password and this
-# would lock it out; with an `acl_file`, that has to come over too.
+# As on the TrueNAS (seen 2026-11-24): the app's own config include is the
+# one line `password_file`, with no `allow_anonymous` (so no anonymous
+# logins, the default of mosquitto 2) and no `acl_file`. The file is
+# /mnt/Thalamus/Apps/eclipse-mosquitto/config/passwords there.
 #
 # At the cutover (not tried): the retained messages are in mosquitto.db in
 # the app's data folder; copying it is optional (the sensor sends again):

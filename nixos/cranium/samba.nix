@@ -5,11 +5,20 @@
 #
 # media-stack is the account packardserver mounts Media with (Sonarr and
 # Radarr write there, ../packardserver/media-stack.nix). It keeps its
-# TrueNAS uid, 3003, as Evelyn keeps 3000 (configuration.nix), so the files
-# on the pool stay theirs.
+# TrueNAS uid, 3003, as Evelyn keeps 3000 (configuration.nix).
+#
+# Media is shared through the group media (pool-access.nix): whatever
+# Evelyn or media-stack write there gets that group (`force group`), so
+# Jellyfin and the other account can read it. The mode, 770, comes from the
+# folder's inherited ACL entries, not from Samba.
+#
+# A client that sets permissions (a Mac or Windows after a copy) makes
+# Samba chmod, which ZFS refuses on Media and Share (aclmode=restricted,
+# pools.nix). The way out is in pool-access.nix.
 #
 # The Samba passwords are sops secrets, set again at every boot (Samba's
-# password database is not kept, as on dellserver). media-stack's has to be
+# password database is not kept, as on dellserver). Evelyn's is the one she
+# uses for the share today, so no laptop changes; media-stack's has to be
 # the one in ../packardserver/media-stack.nix.
 #
 # streams_xattr, as TrueNAS has it: Windows and macOS keep extra data of a
@@ -38,9 +47,6 @@ in {
   };
   users.groups.media-stack.gid = 3003;
 
-  users.users.${username}.extraGroups = [ "pools" ];
-  users.users.media-stack.extraGroups = [ "pools" ];
-
   services.samba = {
     enable = true;
     nmbd.enable = false;
@@ -58,7 +64,9 @@ in {
       };
 
       Share = share "/mnt/Neocortex/Share" username;
-      Media = share "/mnt/Neocortex/Media" "${username} media-stack";
+      Media = share "/mnt/Neocortex/Media" "${username} media-stack" // {
+        "force group" = "media";
+      };
     };
   };
 

@@ -1,10 +1,10 @@
-# PLACEHOLDER until NixOS is installed: replace the module lists with what
-# `nixos-generate-config --show-hardware-config` prints on the machine (only
-# these lines; the file systems are in ../common/hardware-configuration.nix
-# and the pools in pools.nix).
+# The kernel modules the hardware needs early, from `lspci -k` on the TrueNAS
+# (2026-11-24): the USB controllers use xhci_pci, the SATA controller ahci,
+# the NVMe nvme; usb_storage, uas and sd_mod for the disks on USB. The
+# network card (enp60s0, alx) loads later by itself.
 #
-# Guessed from the hardware list of the TrueNAS (i7-8750H laptop, NVMe,
-# Intel AHCI, the disks on USB).
+# Only the module lines: the file systems are in
+# ../common/hardware-configuration.nix and the pools in pools.nix.
 { config, lib, pkgs, modulesPath, ... }:
 
 {

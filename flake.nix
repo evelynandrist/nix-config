@@ -152,11 +152,11 @@
           ./nixos/dellserver/configuration.nix
         ];
       };
-      # the NAS, a draft (nixos/nasserver/configuration.nix)
-      nasserver = nixpkgs.lib.nixosSystem {
+      # the NAS (nixos/cranium/configuration.nix)
+      cranium = nixpkgs.lib.nixosSystem {
         specialArgs = {inherit inputs outputs;};
         modules = [
-          ./nixos/nasserver/configuration.nix
+          ./nixos/cranium/configuration.nix
         ];
       };
     };

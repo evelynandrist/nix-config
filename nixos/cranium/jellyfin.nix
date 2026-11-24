@@ -3,9 +3,9 @@
 #
 # Its state is in /var/lib/jellyfin on the NVMe. The media are on the pool,
 # shown to Jellyfin at /Media, the path it knew them by in the container, so
-# the libraries, and with them what was watched, stay as they are. Sonarr
-# and Radarr on packardserver write there through the Samba share
-# (samba.nix).
+# the libraries, and with them what was watched, stay as they are. It reads
+# them through the group media (pool-access.nix). Sonarr and Radarr on
+# packardserver write there through the Samba share (samba.nix).
 #
 # The port and the hardware acceleration are Jellyfin's own settings
 # (network.xml, encoding.xml), so they come with the copied config.
@@ -34,8 +34,6 @@ let
   restored = "${config.services.jellyfin.dataDir}/restored";
 in {
   services.jellyfin.enable = true;
-
-  users.users.jellyfin.extraGroups = [ "pools" ];
 
   systemd.services.jellyfin = {
     unitConfig = {

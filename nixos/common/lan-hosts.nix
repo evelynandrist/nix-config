@@ -13,7 +13,7 @@
 let
   domain = "internal.qwt.ch";
   machines = {
-    nasserver = "192.168.1.56";
+    cranium = "192.168.1.56";
     dellserver = "192.168.1.57";
     anycubic = "192.168.1.120";
     nixbook = "192.168.1.131";
@@ -22,7 +22,7 @@ let
   # Old names that still point at a machine. The NAS ran TrueNAS under the
   # name truenas, which the other hosts and the Cloudflare record still use.
   aliases = {
-    nasserver = [ "truenas" ];
+    cranium = [ "truenas" ];
   };
 in {
   networking.hosts = lib.mapAttrs' (name: address:

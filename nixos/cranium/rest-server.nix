@@ -4,13 +4,14 @@
 #
 # --private-repos: each login only gets into the repository of its name.
 # The logins are read from .htpasswd in the data folder, rest-server's
-# default. If the TrueNAS app kept them there, they come with the data;
-# otherwise copy its file there at the cutover (see the rehearsal).
+# default, where the TrueNAS app kept them too (seen 2026-11-24), so they
+# come with the pool. Each host's login is its host name; cranium's own line
+# is added there before the cutover (the cutover notes).
 #
 # The repositories are protected by the daily snapshots in pools.nix, kept
 # 30 days.
 #
-# Until the owners are changed it runs as uid 568 (truenas-owners.nix).
+# It runs as uid 568, the owner of the repositories (pool-access.nix).
 { config, lib, pkgs, ... }:
 let
   dataDir = "/mnt/Neocortex/Backups/restic";
@@ -19,10 +20,9 @@ in {
     enable = true;
     listenAddress = "30080";
     inherit dataDir;
-    privateRepos = true;
+    # not the module's privateRepos, which chowns .htpasswd (pool-access.nix)
+    extraFlags = [ "--private-repos" ];
   };
-
-  users.users.restic.extraGroups = [ "pools" ];
 
   systemd.services.restic-rest-server.unitConfig.RequiresMountsFor = [ dataDir ];
 

@@ -42,7 +42,7 @@
 let
   repo = "evelynandrist/nix-config";
   branch = "auto/flake-update";
-  hosts = [ "nixpad" "nixserver" "packardserver" "dellserver" "nasserver" ];
+  hosts = [ "nixpad" "nixserver" "packardserver" "dellserver" "cranium" ];
   # T3's project, where the thread starts
   project = "${config.users.users.agent.home}/repos/nix-config";
 in {
