@@ -13,15 +13,21 @@
 let
   domain = "internal.qwt.ch";
   machines = {
-    truenas = "192.168.1.56";
+    cranium = "192.168.1.56";
     dellserver = "192.168.1.57";
     anycubic = "192.168.1.120";
     nixbook = "192.168.1.131";
     packardserver = "192.168.1.170";
   };
+  # Old names that still point at a machine. The NAS ran TrueNAS under the
+  # name truenas, which the other hosts and the Cloudflare record still use.
+  aliases = {
+    cranium = [ "truenas" ];
+  };
 in {
   networking.hosts = lib.mapAttrs' (name: address:
-    lib.nameValuePair address [ "${name}.${domain}" name ]
+    lib.nameValuePair address (lib.concatMap (n: [ "${n}.${domain}" n ])
+      ([ name ] ++ aliases.${name} or [ ]))
   ) machines;
 
   # short names for everything else under the domain (sonarr, nas, ...)

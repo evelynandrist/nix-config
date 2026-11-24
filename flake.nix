@@ -152,6 +152,13 @@
           ./nixos/dellserver/configuration.nix
         ];
       };
+      # the NAS (nixos/cranium/configuration.nix)
+      cranium = nixpkgs.lib.nixosSystem {
+        specialArgs = {inherit inputs outputs;};
+        modules = [
+          ./nixos/cranium/configuration.nix
+        ];
+      };
     };
 
     # nix-darwin configuration entrypoint
