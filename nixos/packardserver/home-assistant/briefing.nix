@@ -149,7 +149,11 @@ in {
       Type = "oneshot";
       User = "briefing";
       Group = "briefing";
-      ExecStart = "${lib.getExe pkgs.briefing} --config ${briefingConfig} %i";
+      # A switch that restarts Home Assistant takes it away for a minute or
+      # two. A run in that gap failed, and with it the nightly upgrade:
+      # wait up to two minutes for the port instead.
+      ExecStartPre = "${lib.getExe pkgs.curl} -s -o /dev/null --retry 12 --retry-delay 10 --retry-connrefused http://127.0.0.1:8123/";
+      ExecStart ="${lib.getExe pkgs.briefing} --config ${briefingConfig} %i";
       LoadCredential = [
         "ha_token:${config.sops.secrets."briefing/ha_token".path}"
         "imap_password:${config.sops.secrets."email/logins/evelyn".path}"
