@@ -131,7 +131,7 @@ in {
          out the rest.
       3. Push a fix with: git push origin HEAD:${branch}
       4. End with the link that opens the pull request:
-         https://github.com/${repo}/compare/main...${branch}?quick_pull=1
+         https://github.com/${repo}/compare/main...${branch}?quick_pull=1&title=<title>&body=<body>
 
       A test deploy before the merge is there when Evelyn asks for it: she
       sets the label test-deploy on the pull request and says so here. Then

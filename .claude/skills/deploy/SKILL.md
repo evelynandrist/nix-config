@@ -26,7 +26,7 @@ On nixpad there is no such loop: show Evelyn the diff, she deploys.
    filled in, so creating the PR is also her approval of the test deploy:
 
    ```
-   https://github.com/evelynandrist/nix-config/compare/main...<branch>?quick_pull=1&labels=test-deploy
+   https://github.com/evelynandrist/nix-config/compare/main...<branch>?quick_pull=1&labels=test-deploy&title=<title>&body=<body>
    ```
 
    Say which hosts you want to test-deploy on, and whether that restarts
