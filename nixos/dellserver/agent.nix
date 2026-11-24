@@ -122,6 +122,7 @@ in {
     # for test deploys (../common/agent-access.nix)
     "packardserver".publicKey = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIC+DM5/muda4czqL7luaLqVfuS67fb9sYZiw6bXbHp+V";
     "nixserver.qwt.ch".publicKey = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAINeSBKfQ3vO2GZbGQFMzFC5G5HVf2D5E04eQmkaoPgUs";
+    "cranium".publicKey = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIDDDeyIdgE+Hu3kqu3vLosZnyVtB2Qe6PXozu4IjDfKW";
     # iOS builds (`mac`, home-manager/dellserver/agent.nix)
     "nixbook.internal.qwt.ch".publicKey = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIN9UeWoyTfsPkpgv8dyCF5icOLdac7+I528tlLxQkCkp";
   };

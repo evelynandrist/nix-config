@@ -52,11 +52,6 @@
 
   networking.hostName = "cranium";
 
-  # REMOVE once Evelyn has added this host's secrets to secrets/secrets.yaml
-  # (backup/cranium/, samba/, mosquitto/). Until then the build would fail on
-  # them: the check looks up every secret in the file.
-  sops.validateSopsFiles = false;
-
   boot.loader = {
     grub = {
       enable = true;
