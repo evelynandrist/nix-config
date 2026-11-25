@@ -49,6 +49,14 @@ You can then install the system:
 sudo nixos-install --flake .\#nixpad
 ```
 
+dellserver needs packages built with CUDA, which are only on the CUDA team's cache. The installed system knows it, the live ISO does not; without it the install compiles them for hours. So for dellserver:
+
+``` sh
+sudo nixos-install --flake .\#dellserver \
+  --option extra-substituters https://cache.nixos-cuda.org \
+  --option extra-trusted-public-keys cache.nixos-cuda.org:74DUi4Ye579gUqzH4ziL9IyiJBlDpMRn9MBN8oNan9M=
+```
+
 If all went well, you should now be able to reboot into your new system!
 Please feel free to [open an issue](https://github.com/kev1nbam27/nix-config/issues) if you have any questions.
 

@@ -5,11 +5,17 @@
 # and saves the whole stack as one PDF to consume/<owner>/single_sheets/.
 # Paperless ignores folders of that name. This service takes each PDF
 # there, cuts it every 2 pages (front and back of one sheet), drops the
-# pages that are blank, and puts the pieces into consume/<owner>/, where
-# paperless imports them:
+# pages that are blank, and puts the pieces into
+# consume/<owner>/scansnap/loose_sheets/, where paperless imports them:
 #
-#   consume/evelyn/single_sheets/scan.pdf  ->  consume/evelyn/scan-001.pdf
-#                                              consume/evelyn/scan-002.pdf ...
+#   consume/evelyn/single_sheets/scan.pdf
+#     ->  consume/evelyn/scansnap/loose_sheets/scan-001.pdf
+#         consume/evelyn/scansnap/loose_sheets/scan-002.pdf ...
+#
+# The folders become tags (paperless.nix): the owner, `scansnap`, which
+# every document from the scanner carries, and `loose_sheets`. (What the
+# scanner writes to consume/evelyn/bulk_scan gets `scansnap` from a
+# workflow in paperless's web UI instead.)
 #
 # The scanner's PDF is then moved to single_sheets/done/ and deleted after
 # 30 days; a PDF that could not be cut goes to single_sheets/failed/ and
@@ -26,6 +32,8 @@
 let
   consumeDir = config.services.paperless.consumptionDir;
   folder = "single_sheets";
+  # Where the pieces go, under consume/<owner>/; each folder is a tag.
+  target = "scansnap/loose_sheets";
   # consume/<owner>/single_sheets is watched for each of these.
   owners = [ "evelyn" ];
   user = config.services.paperless.user;
@@ -44,6 +52,7 @@ let
     from PIL import Image
 
     FOLDER = "${folder}"
+    TARGET = "${target}"
     PDFTOPPM = "${pkgs.poppler-utils}/bin/pdftoppm"
     MARGIN = 0.08  # of width and height, left out on each side
     DARK = 128  # grey values below this count as dark (0 black, 255 white)
@@ -95,10 +104,11 @@ let
 
 
     def split(pdf):
-        """Cut pdf into one file per sheet in the folder above FOLDER."""
+        """Cut pdf into one file per sheet in consume/<owner>/TARGET."""
         sheets = plan(pdf)
         report(pdf, sheets)
-        target = pdf.parent.parent
+        target = pdf.parent.parent / TARGET
+        target.mkdir(parents=True, exist_ok=True)
         tmp = pdf.parent / ".tmp"
         tmp.mkdir(exist_ok=True)
         pieces = []

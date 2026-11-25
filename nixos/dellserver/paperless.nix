@@ -26,6 +26,9 @@
 # the PDF the scanner sent, so a wrong split can only be redone from paper.
 # It rasterises every page of every PDF, which makes large imports slow.
 #
+# The text of scans comes from a vision model on this machine, with
+# Tesseract as the fallback, see paperless-llm-ocr.nix.
+#
 # The scanner writes into consume/ over SMB, see samba.nix.
 #
 # Manage:  sudo paperless-manage <command>
@@ -63,6 +66,30 @@ in {
       # 12). Scanned landscape pages were left sideways at 7.6 to 9.7, and
       # no upright page was misjudged anywhere near that.
       PAPERLESS_OCR_ROTATE_PAGES_THRESHOLD = 7;
+
+      # The built-in AI, for title, date and document type. It talks to
+      # ollama on the nixbook (../../darwin/nixbook/ollama.nix), so nothing
+      # leaves the LAN. No embedding backend: that would build a vector
+      # index of every document each night, which nothing here needs.
+      # Until a workflow uses it, it only answers the "Suggest" button on
+      # a document, which shows the result and changes nothing.
+      PAPERLESS_AI_ENABLED = true;
+      # ollama's OpenAI-compatible endpoint, not the "ollama" backend: that
+      # one cannot turn the model's thinking off (llama-index-llms-ollama
+      # 0.11.0 drops paperless's think=False), and with thinking one
+      # document took 285 s instead of 9 to 13, longer than paperless's
+      # own timeout of 120 s. Here reasoning_effort turns it off.
+      PAPERLESS_AI_LLM_BACKEND = "openai-like";
+      PAPERLESS_AI_LLM_ENDPOINT = "http://nixbook.internal.qwt.ch:11434/v1";
+      PAPERLESS_AI_LLM_MODEL = "qwen3.5:9b";
+      PAPERLESS_AI_LLM_EXTRA_PARAMS = { reasoning_effort = "none"; };
+      # The AI's prompt is fixed: it gets the text and the stored file name,
+      # nothing else. So the stored name is the original one instead of
+      # 0000123.pdf, which hands it the subject and topic of the GoodNotes
+      # files ("bio ~ Zoologie ~ x.pdf"). A document already in the archive
+      # is renamed when it is next saved, or all at once with
+      # `sudo paperless-manage document_renamer`.
+      PAPERLESS_FILENAME_FORMAT = "{{ original_name }}";
     };
   };
 

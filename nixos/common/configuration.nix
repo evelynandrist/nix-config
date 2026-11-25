@@ -110,6 +110,12 @@
     auto-optimise-store = true;
     # Needed for internet access in the video-paper module
     sandbox = "relaxed";
+    # CUDA builds (ollama on dellserver) are not on cache.nixos.org, only
+    # on the CUDA team's cache. On every host, so any of them can build
+    # dellserver without compiling CUDA for hours. A fresh install does not
+    # have this yet: see the install section of README.md.
+    substituters = [ "https://cache.nixos-cuda.org" ];
+    trusted-public-keys = [ "cache.nixos-cuda.org:74DUi4Ye579gUqzH4ziL9IyiJBlDpMRn9MBN8oNan9M=" ];
   };
 
   # Automatic garbage collection
