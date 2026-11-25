@@ -26,6 +26,9 @@
 # the PDF the scanner sent, so a wrong split can only be redone from paper.
 # It rasterises every page of every PDF, which makes large imports slow.
 #
+# The text of scans comes from a vision model on this machine, with
+# Tesseract as the fallback, see paperless-llm-ocr.nix.
+#
 # The scanner writes into consume/ over SMB, see samba.nix.
 #
 # Manage:  sudo paperless-manage <command>

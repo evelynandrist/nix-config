@@ -19,6 +19,7 @@
     ./paperless.nix
     ./samba.nix
     ./paperless-single-sheets.nix
+    ./paperless-llm-ocr.nix
     ./agent.nix
     ./flake-update.nix
     ./upgrade-check.nix

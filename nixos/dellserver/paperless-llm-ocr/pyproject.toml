@@ -1,0 +1,14 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "paperless-llm-ocr"
+version = "1.0.0"
+description = "Paperless parser: Tesseract's archive PDF, text from a vision model in ollama"
+
+[tool.setuptools]
+py-modules = ["paperless_llm_ocr"]
+
+[project.entry-points."paperless_ngx.parsers"]
+llm_ocr = "paperless_llm_ocr:VisionModelDocumentParser"
