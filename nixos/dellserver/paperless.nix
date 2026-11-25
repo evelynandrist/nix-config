@@ -32,10 +32,30 @@
 # The scanner writes into consume/ over SMB, see samba.nix.
 #
 # Manage:  sudo paperless-manage <command>
-{ config, ... }:
+{ config, lib, ... }:
 let
   dataDir = "/persist/data/paperless";
   port = 28981;
+
+  # Our prompts for the built-in AI, laid over the ones in the package.
+  # Paperless has no setting for this, and patching the package would mean
+  # building it here. The files explain themselves; in short:
+  #   classification.j2              what to fill in. The fields are in the
+  #                                  order of paperless's schema: ollama
+  #                                  cannot write a field after a later one,
+  #                                  so tags described last were never set.
+  #   classification_rag_context.j2  would append similar documents; ours
+  #                                  sends none.
+  #   localization.j2                would translate the result into the
+  #                                  user's display language, if one is set;
+  #                                  ours returns it unchanged.
+  # Check after a paperless update that the three files still exist there.
+  promptDir = "${config.services.paperless.package}/lib/paperless-ngx/src/paperless_ai/prompts";
+  promptOverlay = map (name: "${./paperless-prompts}/${name}:${promptDir}/${name}") [
+    "classification.j2"
+    "classification_rag_context.j2"
+    "localization.j2"
+  ];
 in {
   sops.secrets."paperless/admin_password" = { };
 
@@ -67,24 +87,25 @@ in {
       # no upright page was misjudged anywhere near that.
       PAPERLESS_OCR_ROTATE_PAGES_THRESHOLD = 7;
 
-      # The built-in AI, for title, date and document type. It talks to
-      # ollama on the nixbook (../../darwin/nixbook/ollama.nix), so nothing
-      # leaves the LAN. No embedding backend: that would build a vector
-      # index of every document each night, which nothing here needs.
+      # The built-in AI, for title, issuer, date, document type and tags. It
+      # talks to ollama on the nixbook (../../darwin/nixbook/ollama.nix), so
+      # nothing leaves the LAN. No embedding backend: that would build a
+      # vector index of every document each night, which nothing here needs.
       # Until a workflow uses it, it only answers the "Suggest" button on
       # a document, which shows the result and changes nothing.
       PAPERLESS_AI_ENABLED = true;
-      # ollama's OpenAI-compatible endpoint, not the "ollama" backend: that
-      # one cannot turn the model's thinking off (llama-index-llms-ollama
-      # 0.11.0 drops paperless's think=False), and with thinking one
-      # document took 285 s instead of 9 to 13, longer than paperless's
-      # own timeout of 120 s. Here reasoning_effort turns it off.
-      PAPERLESS_AI_LLM_BACKEND = "openai-like";
-      PAPERLESS_AI_LLM_ENDPOINT = "http://nixbook.internal.qwt.ch:11434/v1";
-      PAPERLESS_AI_LLM_MODEL = "qwen3.5:9b";
-      PAPERLESS_AI_LLM_EXTRA_PARAMS = { reasoning_effort = "none"; };
-      # The AI's prompt is fixed: it gets the text and the stored file name,
-      # nothing else. So the stored name is the original one instead of
+      # The "ollama" backend forces the answer into paperless's JSON schema.
+      # It cannot turn the model's thinking off (llama-index-llms-ollama
+      # 0.11.0 drops paperless's think=False), which is wanted here: with
+      # thinking gemma4:e4b takes about 30 s a document, well inside
+      # paperless's timeout of 120 s. The prompts in paperless-prompts/ were
+      # tried with exactly this model and backend.
+      PAPERLESS_AI_LLM_BACKEND = "ollama";
+      PAPERLESS_AI_LLM_ENDPOINT = "http://nixbook.internal.qwt.ch:11434";
+      PAPERLESS_AI_LLM_MODEL = "gemma4:e4b";
+      PAPERLESS_AI_LLM_EXTRA_PARAMS = { temperature = 0; };
+      # The AI gets the text and the stored file name, nothing else. So the
+      # stored name is the original one instead of
       # 0000123.pdf, which hands it the subject and topic of the GoodNotes
       # files ("bio ~ Zoologie ~ x.pdf"). A document already in the archive
       # is renamed when it is next saved, or all at once with
@@ -92,6 +113,11 @@ in {
       PAPERLESS_FILENAME_FORMAT = "{{ original_name }}";
     };
   };
+
+  # paperless-web answers the Suggest button, the task queue runs workflows.
+  systemd.services = lib.genAttrs [ "paperless-web" "paperless-task-queue" ] (_: {
+    serviceConfig.BindReadOnlyPaths = promptOverlay;
+  });
 
   # allowedTCPPorts cannot restrict by source, hence the hand-written rule.
   # The name comes from /etc/hosts (../common/lan-hosts.nix).
