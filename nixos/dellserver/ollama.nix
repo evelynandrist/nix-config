@@ -5,14 +5,9 @@
 # /persist/data/ollama, in the nightly restic backup.
 #
 # The CUDA build of ollama is not on cache.nixos.org, only on the CUDA
-# team's cache, added below. A system that does not have this cache yet
-# in its nix.conf would compile ollama with CUDA on this laptop for hours,
-# so the first time, fetch it before deploying:
-#
-#   sudo nix build --no-link \
-#     --option extra-substituters https://cache.nixos-cuda.org \
-#     --option extra-trusted-public-keys cache.nixos-cuda.org:74DUi4Ye579gUqzH4ziL9IyiJBlDpMRn9MBN8oNan9M= \
-#     <the ollama store path of the new system>
+# team's cache, which every host has in its nix.conf
+# (../common/configuration.nix). A machine without it would compile
+# ollama with CUDA for hours; for a fresh install see README.md.
 #
 # Check:  ollama list
 #         journalctl -u ollama -b
@@ -20,11 +15,6 @@
 let
   home = "/persist/data/ollama";
 in {
-  nix.settings = {
-    substituters = [ "https://cache.nixos-cuda.org" ];
-    trusted-public-keys = [ "cache.nixos-cuda.org:74DUi4Ye579gUqzH4ziL9IyiJBlDpMRn9MBN8oNan9M=" ];
-  };
-
   services.ollama = {
     enable = true;
     package = pkgs.ollama-cuda;
