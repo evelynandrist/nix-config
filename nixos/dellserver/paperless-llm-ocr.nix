@@ -77,8 +77,7 @@ in {
     wants = [ "network-online.target" ];
     after = [ "ollama.service" "network-online.target" ];
     unitConfig.OnFailure = [ "ha-notify-failed@%n.service" ];
-    environment.OLLAMA_HOST = "${ollama.host}:${toString ollama.port}";
-    path = [ ollama.package pkgs.curl pkgs.jq ];
+    path = [ pkgs.curl pkgs.jq ];
     serviceConfig = {
       Type = "oneshot";
       RemainAfterExit = true;
@@ -89,17 +88,19 @@ in {
         curl -sf ${api}/api/version >/dev/null && break
         sleep 1
       done
+      body=$(jq -cn --arg m ${lib.escapeShellArg model} '{model: $m, stream: false}')
       installed() {
         curl -sf ${api}/api/tags \
           | jq -r --arg m ${lib.escapeShellArg model} '.models[] | select(.name == $m) | .digest'
       }
       if [ -z "$(installed)" ]; then
-        ollama pull ${lib.escapeShellArg model}
+        # waits until the download is complete; answers {"status":"success"}
+        curl -sS ${api}/api/pull -d "$body" | jq -e '.status == "success"'
       fi
       have=$(installed)
       if [ "$have" != ${digest} ]; then
         echo "${model} has digest '$have', expected ${digest}: removed" >&2
-        ollama rm ${lib.escapeShellArg model} || true
+        curl -sS -X DELETE ${api}/api/delete -d "$body" || true
         exit 1
       fi
       echo "${model} present, digest ${digest}"
