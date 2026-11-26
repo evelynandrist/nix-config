@@ -9,9 +9,10 @@ See ../paperless-llm-ocr.nix for why and how it is set up. In short:
   rendered at 200 dpi and sent to ollama; the model's text replaces
   Tesseract's as the document's content, cleaned of most of its markup.
 - PDFs that bring their own text (GoodNotes) only go through Tesseract.
-- A page whose answer reaches the length limit keeps the model's text up
-  to where it starts repeating itself.
-- A page that is empty once its repetition is cut gets Tesseract's text.
+- A page whose answer reaches the length limit is read once more with a
+  repetition penalty. If that reaches the limit too, the page keeps the
+  model's text up to where it starts repeating itself, followed by
+  Tesseract's text for the page: the model may have left out the rest.
 - If the model fails, the whole document keeps Tesseract's text.
 - Either way the document gets the fallback tag (tags are per document).
   A later successful "Redo OCR" removes it.
@@ -54,6 +55,10 @@ PAGE_TIMEOUT = 600  # seconds per page, waiting in ollama's queue included
 LOOP_MAX_PERIOD = 1000
 LOOP_MIN_REPEATS = 3
 LOOP_MIN_CHARS = 200
+# For the second reading of a page whose first one reached the length
+# limit. Not for the first: the trial ran without, and a penalty can
+# spoil tables, which repeat their tags by nature.
+REPEAT_PENALTY = 1.2
 
 logger = logging.getLogger("paperless.parsers.llm_ocr")
 
@@ -69,10 +74,16 @@ def _config():
 #
 # LightOnOCR answers in Markdown with HTML tables. The content field feeds
 # full-text search and paperless's AI, which sees only the first 4000
-# characters, so tables become one line per row and other markup goes.
-# Headings (#) and bold (**) stay. The raw answer is kept separately.
+# characters, so tables become one line per row, lists one line per item,
+# and other markup goes. Headings (#) and bold (**) stay. The raw answer
+# is kept separately.
 
-_TABLE = re.compile(r"<table\b.*?</table>", re.S | re.I)
+# Up to the end of the text if the table is not closed: an answer cut at
+# its repetition often ends inside one.
+_TABLE = re.compile(r"<table\b.*?(?:</table>|\Z)", re.S | re.I)
+_CUT_TAG = re.compile(r"<[^>]*\Z")
+_LIST_ITEM = re.compile(r"[ \t]*<li\b[^>]*>", re.I)
+_LIST_TAGS = re.compile(r"</li>|</?(?:[uo]l|p)\b[^>]*>", re.I)
 _COMMENT = re.compile(r"<!--.*?-->", re.S)
 _BR = re.compile(r"<br\s*/?>", re.I)
 _DIV = re.compile(r"</?div\b[^>]*>", re.I)
@@ -80,7 +91,7 @@ _IMAGE = re.compile(r"!\[[^\]]*\]\([^)]*\)")
 _DOT_LEADER = re.compile(r"(?:\.\s?){5,}|…{2,}")
 _BLANK_LINES = re.compile(r"\n[ \t]*\n(?:[ \t]*\n)+")
 _TABLE_TAGS = {"table", "thead", "tbody", "tfoot", "tr", "td", "th", "br",
-               "caption", "colgroup", "col"}
+               "caption", "colgroup", "col", "ul", "ol", "li", "p"}
 
 
 def _span(value):
@@ -108,6 +119,10 @@ class _Table(HTMLParser):
             self.spans = (_span(a.get("rowspan")), _span(a.get("colspan")))
         elif tag == "br":
             if self.cell is not None:
+                self.cell.append(" / ")
+        elif tag in ("li", "p"):
+            # a list or paragraphs in a cell: on the row's one line
+            if self.cell is not None and "".join(self.cell).strip():
                 self.cell.append(" / ")
         elif tag not in _TABLE_TAGS and self.cell is not None:
             # Not markup but text that looks like it: <name@example.org>
@@ -167,8 +182,9 @@ def _grid(rows):
 
 def _flatten_table(match):
     parser = _Table()
-    parser.feed(match.group(0))
+    parser.feed(_CUT_TAG.sub("", match.group(0)))
     parser.close()
+    parser.handle_endtag("td")  # a cell the cut left open
     rows = _grid(parser.rows)
     return "\n" + "\n".join("| " + " | ".join(r) + " |" for r in rows) + "\n"
 
@@ -178,6 +194,8 @@ def clean(text):
     text = _TABLE.sub(_flatten_table, text)
     text = _BR.sub("\n", text)
     text = _DIV.sub("", text)
+    text = _LIST_ITEM.sub("- ", text)
+    text = _LIST_TAGS.sub("", text)
     text = _IMAGE.sub("", text)
     text = _DOT_LEADER.sub(" … ", text)
     text = _BLANK_LINES.sub("\n\n", text)
@@ -199,7 +217,7 @@ def _render(pdf, out_dir):
     return sorted(out_dir.glob("p-*.jpg"), key=lambda p: int(p.stem[2:]))
 
 
-def _read_page(url, model, image):
+def _read_page(url, model, image, repeat_penalty=None):
     """The model's transcription of one page image, and whether it finished.
 
     It does not finish when it reaches num_predict, as on sheet music,
@@ -223,6 +241,8 @@ def _read_page(url, model, image):
             "num_predict": 6000,
         },
     }
+    if repeat_penalty is not None:
+        body["options"]["repeat_penalty"] = repeat_penalty
     request = urllib.request.Request(
         f"{url}/api/chat",
         data=json.dumps(body).encode(),
@@ -291,7 +311,7 @@ def _apply(document, raw, fell_back):
             defaults={"matching_algorithm": Tag.MATCH_NONE},
         )
         document.tags.add(tag)
-        logger.warning("Document %s: Tesseract's text on some or all pages, tagged %r",
+        logger.warning("Document %s: Tesseract's text on or added to some or all pages, tagged %r",
                        document.pk, tag_name)
     else:
         document.tags.remove(*Tag.objects.filter(name=tag_name))
@@ -393,19 +413,26 @@ class VisionModelDocumentParser(RasterisedDocumentParser):
             answer, finished = _read_page(url, model, image)
             text, marker = answer, f"page {number}"
             if not finished:
-                cut = cut_repetition(answer)
-                if cut is None:
-                    note = "stopped at the length limit, no repetition found, kept whole"
-                else:
-                    text = cut
-                    note = f"stopped at the length limit, repeating from character {len(cut)}, cut there"
+                first = answer
+                answer, finished = _read_page(url, model, image, REPEAT_PENALTY)
+                text = answer
+                note = "stopped at the length limit, read again with a repetition penalty"
+                if not finished:
+                    # Of the two, the one with more text before its repetition.
+                    answer, text = max(
+                        ((a, a if (cut := cut_repetition(a)) is None else cut)
+                         for a in (first, answer)),
+                        key=lambda pair: len(pair[1]),
+                    )
+                    if text == answer:
+                        note += ", stopped again, no repetition found, kept whole"
+                    else:
+                        note += f", stopped again, repeating from character {len(text)}, cut there"
+                    note += ", Tesseract's text added"
+                    text = f"{text}\n\n{_tesseract_page(pdf, number)}"
+                    fell_back = True
                 self.log.warning(f"Page {number}: {note}")
                 marker += f": {note}"
-                if not clean(text):
-                    text = _tesseract_page(pdf, number)
-                    fell_back = True
-                    self.log.warning(f"Page {number}: nothing left, Tesseract's text used")
-                    marker += ", nothing left, Tesseract's text used"
             raw.append(f"<!-- {marker} -->\n\n{answer}")
             texts.append(text)
         self.log.info(f"Read {len(pages)} pages with {model}")

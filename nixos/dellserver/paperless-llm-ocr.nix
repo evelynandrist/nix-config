@@ -13,22 +13,26 @@
 # - Only documents imported from now on, and "Redo OCR". PDFs with their
 #   own text (GoodNotes) only go through Tesseract, as before.
 # - Content is cleaned: tables become one line per row, cells joined by
-#   " | ", merged cells kept in their column; other HTML, image
-#   placeholders and dot leaders go; headings and bold stay. The AI only
+#   " | ", merged cells kept in their column; lists one line per item
+#   (in a cell: joined by " / "); other HTML, image placeholders and dot
+#   leaders go; headings and bold stay. The AI only
 #   reads the first 4000 characters, and HTML tables took a quarter of the
 #   text, up to half on table pages.
 # - The model's raw answer, with page markers and full tables, is kept in
 #   ${rawDir}/<document id>.md, for later uses that need the structure.
-# - A page whose answer reaches the length limit (num_predict) keeps the
-#   model's text up to where it starts repeating itself. Sheet music does
-#   this, the model writes out notes until the limit; so did 16 of the
-#   first 1124 pages. The whole answer stays in the raw file, its page
-#   marker says it was cut; journalctl shows document and page.
-# - A page that is empty once its repetition is cut gets Tesseract's text;
-#   if the model fails (ollama down, model missing), the whole document
-#   does. Either way the document gets the tag `${tag}`, tags being per
-#   document; for a cut page the raw file's page marker says so. Run
-#   "Redo OCR" on it later; a successful run removes the tag.
+# - A page whose answer reaches the length limit (num_predict) is read a
+#   second time with a repetition penalty. Sheet music does this, the
+#   model writes out notes until the limit; so did 16 of the first 1124
+#   pages. If the second reading reaches the limit too, the page keeps the
+#   model's text up to where it starts repeating itself (of the two
+#   readings, the one with more), followed by Tesseract's text for the
+#   page: the model can get stuck in the first column of a table and never
+#   reach the rest. The raw file has the whole answer, its page marker
+#   says what happened; journalctl shows document and page.
+# - If the model fails (ollama down, model missing), the whole document
+#   keeps Tesseract's text. Either way the document gets the tag `${tag}`,
+#   tags being per document; for a cut page the raw file's page marker
+#   says so. Run "Redo OCR" on it later; a successful run removes the tag.
 # - Long documents are not cut short: the worker's time limit is raised
 #   from 30 minutes to 2 hours, about 350 pages.
 #
