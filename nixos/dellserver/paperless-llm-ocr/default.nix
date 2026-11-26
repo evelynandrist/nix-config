@@ -15,7 +15,8 @@ buildPythonPackage {
 
   postPatch = ''
     substituteInPlace paperless_llm_ocr.py \
-      --replace-fail '@pdftoppm@' '${poppler-utils}/bin/pdftoppm'
+      --replace-fail '@pdftoppm@' '${poppler-utils}/bin/pdftoppm' \
+      --replace-fail '@pdftotext@' '${poppler-utils}/bin/pdftotext'
   '';
 
   build-system = [ setuptools ];

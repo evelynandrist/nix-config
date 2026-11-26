@@ -9,8 +9,12 @@ See ../paperless-llm-ocr.nix for why and how it is set up. In short:
   rendered at 200 dpi and sent to ollama; the model's text replaces
   Tesseract's as the document's content, cleaned of most of its markup.
 - PDFs that bring their own text (GoodNotes) only go through Tesseract.
-- If the model fails on any page, the document keeps Tesseract's text and
-  gets the fallback tag. A later successful "Redo OCR" removes it.
+- A page whose answer reaches the length limit keeps the model's text up
+  to where it starts repeating itself.
+- If the model fails, the document keeps Tesseract's text and gets the
+  fallback tag; so does a page that is empty once its repetition is cut,
+  with Tesseract's text for that page alone. A later successful "Redo OCR"
+  removes the tag.
 - The model's raw answer is kept as <raw dir>/<document id>.md.
 
 A parser is not told which document it parses. For a new document, the
@@ -41,8 +45,15 @@ from paperless.parsers.tesseract import RasterisedDocumentParser
 from paperless.parsers.utils import is_born_digital_text
 
 PDFTOPPM = "@pdftoppm@"
+PDFTOTEXT = "@pdftotext@"
 DPI = 200
 PAGE_TIMEOUT = 600  # seconds per page, waiting in ollama's queue included
+# A cut-off answer counts as repeating itself from where its last
+# characters repeat with a period of at most LOOP_MAX_PERIOD, at least
+# LOOP_MIN_REPEATS times and over at least LOOP_MIN_CHARS.
+LOOP_MAX_PERIOD = 1000
+LOOP_MIN_REPEATS = 3
+LOOP_MIN_CHARS = 200
 
 logger = logging.getLogger("paperless.parsers.llm_ocr")
 
@@ -189,7 +200,11 @@ def _render(pdf, out_dir):
 
 
 def _read_page(url, model, image):
-    """The model's transcription of one page image."""
+    """The model's transcription of one page image, and whether it finished.
+
+    It does not finish when it reaches num_predict, as on sheet music,
+    where it writes out notes until then.
+    """
     body = {
         "model": model,
         "stream": False,
@@ -215,14 +230,48 @@ def _read_page(url, model, image):
     )
     with urllib.request.urlopen(request, timeout=PAGE_TIMEOUT) as response:
         answer = json.load(response)
-    if answer.get("done_reason") != "stop":
-        # "length": stopped at num_predict, which in the trial meant the
-        # model was repeating itself.
-        raise RuntimeError(f"model stopped with {answer.get('done_reason')!r}")
+    reason = answer.get("done_reason")
+    if reason not in ("stop", "length"):
+        raise RuntimeError(f"model stopped with {reason!r}")
     text = (answer.get("message") or {}).get("content", "").strip()
     seconds = answer.get("total_duration", 0) / 1e9
     logger.debug("%s: %d characters in %.1f s", image.name, len(text), seconds)
-    return text
+    return text, reason == "stop"
+
+
+def cut_repetition(text):
+    """text up to the repetition it ends in, one round of it kept.
+
+    None if it does not end in one. Of the periods that fit, the one that
+    cuts earliest wins; a multiple of the real period never cuts earlier.
+    """
+    n = len(text)
+    best = None  # where to cut
+    found = []  # periods that fit
+    for period in range(1, min(LOOP_MAX_PERIOD, n // LOOP_MIN_REPEATS) + 1):
+        if any(period % p == 0 for p in found):
+            continue
+        if text[n - period:] != text[n - 2 * period:n - period]:
+            continue
+        start = n - 2 * period
+        while start > 0 and text[start - 1] == text[start - 1 + period]:
+            start -= 1
+        if n - start >= max(LOOP_MIN_REPEATS * period, LOOP_MIN_CHARS):
+            found.append(period)
+            if best is None or start + period < best:
+                best = start + period
+    return None if best is None else text[:best].rstrip()
+
+
+def _tesseract_page(pdf, number):
+    """The text layer Tesseract put on one page of pdf."""
+    return subprocess.run(
+        [PDFTOTEXT, "-q", "-layout", "-enc", "UTF-8",
+         "-f", str(number), "-l", str(number), str(pdf), "-"],
+        check=True,
+        capture_output=True,
+        text=True,
+    ).stdout.strip()
 
 
 # --- Tag and raw text ---------------------------------------------------
@@ -242,7 +291,8 @@ def _apply(document, raw, fell_back):
             defaults={"matching_algorithm": Tag.MATCH_NONE},
         )
         document.tags.add(tag)
-        logger.warning("Document %s: model failed, tagged %r", document.pk, tag_name)
+        logger.warning("Document %s: Tesseract's text on some or all pages, tagged %r",
+                       document.pk, tag_name)
     else:
         document.tags.remove(*Tag.objects.filter(name=tag_name))
     if raw is not None:
@@ -305,14 +355,13 @@ class VisionModelDocumentParser(RasterisedDocumentParser):
             self.log.debug("Has its own text, not sent to the model")
             return
 
-        raw = None
         try:
-            raw = self._read_with_model()
+            raw, text, fell_back = self._read_with_model()
+            self.text = clean(text)
         except Exception as e:
+            raw, fell_back = None, True
             self.log.warning(f"Vision model failed, keeping Tesseract's text: {e!r}")
-        if raw is not None:
-            self.text = clean(raw)
-        result = (raw, raw is None)
+        result = (raw, fell_back)
 
         document = _stored_document(document_path)
         if document is not None:
@@ -322,6 +371,8 @@ class VisionModelDocumentParser(RasterisedDocumentParser):
             _state.result = result
 
     def _read_with_model(self):
+        """The raw answers, the text for the content, whether any page
+        fell back to Tesseract."""
         url, model, _, _ = _config()
         tempdir = Path(self.tempdir)
         # The PDF ocrmypdf wrote, pages turned upright, whether or not it is
@@ -336,8 +387,26 @@ class VisionModelDocumentParser(RasterisedDocumentParser):
         pages = _render(pdf, tempdir / "llm-pages")
         if not pages:
             raise RuntimeError("no pages rendered")
-        texts = []
+        raw, texts = [], []
+        fell_back = False
         for number, image in enumerate(pages, 1):
-            texts.append(f"<!-- page {number} -->\n\n{_read_page(url, model, image)}")
+            answer, finished = _read_page(url, model, image)
+            text, marker = answer, f"page {number}"
+            if not finished:
+                cut = cut_repetition(answer)
+                if cut is None:
+                    note = "stopped at the length limit, no repetition found, kept whole"
+                else:
+                    text = cut
+                    note = f"stopped at the length limit, repeating from character {len(cut)}, cut there"
+                self.log.warning(f"Page {number}: {note}")
+                marker += f": {note}"
+                if not clean(text):
+                    text = _tesseract_page(pdf, number)
+                    fell_back = True
+                    self.log.warning(f"Page {number}: nothing left, Tesseract's text used")
+                    marker += ", nothing left, Tesseract's text used"
+            raw.append(f"<!-- {marker} -->\n\n{answer}")
+            texts.append(text)
         self.log.info(f"Read {len(pages)} pages with {model}")
-        return "\n\n".join(texts) + "\n"
+        return "\n\n".join(raw) + "\n", "\n\n".join(texts), fell_back
