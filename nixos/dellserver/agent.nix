@@ -3,7 +3,7 @@
 # Reached as https://t3.internal.qwt.ch through nginx on packardserver (LAN
 # and VPN only). Nothing else may connect: the port is open for
 # packardserver alone. Every browser and phone pairs once, sessions last 30
-# days (t3code 0.1.8).
+# days (t3code 0.1.12).
 #
 # State, all in /home/agent (own btrfs subvolume: kept across reboots, not
 # in the backup except where noted):
@@ -70,12 +70,23 @@
 #     approval that a token cannot give, instead of the test-deploy label.
 #   - If Claude turns fail without a user session, switch to a user unit with
 #     linger, as upstream does.
-{ pkgs, ... }:
+{ pkgs, lib, inputs, ... }:
 let
   port = 3773;
   home = "/home/agent";
   userdata = "${home}/.t3/userdata";
-  t3codeBase = pkgs.t3code.override {
+  # t3code 0.1.12 from NixOS/nixpkgs#589125 while nixpkgs is behind it. The
+  # newer of the two wins, so nixpkgs takes over by itself once a flake
+  # update brings 0.1.12 or later. From then on this and the input
+  # nixpkgs-t3code in flake.nix are unused and can be deleted.
+  t3codePinned = (import inputs.nixpkgs-t3code {
+    system = pkgs.stdenv.hostPlatform.system;
+    config.allowUnfree = true;
+  }).t3code;
+  t3codeNewest =
+    if lib.versionOlder pkgs.t3code.version t3codePinned.version
+    then t3codePinned else pkgs.t3code;
+  t3codeBase = t3codeNewest.override {
     enableClaude = true;
     enableCodex = false;
     # gh would let T3 open PRs from the app, but only with a token, and any
@@ -87,7 +98,8 @@ let
   # upstream bakes into its releases; without it `t3 connect` does not exist
   # and nothing is pushed to the phone. The values are public by design
   # (Clerk publishable key, OAuth client id), copied from the official
-  # v0.1.8 linux-x64 release. Check them again when t3code is updated.
+  # linux-x64 release (checked for v0.1.12). Check them again when t3code
+  # is updated.
   t3code = pkgs.symlinkJoin {
     name = "t3code-connect-${t3codeBase.version}";
     paths = [ t3codeBase ];

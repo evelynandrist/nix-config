@@ -10,6 +10,9 @@
     # Also see the 'master-packages' overlay at 'overlays/default.nix'.
     # qemu antidetection patch only works for 8.2.X, which is included here
     nixpkgs-24-05.url = "github:nixos/nixpkgs/nixos-24.05";
+    # t3code 0.1.12 from NixOS/nixpkgs#589125, until nixpkgs has it. Used and
+    # explained in nixos/dellserver/agent.nix; delete when unused there.
+    nixpkgs-t3code.url = "github:nixos/nixpkgs/6119be72b7a9ab3ac31a2c752cc3670978d66508";
 
     # Home manager
     home-manager.url = "github:nix-community/home-manager";
