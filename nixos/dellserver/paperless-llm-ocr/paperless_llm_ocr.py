@@ -11,10 +11,10 @@ See ../paperless-llm-ocr.nix for why and how it is set up. In short:
 - PDFs that bring their own text (GoodNotes) only go through Tesseract.
 - A page whose answer reaches the length limit keeps the model's text up
   to where it starts repeating itself.
-- If the model fails, the document keeps Tesseract's text and gets the
-  fallback tag; so does a page that is empty once its repetition is cut,
-  with Tesseract's text for that page alone. A later successful "Redo OCR"
-  removes the tag.
+- A page that is empty once its repetition is cut gets Tesseract's text.
+- If the model fails, the whole document keeps Tesseract's text.
+- Either way the document gets the fallback tag (tags are per document).
+  A later successful "Redo OCR" removes it.
 - The model's raw answer is kept as <raw dir>/<document id>.md.
 
 A parser is not told which document it parses. For a new document, the

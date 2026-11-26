@@ -24,10 +24,11 @@
 #   this, the model writes out notes until the limit; so did 16 of the
 #   first 1124 pages. The whole answer stays in the raw file, its page
 #   marker says it was cut; journalctl shows document and page.
-# - If the model fails (ollama down, model missing), or a cut page is
-#   left empty, the document gets Tesseract's text for those pages and the
-#   tag `${tag}`. Run "Redo OCR" on it later; a successful run removes the
-#   tag.
+# - A page that is empty once its repetition is cut gets Tesseract's text;
+#   if the model fails (ollama down, model missing), the whole document
+#   does. Either way the document gets the tag `${tag}`, tags being per
+#   document; for a cut page the raw file's page marker says so. Run
+#   "Redo OCR" on it later; a successful run removes the tag.
 # - Long documents are not cut short: the worker's time limit is raised
 #   from 30 minutes to 2 hours, about 350 pages.
 #
