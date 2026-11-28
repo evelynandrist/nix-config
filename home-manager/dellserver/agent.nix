@@ -161,14 +161,17 @@ in {
   home.file.".claude/CLAUDE.md".text = ''
     # The agent on dellserver
 
-    - No GitHub or Bitbucket login: you can push branches, but not open, label
-      or merge pull requests. Give Evelyn the link that opens it filled in:
+    - T3 has tokens for the work repos only, on GitHub and on Bitbucket: open
+      pull requests there yourself with T3's pull request tools, and never
+      merge one. There is no gh.
+    - For nix-config and Evelyn's own repos there is no login: push the branch
+      and give Evelyn the link that opens the pull request filled in:
       https://github.com/<owner>/<repo>/compare/<base>...<branch>?quick_pull=1&title=<title>&body=<body>
-      Title: what the branch does, written like a commit subject. Body: at most
-      two short lines of why the diff does not show; no headings, lists, test
-      plan or footer; leave it out if there is nothing to say. Encode each with
-      `jq -rn --arg s "<text>" '$s|@uri'`, never by hand. Write title and body
-      above the link as plain text too: the phone app ignores the link.
+      Encode title and body with `jq -rn --arg s "<text>" '$s|@uri'`, never by
+      hand. Write them above the link as plain text too: the phone app ignores
+      the link.
+    - A pull request body says why, where the diff does not show it. Apply
+      the skill `unslop` to it. No headings, test plan or footer.
     - No sudo password. If something needs root or a secret, give Evelyn the
       exact command.
     - iOS and macOS builds run on the Mac: `mac` prints the help. Only `~/t3`

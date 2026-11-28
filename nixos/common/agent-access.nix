@@ -6,8 +6,10 @@
 #     Test-deploys the head commit of a nix-config pull request, but only if
 #     the PR is open, comes from the repo itself (not a fork) and carries the
 #     label `test-deploy`. Only Evelyn can set that label: it needs a GitHub
-#     login, which the agent never gets. The label approves the branch, not
-#     one commit, so remove it when the task is done.
+#     login that can write to this repo, which the agent never gets (its
+#     one token is for the work repos only, ../dellserver/agent.nix). The
+#     label approves the branch, not one commit, so remove it when the task
+#     is done.
 #     `nixos-rebuild test` does not change the boot default: a reboot, or the
 #     nightly upgrade (its guard looks at the system profile, which `test`
 #     leaves alone), returns the host to main.
