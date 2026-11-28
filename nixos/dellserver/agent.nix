@@ -31,10 +31,27 @@
 # writes only under ~/t3.
 #
 # Commits are authored as Evelyn, unsigned (home-manager/dellserver/agent.nix).
-# No GitHub token may ever be readable by this user: setting the test-deploy
-# label and merging a pull request each need one. For the same reason GitHub Actions is switched off for
-# nix-config and must stay off: a workflow on a pushed branch gets such a
-# token (see flake-update.nix).
+# No GitHub token that can write to Evelyn's own account may ever be
+# readable by this user: setting the test-deploy label and merging a pull
+# request each need one. For the same reason GitHub Actions is switched off
+# for nix-config and must stay off: a workflow on a pushed branch gets such
+# a token (see flake-update.nix).
+#
+# The one GitHub token it has lets T3 show and open pull requests in the work
+# repos: a fine-grained token whose resource owner is the work organisation
+# (pull requests and actions read/write; contents and commit statuses
+# read). Such a token cannot write outside that organisation, and without
+# contents write it cannot merge there either. Evelyn pastes it in the T3
+# app under Settings, Source control & issues; T3 keeps it in
+# .t3/userdata/secrets/, which is not in the backup. T3 holds one token per
+# host, so there is none for her own repos next to it. Never a classic
+# token and never a `gh auth login`: both reach every repo Evelyn can,
+# nix-config included.
+#
+# For the work repos on Bitbucket T3 has an Atlassian API token, entered in
+# the same place (repository read, pull requests read/write, user and
+# workspace read). On Bitbucket merging is part of pull request write, so
+# this token can merge: only the agent's instructions keep it from doing so.
 #
 # T3 restarts with the nightly upgrade; a running turn waits for Resume.
 #
@@ -66,8 +83,8 @@
 #     only when Evelyn asks for it in the bump's thread.
 #   - Restart T3 only when idle, if the nightly restart interrupts real work.
 #   - Skills (planning), Azure and database access.
-#   - PRs from the T3 app (enableGitHub plus a token): needs a deploy
-#     approval that a token cannot give, instead of the test-deploy label.
+#   - PRs for nix-config from the T3 app: needs a deploy approval that a
+#     token cannot give, instead of the test-deploy label.
 #   - If Claude turns fail without a user session, switch to a user unit with
 #     linger, as upstream does.
 { pkgs, lib, inputs, ... }:
@@ -89,9 +106,9 @@ let
   t3codeBase = t3codeNewest.override {
     enableClaude = true;
     enableCodex = false;
-    # gh would let T3 open PRs from the app, but only with a token, and any
-    # token that can open PRs can also set the test-deploy label. Enable it
-    # only once deploy approval no longer rests on that label (see Later).
+    # T3 talks to GitHub itself with the token from its settings (see the
+    # header) and does not need gh. Left out so that nobody logs gh in
+    # through the browser, which would hand over Evelyn's whole account.
     enableGitHub = false;
   };
   # The nixpkgs build lacks T3 Connect's public configuration, which
@@ -131,6 +148,8 @@ in {
   programs.ssh.knownHosts = {
     "github.com".publicKey = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOMqqnkVzrm0SdG6UOoqKLsabgH5C9okWi0dh2l9GKJl";
     "bitbucket.org".publicKey = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIIazEu89wgQZ4bqs3d63QSMzYVa0MuJ2e2gKTKqu+UUO";
+    # the name Bitbucket is moving ssh to; same key
+    "ssh.bitbucket.org".publicKey = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIIazEu89wgQZ4bqs3d63QSMzYVa0MuJ2e2gKTKqu+UUO";
     # for test deploys (../common/agent-access.nix)
     "packardserver".publicKey = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIC+DM5/muda4czqL7luaLqVfuS67fb9sYZiw6bXbHp+V";
     "nixserver.qwt.ch".publicKey = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAINeSBKfQ3vO2GZbGQFMzFC5G5HVf2D5E04eQmkaoPgUs";
