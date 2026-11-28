@@ -25,6 +25,15 @@
 #   .t3/userdata/server-browser/profiles/
 #                   that browser's cookies. A tab can be taken over from the
 #                   T3 app: whatever is signed in to there, the agent has too.
+#   .local/share/docker/
+#                   images and containers of the agent's own Docker (below).
+#                   Not in the backup: images can be pulled again.
+#
+# Containers: a rootless Docker daemon that runs as `agent`, for the work
+# repos (rimon-api's PostgreSQL tests through Testcontainers, building the
+# Dockerfiles). A container has the agent's rights and no more. Never the
+# system Docker (configuration.nix): the docker group is root without a
+# password, and root reads every secret this user is kept away from.
 #
 # iOS builds on the nixbook: `mac sync`, `mac run nix/build.sh`, `mac clean`
 # (home-manager/dellserver/agent.nix). The agent logs in there as Evelyn and
@@ -90,6 +99,7 @@
 { pkgs, lib, inputs, ... }:
 let
   port = 3773;
+  uid = 1002;
   home = "/home/agent";
   userdata = "${home}/.t3/userdata";
   # t3code 0.1.12 from NixOS/nixpkgs#589125 while nixpkgs is behind it. The
@@ -132,8 +142,10 @@ in {
   # The user itself, its key on the other hosts and its sudo rules:
   # ../common/agent-access.nix
   users.users.agent = {
-    inherit home;
+    inherit home uid;
     shell = pkgs.zsh;
+    # starts the user's Docker daemon at boot, without a login
+    linger = true;
     openssh.authorizedKeys.keys = [
       "sk-ssh-ed25519@openssh.com AAAAGnNrLXNzaC1lZDI1NTE5QG9wZW5zc2guY29tAAAAIOmZZyhqDHkirDFXCoT9sw008Mj0GwlD9qv9M51MONQKAAAAC3NzaDp5dWJpa2V5 yubikey-main"
     ];
@@ -141,6 +153,11 @@ in {
     # `claude auth login` is run in a shell
     packages = [ t3code pkgs.claude-code ];
   };
+
+  # A user unit for every user with a session, which only `agent` has from
+  # boot. setSocketVariable stays off: it would point Evelyn's `docker` at
+  # a daemon of her own instead of telling her to use sudo.
+  virtualisation.docker.rootless.enable = true;
 
   home-manager.users.agent = import ../../home-manager/dellserver/agent.nix;
 
@@ -191,6 +208,9 @@ in {
       # T3's terminal; systemd does not set SHELL for system services
       SHELL = "${pkgs.zsh}/bin/zsh";
       T3CODE_TELEMETRY_ENABLED = "false";
+      # The agent's own Docker. Only this variable: with XDG_RUNTIME_DIR
+      # T3 would wrap agents in scopes again (see above).
+      DOCKER_HOST = "unix:///run/user/${toString uid}/docker.sock";
     };
     serviceConfig = {
       User = "agent";
